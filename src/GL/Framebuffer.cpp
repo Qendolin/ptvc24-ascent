@@ -48,7 +48,7 @@ int Framebuffer::mapAttachmentIndex(int index) const {
     return index + 2;
 }
 
-Framebuffer::Framebuffer() : textures_(MaxAttachments + 2, nullptr), renderbuffers_(MaxAttachments + 2, nullptr) {
+Framebuffer::Framebuffer() : textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
     glCreateFramebuffers(1, &id_);
 }
 
@@ -70,7 +70,7 @@ void Framebuffer::bindTargets(const std::vector<int>& indices) {
     std::vector<GLenum> attachments(indices.size());
     for (int i = 0; i < indices.size(); i++) {
         int index = indices[i];
-        if (index <= MaxAttachments) {
+        if (index <= MAX_ATTACHMENTS) {
             attachments[i] = GL_COLOR_ATTACHMENT0 + index;
         } else {
             attachments[i] = index;
@@ -113,7 +113,7 @@ void Framebuffer::attachTexture(int index, const Texture* texture) {
 
 void Framebuffer::attachTextureLevel(int index, const Texture* texture, int level) {
     textures_[mapAttachmentIndex(index)] = texture;
-    if (index <= MaxAttachments) {
+    if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
     glNamedFramebufferTexture(id_, index, texture->id(), level);
@@ -125,7 +125,7 @@ void Framebuffer::attachTextureLayer(int index, const Texture* texture, int laye
 
 void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int layer, int level) {
     textures_[mapAttachmentIndex(index)] = texture;
-    if (index <= MaxAttachments) {
+    if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
     // https://community.intel.com/t5/Graphics/glNamedFramebufferTextureLayer-rejects-cubemaps-of-any-kind/td-p/1167643
@@ -141,7 +141,7 @@ void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int
 
 void Framebuffer::attachRenderbuffer(int index, const Renderbuffer* renderbuffer) {
     renderbuffers_[mapAttachmentIndex(index)] = renderbuffer;
-    if (index <= MaxAttachments) {
+    if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
     glNamedFramebufferRenderbuffer(id_, index, GL_RENDERBUFFER, renderbuffer->id());
