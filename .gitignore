@@ -1,0 +1,85 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+**/bin/
+**/build/
+**/out/
+**/out-release/
+**/out-release-exe/
+**/out-debug/
+**/buildLinux/
+**/cmake-build-debug/
+**/cmake-build-release/
+**/test/
+**/_project/
+
+# Prebuild files and assets
+assets/textures/
+assets/settings/
+lib/
+include/
+
+# Source Code
+*.ilk
+*.pdb
+*.suo
+*.db
+*.opendb
+
+#custom
+*.ipch
+*.dtbcache
+*.lock
+*.ide*
+
+Tools/**/*.cache
+*.CopyComplete
+.vs
+
+# Build helpers and results:
+**/obj/
+
+# Visual Studio
+
+**/.vs
+**/.vscode
+
+# CLion
+**/.idea
+
+# Clangd
+**/.cache
+
+# Emacs
+**/.dir-locals.el
+
+# CMake
+**/CMakeSettings.json
+
+# MacOS
+.DS_Store
