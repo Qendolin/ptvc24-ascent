@@ -19,6 +19,7 @@
 #include "GL/StateManager.h"
 #include "GL/Texture.h"
 #include "Input.h"
+#include "Loader.h"
 #include "Utils.h"
 
 struct Arguments {
@@ -71,6 +72,7 @@ void setup() {
         throw std::runtime_error("GLFW window creation failed");
     }
     glfwMakeContextCurrent(win);
+    glfwSwapInterval(0);
 
     LOG("Initializing OpenGL");
 
@@ -111,12 +113,12 @@ void run() {
 
     GL::ShaderProgram *vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/sky.vert"), GL_VERTEX_SHADER);
     vert_sh->compile();
-    GL::ShaderProgram *frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/sky.frag"), GL_FRAGMENT_SHADER);
-    frag_sh->compile();
+    GL::ShaderProgram *sky_frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/sky.frag"), GL_FRAGMENT_SHADER);
+    sky_frag_sh->compile();
 
-    GL::ShaderPipeline *shader = new GL::ShaderPipeline();
-    shader->attach(vert_sh);
-    shader->attach(frag_sh);
+    GL::ShaderPipeline *sky_shader = new GL::ShaderPipeline();
+    sky_shader->attach(vert_sh);
+    sky_shader->attach(sky_frag_sh);
 
     GL::ShaderProgram *dd_vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/direct.vert"), GL_VERTEX_SHADER);
     dd_vert_sh->compile();
@@ -128,6 +130,15 @@ void run() {
     dd_shader->attach(dd_frag_sh);
     DirectBuffer *dd = new DirectBuffer(dd_shader);
 
+    GL::ShaderProgram *test_vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/test.vert"), GL_VERTEX_SHADER);
+    test_vert_sh->compile();
+    GL::ShaderProgram *test_frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/test.frag"), GL_FRAGMENT_SHADER);
+    test_frag_sh->compile();
+
+    GL::ShaderPipeline *test_shader = new GL::ShaderPipeline();
+    test_shader->attach(test_vert_sh);
+    test_shader->attach(test_frag_sh);
+
     double time = glfwGetTime();
     double delta = 1 / 60.0;
 
@@ -138,6 +149,8 @@ void run() {
     Input *input = Input::init(win);
     Camera *camera = new Camera(glm::radians(90.), viewport_size, 0.1, 100., glm::vec3{}, glm::vec3{});
     bool mouse_captured = false;
+
+    auto instances = loadModel("assets/models/suzanne.glb");
 
     LOG("Entering main loop");
 
@@ -175,18 +188,35 @@ void run() {
             camera->updateView();
         }
 
-        quad->bind();
-        shader->bind();
+        GL::manager->setEnabled({GL::Capability::DepthTest});
+        GL::manager->depthMask(true);
+        GL::manager->depthFunc(GL::DepthFunc::Less);
+        test_shader->bind();
 
-        frag_sh->setUniform("u_view_mat", camera->viewMatrix);
-        frag_sh->setUniform("u_projection_mat", camera->projectionMatrix);
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        test_vert_sh->setUniform("u_view_projection_mat", camera->projectionMatrix * camera->viewMatrix);
+        for (auto &i : instances) {
+            i.mesh.vao->bind();
+            test_vert_sh->setUniform("u_model_mat", i.transform);
+            for (auto &s : i.mesh.sections) {
+                glDrawElementsBaseVertex(GL_TRIANGLES, s.length, GL_UNSIGNED_SHORT, 0, s.base);
+            }
+        }
 
         dd->shaded();
         dd->color(1.0, 1.0, 1.0);
         dd->plane({-10, -1, -10}, {10, -1, 10}, {0, 1, 0});
+
+        // Draw debug
         dd->draw(camera->projectionMatrix * camera->viewMatrix, camera->position);
+
+        // Draw sky
+        quad->bind();
+        sky_shader->bind();
+
+        sky_frag_sh->setUniform("u_view_mat", camera->viewMatrix);
+        sky_frag_sh->setUniform("u_projection_mat", camera->projectionMatrix);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         // Poll events
         glfwPollEvents();

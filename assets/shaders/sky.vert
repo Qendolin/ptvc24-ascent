@@ -8,6 +8,7 @@ out gl_PerVertex {
 };
 
 void main() {
-	gl_Position = vec4(in_position, 0., 1.);
+	gl_Position = vec4(in_position, 1., 1.);
+	gl_Position.z = gl_Position.w;
 	out_clip_pos = vec3(in_position, 0);
 }

@@ -62,7 +62,7 @@ void StateManager::setEnabled(const std::vector<Capability>& caps) {
 
     // enable provided
     for (Capability cap : caps) {
-        if (!diff.count(cap) || !this->caps[cap]) {
+        if (!diff[cap] || !this->caps[cap]) {
             diff[cap] = true;
         }
     }

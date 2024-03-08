@@ -80,9 +80,9 @@ class VertexArray : public GLObject {
 
     void bind() const;
 
-    void layout(int bufferIndex, int attributeIndex, size_t size, GLenum dataType, bool normalized, int offset);
+    void layout(int bufferIndex, int attributeIndex, int size, GLenum dataType, bool normalized, int offset);
 
-    void layoutI(int bufferIndex, int attributeIndex, size_t size, GLenum dataType, int offset);
+    void layoutI(int bufferIndex, int attributeIndex, int size, GLenum dataType, int offset);
 
     void bindBuffer(int bufferIndex, const Buffer& vbo, int offset, int stride);
 

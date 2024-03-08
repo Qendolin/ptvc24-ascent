@@ -167,13 +167,13 @@ void VertexArray::bind() const {
     manager->bindVertexArray(id_);
 }
 
-void VertexArray::layout(int bufferIndex, int attributeIndex, size_t size, GLenum dataType, bool normalized, int offset) {
+void VertexArray::layout(int bufferIndex, int attributeIndex, int size, GLenum dataType, bool normalized, int offset) {
     glEnableVertexArrayAttrib(id_, attributeIndex);
     glVertexArrayAttribFormat(id_, attributeIndex, size, dataType, normalized, offset);
     glVertexArrayAttribBinding(id_, attributeIndex, bufferIndex);
 }
 
-void VertexArray::layoutI(int bufferIndex, int attributeIndex, size_t size, GLenum dataType, int offset) {
+void VertexArray::layoutI(int bufferIndex, int attributeIndex, int size, GLenum dataType, int offset) {
     glEnableVertexArrayAttrib(id_, attributeIndex);
     glVertexArrayAttribIFormat(id_, attributeIndex, size, dataType, offset);
     glVertexArrayAttribBinding(id_, attributeIndex, bufferIndex);
