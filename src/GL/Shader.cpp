@@ -190,20 +190,20 @@ GLenum shaderStageToBit(GLenum stage) {
 
 ShaderPipeline::ShaderPipeline() {
     glCreateProgramPipelines(1, &id_);
-    owned_programs_ = {};
+    ownedPrograms_ = {};
 }
 
 ShaderPipeline::ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs) {
     glCreateProgramPipelines(1, &id_);
     attach(owned_programs);
-    owned_programs_ = owned_programs;
+    ownedPrograms_ = owned_programs;
 }
 
 void ShaderPipeline::destroy() {
     glDeleteProgramPipelines(1, &id_);
     manager->unbindProgramPipeline(id_);
     id_ = 0;
-    for (auto&& p : owned_programs_) {
+    for (auto&& p : ownedPrograms_) {
         p->destroy();
     }
 }

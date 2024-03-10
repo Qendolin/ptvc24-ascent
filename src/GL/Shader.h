@@ -54,7 +54,7 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* geomStage_ = nullptr;
     ShaderProgram* fragStage_ = nullptr;
     ShaderProgram* compStage_ = nullptr;
-    std::initializer_list<ShaderProgram*> owned_programs_;
+    std::initializer_list<ShaderProgram*> ownedPrograms_;
 
    public:
     ShaderPipeline();
@@ -62,10 +62,10 @@ class ShaderPipeline : public GLObject {
 
     ~ShaderPipeline() {
         checkDestroyed(GL_PROGRAM_PIPELINE);
-        for (auto&& p : owned_programs_) {
+        for (auto&& p : ownedPrograms_) {
             delete p;
         }
-        owned_programs_ = {};
+        ownedPrograms_ = {};
     }
 
     void destroy();

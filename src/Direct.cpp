@@ -5,6 +5,12 @@
 
 #include "GL/StateManager.h"
 
+// calculate number of sides for a given radius
+int circleSides(float r) {
+    return 24 + (int)(0.6 * r);
+}
+
+// calculate a perpendicular vector
 // https://math.stackexchange.com/a/1681815/1014081
 glm::vec3 perpendicular(glm::vec3 v) {
     float lx = v[0] * v[0];
@@ -114,11 +120,6 @@ void DirectBuffer::tri(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
     vert(b);
 }
 
-// Order:
-//
-//	A--B
-//	|  |
-//	C--D
 void DirectBuffer::quad(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d) {
     tri(a, b, c);
     tri(d, c, b);
@@ -258,7 +259,7 @@ void DirectBuffer::unitBox() {
     quad(glm::vec3(-0.5, +0.5, +0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(-0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, -0.5));
 }
 
-void DirectBuffer::draw(glm::mat4 viewProj, glm::vec3 camPos) {
+void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     if (data_.empty()) {
         return;
     }
@@ -271,8 +272,8 @@ void DirectBuffer::draw(glm::mat4 viewProj, glm::vec3 camPos) {
 
     vao_->bind();
     shader_->bind();
-    shader_->vertexStage()->setUniform("u_view_projection_mat", viewProj);
-    shader_->fragmentStage()->setUniform("u_camera_position", camPos);
+    shader_->vertexStage()->setUniform("u_view_projection_mat", view_proj_mat);
+    shader_->fragmentStage()->setUniform("u_camera_position", camera_pos);
     GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::PolygonOffsetFill});
     GL::manager->depthFunc(GL::DepthFunc::Less);
     GL::manager->depthMask(true);

@@ -1,5 +1,7 @@
 #include "Input.h"
 
+#include <algorithm>
+
 void Input::update() {
     time_ = glfwGetTime();
     timeDelta_ = time_ - prevTime_;
@@ -10,6 +12,8 @@ void Input::update() {
     scrollNextDelta_ = glm::vec2(0.0f);
     std::copy(std::begin(mouseButtons_), std::end(mouseButtons_), std::begin(mousePrevButtons_));
     std::copy(std::begin(keys_), std::end(keys_), std::begin(keysPrev_));
+
+    glfwPollEvents();
 }
 
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {

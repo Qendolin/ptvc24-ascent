@@ -68,9 +68,7 @@ void run() {
     LOG("Entering main loop");
 
     while (!glfwWindowShouldClose(win)) {
-        // NOTE: input update need to be called before glfwPollEvents
         input->update();
-        glfwPollEvents();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -98,7 +96,7 @@ void run() {
             glm::vec3 move = move_input * 2.5f * input->timeDelta();
             move = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.y, {0, 1, 0})) * move;
             camera->position += move;
-            camera->updateView();
+            camera->updateViewMatrix();
         }
 
         GL::manager->setEnabled({GL::Capability::DepthTest});
@@ -106,7 +104,7 @@ void run() {
         GL::manager->depthFunc(GL::DepthFunc::Less);
         test_shader->bind();
 
-        test_shader->vertexStage()->setUniform("u_view_projection_mat", camera->projectionMatrix * camera->viewMatrix);
+        test_shader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
         for (auto &i : instances) {
             i.mesh.vao->bind();
             test_shader->vertexStage()->setUniform("u_model_mat", i.transform);
@@ -117,17 +115,17 @@ void run() {
 
         dd->shaded();
         dd->color(1.0, 1.0, 1.0);
-        dd->plane({-10, -1, -10}, {10, -1, 10}, {0, 1, 0});
+        dd->plane({-10, -1, -10}, {10, -1, 10});
 
         // Draw debug
-        dd->draw(camera->projectionMatrix * camera->viewMatrix, camera->position);
+        dd->draw(camera->viewProjectionMatrix(), camera->position);
 
         // Draw sky
         quad->bind();
         sky_shader->bind();
 
-        sky_shader->fragmentStage()->setUniform("u_view_mat", camera->viewMatrix);
-        sky_shader->fragmentStage()->setUniform("u_projection_mat", camera->projectionMatrix);
+        sky_shader->fragmentStage()->setUniform("u_view_mat", camera->viewMatrix());
+        sky_shader->fragmentStage()->setUniform("u_projection_mat", camera->projectionMatrix());
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
