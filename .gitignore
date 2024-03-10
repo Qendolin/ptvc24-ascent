@@ -67,7 +67,7 @@ Tools/**/*.cache
 # Visual Studio
 
 **/.vs
-**/.vscode
+**/.vscode/settings.json
 
 # CLion
 **/.idea
