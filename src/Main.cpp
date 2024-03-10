@@ -20,6 +20,7 @@
 #include "GL/Texture.h"
 #include "Input.h"
 #include "Loader.h"
+#include "Setup.h"
 #include "Utils.h"
 
 struct Arguments {
@@ -27,82 +28,9 @@ struct Arguments {
     bool disableGlDebug;
 } arguments = {};
 
-static void APIENTRY DebugCallbackDefault(
-    GLenum source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar *message,
-    const GLvoid *userParam) {
-    if (id == 131185 || id == 131218)
-        return;  // ignore performance warnings from nvidia
-    std::string error = formatDebugOutput(source, type, id, severity, message);
-    std::cout << error << std::endl;
-}
-
-// Using globals isn't so pretty but it get's the job done
-GLFWwindow *win;
-
-void setup() {
-    LOG("Initializing GLFW");
-    if (glfwInit() != GLFW_TRUE) {
-        throw std::runtime_error("GLFW init failed");
-    }
-
-    glfwDefaultWindowHints();
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-    glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-    if (arguments.enableCompatibilityProfile) {
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-        LOG("Using GL compatability profile");
-    } else {
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        LOG("Using GL core profile");
-    }
-
-    LOG("Creating Window");
-    win = glfwCreateWindow(1600, 900, "Ascent", nullptr, nullptr);
-    if (win == nullptr) {
-        throw std::runtime_error("GLFW window creation failed");
-    }
-    glfwMakeContextCurrent(win);
-    glfwSwapInterval(0);
-
-    LOG("Initializing OpenGL");
-
-    glewExperimental = true;
-    GLenum err = glewInit();
-
-    // If GLEW wasn't initialized
-    if (err != GLEW_OK) {
-        throw std::runtime_error(std::format(
-            "Glew init failed: {}",
-            reinterpret_cast<const char *>(glewGetErrorString(err))));
-    }
-
-    LOG("Using GPU: " << glGetString(GL_RENDERER));
-
-    GL::manager = std::make_unique<GL::StateManager>(GL::createEnvironment());
-
-    // enable these without using the manager
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-    if (glDebugMessageCallback != NULL && !arguments.disableGlDebug) {
-        glDebugMessageCallback(DebugCallbackDefault, NULL);
-        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, false);
-        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, false);
-    }
-}
-
 void run() {
+    GLFWwindow *win = glfwGetCurrentContext();
+
     GL::Buffer *vbo = new GL::Buffer();
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
@@ -111,33 +39,18 @@ void run() {
     quad->layout(0, 0, 2, GL_FLOAT, false, 0);
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
 
-    GL::ShaderProgram *vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/sky.vert"), GL_VERTEX_SHADER);
-    vert_sh->compile();
-    GL::ShaderProgram *sky_frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/sky.frag"), GL_FRAGMENT_SHADER);
-    sky_frag_sh->compile();
+    GL::ShaderPipeline *sky_shader = new GL::ShaderPipeline(
+        {new GL::ShaderProgram("assets/shaders/sky.vert"),
+         new GL::ShaderProgram("assets/shaders/sky.frag")});
 
-    GL::ShaderPipeline *sky_shader = new GL::ShaderPipeline();
-    sky_shader->attach(vert_sh);
-    sky_shader->attach(sky_frag_sh);
-
-    GL::ShaderProgram *dd_vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/direct.vert"), GL_VERTEX_SHADER);
-    dd_vert_sh->compile();
-    GL::ShaderProgram *dd_frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/direct.frag"), GL_FRAGMENT_SHADER);
-    dd_frag_sh->compile();
-
-    GL::ShaderPipeline *dd_shader = new GL::ShaderPipeline();
-    dd_shader->attach(dd_vert_sh);
-    dd_shader->attach(dd_frag_sh);
+    GL::ShaderPipeline *dd_shader = new GL::ShaderPipeline(
+        {new GL::ShaderProgram("assets/shaders/direct.vert"),
+         new GL::ShaderProgram("assets/shaders/direct.frag")});
     DirectBuffer *dd = new DirectBuffer(dd_shader);
 
-    GL::ShaderProgram *test_vert_sh = new GL::ShaderProgram(loadFile("assets/shaders/test.vert"), GL_VERTEX_SHADER);
-    test_vert_sh->compile();
-    GL::ShaderProgram *test_frag_sh = new GL::ShaderProgram(loadFile("assets/shaders/test.frag"), GL_FRAGMENT_SHADER);
-    test_frag_sh->compile();
-
-    GL::ShaderPipeline *test_shader = new GL::ShaderPipeline();
-    test_shader->attach(test_vert_sh);
-    test_shader->attach(test_frag_sh);
+    GL::ShaderPipeline *test_shader = new GL::ShaderPipeline(
+        {new GL::ShaderProgram("assets/shaders/test.vert"),
+         new GL::ShaderProgram("assets/shaders/test.frag")});
 
     double time = glfwGetTime();
     double delta = 1 / 60.0;
@@ -193,10 +106,10 @@ void run() {
         GL::manager->depthFunc(GL::DepthFunc::Less);
         test_shader->bind();
 
-        test_vert_sh->setUniform("u_view_projection_mat", camera->projectionMatrix * camera->viewMatrix);
+        test_shader->vertexStage()->setUniform("u_view_projection_mat", camera->projectionMatrix * camera->viewMatrix);
         for (auto &i : instances) {
             i.mesh.vao->bind();
-            test_vert_sh->setUniform("u_model_mat", i.transform);
+            test_shader->vertexStage()->setUniform("u_model_mat", i.transform);
             for (auto &s : i.mesh.sections) {
                 glDrawElementsBaseVertex(GL_TRIANGLES, s.length, GL_UNSIGNED_SHORT, 0, s.base);
             }
@@ -213,8 +126,8 @@ void run() {
         quad->bind();
         sky_shader->bind();
 
-        sky_frag_sh->setUniform("u_view_mat", camera->viewMatrix);
-        sky_frag_sh->setUniform("u_projection_mat", camera->projectionMatrix);
+        sky_shader->fragmentStage()->setUniform("u_view_mat", camera->viewMatrix);
+        sky_shader->fragmentStage()->setUniform("u_projection_mat", camera->projectionMatrix);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -239,7 +152,7 @@ int main(int argc, char **argv) {
     }
 
     try {
-        setup();
+        setupOpenGL(arguments.enableCompatibilityProfile, arguments.disableGlDebug);
         run();
     } catch (const std::exception &e) {
         std::cerr << "Fatal Error: " << e.what() << std::flush;

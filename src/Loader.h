@@ -6,7 +6,7 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-
+#undef APIENTRY
 #include <tiny_gltf.h>
 
 #include <glm/glm.hpp>

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "Object.h"
 
@@ -16,7 +17,8 @@ class ShaderProgram : public GLObject {
     GLenum stage_ = 0;
 
    public:
-    ShaderProgram(std::string source, GLenum stage);
+    ShaderProgram(std::string source, GLenum stage, std::map<std::string, std::string> substitutions = {});
+    ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions = {});
 
     ~ShaderProgram() {
         checkDestroyed(GL_PROGRAM);
@@ -30,9 +32,7 @@ class ShaderProgram : public GLObject {
 
     GLenum stage() const;
 
-    void compile();
-
-    void compileWith(std::map<std::string, std::string> defs);
+    void compile(std::map<std::string, std::string> defs = {});
 
     void setDebugLabel(const std::string& label);
 
@@ -54,12 +54,18 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* geomStage_ = nullptr;
     ShaderProgram* fragStage_ = nullptr;
     ShaderProgram* compStage_ = nullptr;
+    std::initializer_list<ShaderProgram*> owned_programs_;
 
    public:
     ShaderPipeline();
+    ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs);
 
     ~ShaderPipeline() {
         checkDestroyed(GL_PROGRAM_PIPELINE);
+        for (auto&& p : owned_programs_) {
+            delete p;
+        }
+        owned_programs_ = {};
     }
 
     void destroy();
@@ -75,6 +81,8 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* get(GLenum stage) const;
 
     void setDebugLabel(const std::string& label);
+
+    void attach(const std::initializer_list<ShaderProgram*> programs);
 
     void attach(ShaderProgram* program);
 
