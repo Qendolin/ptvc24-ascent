@@ -16,6 +16,10 @@
 #include "GL/Geometry.h"
 #include "GL/Texture.h"
 
+// References:
+// https://kcoley.github.io/glTF/specification/2.0/figures/gltfOverview-2.0.0a.png
+// https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+
 namespace gltf = tinygltf;
 
 bool loadModel(gltf::Model &model, const char *filename) {
