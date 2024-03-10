@@ -63,37 +63,39 @@ typedef struct Instance {
     const Mesh mesh;
 } Instance;
 
-void loadNode(gltf::Model &model, gltf::Node &node, const std::vector<Mesh> &meshes, std::vector<Instance> &instances) {
-    if (node.mesh >= 0) {
-        glm::mat4 transform = glm::mat4(1.0);
-        if (node.matrix.size() == 16) {
-            // convert doubles to floats
-            std::vector<float> float_matrix(16);
-            std::transform(node.matrix.begin(), node.matrix.end(), float_matrix.begin(),
-                           [](double d) { return static_cast<float>(d); });
-            transform = glm::make_mat4(float_matrix.data());
-        } else {
-            if (node.scale.size() == 3) {
-                transform = glm::scale(transform, {node.scale[0], node.scale[1], node.scale[2]});
-            }
-            if (node.rotation.size() == 4) {
-                transform = glm::toMat4(glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2])) * transform;
-            }
-            if (node.translation.size() == 3) {
-                transform = glm::translate(transform, {node.translation[0], node.translation[1], node.translation[2]});
-            }
+void loadNode(gltf::Model &model, gltf::Node &node, const std::vector<Mesh> &meshes, std::vector<Instance> &instances, glm::mat4 combined_transform) {
+    glm::mat4 transform = glm::mat4(1.0);
+    if (node.matrix.size() == 16) {
+        // convert doubles to floats
+        std::vector<float> float_matrix(16);
+        std::transform(node.matrix.begin(), node.matrix.end(), float_matrix.begin(),
+                       [](double d) { return static_cast<float>(d); });
+        transform = glm::make_mat4(float_matrix.data());
+    } else {
+        if (node.scale.size() == 3) {
+            transform = glm::scale(transform, {node.scale[0], node.scale[1], node.scale[2]});
         }
+        if (node.rotation.size() == 4) {
+            glm::quat quat = glm::make_quat(node.rotation.data());
+            transform = glm::toMat4(quat) * transform;
+        }
+        if (node.translation.size() == 3) {
+            glm::mat4 mat = glm::translate(glm::mat4(1.0), {node.translation[0], node.translation[1], node.translation[2]});
+            transform = mat * transform;
+        }
+    }
+    combined_transform = combined_transform * transform;
 
-        // TODO: Parent transform
+    if (node.mesh >= 0) {
         instances.push_back(Instance{
             .name = node.name,
-            .transform = transform,
+            .transform = combined_transform,
             .mesh = meshes[node.mesh],
         });
     }
 
     for (size_t i = 0; i < node.children.size(); i++) {
-        loadNode(model, model.nodes[node.children[i]], meshes, instances);
+        loadNode(model, model.nodes[node.children[i]], meshes, instances, combined_transform);
     }
 }
 
@@ -172,7 +174,7 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh) {
         gltf::BufferView &position_view = model.bufferViews[position_access.bufferView];
         gltf::BufferView &normal_view = model.bufferViews[normal_access.bufferView];
         gltf::BufferView &texcoord_view = model.bufferViews[texcoord_access.bufferView];
-        gltf::BufferView &index_view = model.bufferViews[primitive.indices];
+        gltf::BufferView &index_view = model.bufferViews[index_access.bufferView];
 
         if (position_view.target != GL_ARRAY_BUFFER || position_view.byteStride != 0) {
             std::cerr << "Primitive position attribute has invalid view" << std::endl;
@@ -301,7 +303,7 @@ std::vector<Instance> loadModel(const std::string filename) {
 
     std::vector<Instance> instances;
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        loadNode(model, model.nodes[scene.nodes[i]], meshes, instances);
+        loadNode(model, model.nodes[scene.nodes[i]], meshes, instances, glm::mat4(1.0));
     }
     return instances;
 }

@@ -63,7 +63,7 @@ void run() {
     Camera *camera = new Camera(glm::radians(90.), viewport_size, 0.1, 100., glm::vec3{}, glm::vec3{});
     bool mouse_captured = false;
 
-    auto instances = loadModel("assets/models/suzanne.glb");
+    auto instances = loadModel("assets/models/sponza.glb");
 
     LOG("Entering main loop");
 
