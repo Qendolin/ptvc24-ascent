@@ -13,6 +13,11 @@ typedef struct MatrixStackEntry {
     glm::mat3 normalMatrix;
 } MatrixStackEntry;
 
+/**
+ * A utility for debug drawing.
+ * Using the methods provided many kinds of primitives can be added to the buffer.
+ * Using the draw method they are rendered all at once when the frame is finished.
+ */
 class DirectBuffer {
    private:
     GL::ShaderPipeline* shader_;
@@ -164,6 +169,9 @@ class DirectBuffer {
      */
     void unitBox();
 
+    /**
+     * Renders the buffer's contents and empties it for the next frame.
+     */
     void draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos);
 
     void clear();

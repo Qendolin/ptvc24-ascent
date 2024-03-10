@@ -31,6 +31,10 @@ struct Arguments {
 void run() {
     GLFWwindow *win = glfwGetCurrentContext();
 
+    // =========
+    // Preperation & Asset loading
+    // =========
+
     GL::Buffer *vbo = new GL::Buffer();
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
@@ -52,9 +56,6 @@ void run() {
         {new GL::ShaderProgram("assets/shaders/test.vert"),
          new GL::ShaderProgram("assets/shaders/test.frag")});
 
-    double time = glfwGetTime();
-    double delta = 1 / 60.0;
-
     int32_t viewport_dimensions[4];
     glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
     glm::vec2 viewport_size = glm::vec2(viewport_dimensions[2], viewport_dimensions[3]);
@@ -65,22 +66,28 @@ void run() {
 
     auto instances = loadModel("assets/models/sponza.glb");
 
-    LOG("Entering main loop");
+    // =========
+    // Main loop
+    // =========
 
+    LOG("Entering main loop");
     while (!glfwWindowShouldClose(win)) {
         input->update();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Capture mouse
         if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && !mouse_captured) {
             mouse_captured = true;
             glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
+        // Release mouse
         if (input->isKeyPress(GLFW_KEY_ESCAPE) && mouse_captured) {
             mouse_captured = false;
             glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
 
+        // Camera movement
         if (mouse_captured) {
             // yaw
             camera->angles.y -= input->mouseDelta().x * 0.003f;
@@ -99,12 +106,13 @@ void run() {
             camera->updateViewMatrix();
         }
 
+        // Draw the loaded instances of the GLTF scene
         GL::manager->setEnabled({GL::Capability::DepthTest});
         GL::manager->depthMask(true);
         GL::manager->depthFunc(GL::DepthFunc::Less);
         test_shader->bind();
-
         test_shader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
+
         for (auto &i : instances) {
             i.mesh.vao->bind();
             test_shader->vertexStage()->setUniform("u_model_mat", i.transform);
@@ -113,6 +121,7 @@ void run() {
             }
         }
 
+        // Draw a shaded "gorund plane" at y=-1
         dd->shaded();
         dd->color(1.0, 1.0, 1.0);
         dd->plane({-10, -1, -10}, {10, -1, 10});
@@ -127,13 +136,12 @@ void run() {
         sky_shader->fragmentStage()->setUniform("u_view_mat", camera->viewMatrix());
         sky_shader->fragmentStage()->setUniform("u_projection_mat", camera->projectionMatrix());
 
+        // The sky is rendered using a single, full-screen quad
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        // Poll events
+        // Finish the frame
         glfwPollEvents();
         glfwSwapBuffers(win);
-        delta = glfwGetTime() - time;
-        time += delta;
     }
 }
 
