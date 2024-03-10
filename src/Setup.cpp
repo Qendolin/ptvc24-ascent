@@ -19,12 +19,103 @@ static void APIENTRY debugCallback(
     GLsizei length,
     const GLchar *message,
     const GLvoid *userParam) {
-    if (type == GL_DEBUG_TYPE_PUSH_GROUP || type == GL_DEBUG_TYPE_POP_GROUP || id == 131185 || id == 131218) {
+    if (id == 131185 || id == 131218) {
         // glDebugMessageControl is ignored in nsight, so double check to prevent log spam
         return;
     }
-    std::string error = formatDebugOutput(source, type, id, severity, message);
-    std::cout << error << std::endl;
+
+    auto group_stack = *reinterpret_cast<const std::vector<std::string> *>(userParam);
+
+    if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
+        group_stack.push_back(message);
+        return;
+    } else if (type == GL_DEBUG_TYPE_POP_GROUP) {
+        group_stack.pop_back();
+        return;
+    }
+
+    std::string severity_str;
+    std::string type_str;
+    std::string source_str;
+
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:
+            severity_str = "CRITICAL_ERROR";
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            severity_str = "ERROR";
+            break;
+        case GL_DEBUG_SEVERITY_LOW:
+            severity_str = "WARNING";
+            break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            severity_str = "INFO";
+            break;
+    }
+
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            type_str = "ERROR";
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            type_str = "DEPRECATED_BEHAVIOR";
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            type_str = "UNDEFINED_BEHAVIOR";
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            type_str = "PERFORMANCE";
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY:
+            type_str = "PORTABILITY";
+            break;
+        case GL_DEBUG_TYPE_OTHER:
+            type_str = "OTHER";
+            break;
+        case GL_DEBUG_TYPE_MARKER:
+            type_str = "MARKER";
+            break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:
+            type_str = "PUSH_GROUP";
+            break;
+        case GL_DEBUG_TYPE_POP_GROUP:
+            type_str = "POP_GROUP";
+            break;
+    }
+
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            source_str = "GRAPHICS_LIBRARY";
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            source_str = "SHADER_COMPILER";
+            break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            source_str = "WINDOW_SYSTEM";
+            break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            source_str = "THIRD_PARTY";
+            break;
+        case GL_DEBUG_SOURCE_APPLICATION:
+            source_str = "APPLICATION";
+            break;
+        case GL_DEBUG_SOURCE_OTHER:
+            source_str = "OTHER";
+            break;
+    }
+
+    std::string err = "[" + severity_str + "] " + type_str + " #" + std::to_string(id) + " from " + source_str + ": " + message;
+
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        std::string stack;
+        for (const auto &group : group_stack) {
+            stack += group + " > ";
+        }
+        stack = stack.substr(0, stack.length() - 3);
+        throw std::runtime_error(err + "\ndebug stack: " + stack);
+    }
+
+    std::cout << err << std::endl;
 }
 
 void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
@@ -79,121 +170,11 @@ void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     if (glDebugMessageCallback != NULL && !disableGlDebug) {
-        glDebugMessageCallback(debugCallback, NULL);
+        std::vector<std::string> group_stack = {"top"};
+        glDebugMessageCallback(debugCallback, &group_stack);
         glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, false);
         glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, false);
         const GLuint disabledMessages[] = {131185, 131218};
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 2, &disabledMessages[0], false);
     }
-}
-
-static std::string formatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char *msg) {
-    std::stringstream stringStream;
-    std::string sourceString;
-    std::string typeString;
-    std::string severityString;
-
-    // The AMD variant of this extension provides a less detailed classification of the error,
-    // which is why some arguments might be "Unknown".
-    switch (source) {
-        case GL_DEBUG_CATEGORY_API_ERROR_AMD:
-        case GL_DEBUG_SOURCE_API: {
-            sourceString = "API";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_APPLICATION_AMD:
-        case GL_DEBUG_SOURCE_APPLICATION: {
-            sourceString = "Application";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_WINDOW_SYSTEM_AMD:
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM: {
-            sourceString = "Window System";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_SHADER_COMPILER_AMD:
-        case GL_DEBUG_SOURCE_SHADER_COMPILER: {
-            sourceString = "Shader Compiler";
-            break;
-        }
-        case GL_DEBUG_SOURCE_THIRD_PARTY: {
-            sourceString = "Third Party";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_OTHER_AMD:
-        case GL_DEBUG_SOURCE_OTHER: {
-            sourceString = "Other";
-            break;
-        }
-        default: {
-            sourceString = "Unknown";
-            break;
-        }
-    }
-
-    switch (type) {
-        case GL_DEBUG_TYPE_ERROR: {
-            typeString = "Error";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_DEPRECATION_AMD:
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: {
-            typeString = "Deprecated Behavior";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_UNDEFINED_BEHAVIOR_AMD:
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: {
-            typeString = "Undefined Behavior";
-            break;
-        }
-        case GL_DEBUG_TYPE_PORTABILITY_ARB: {
-            typeString = "Portability";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_PERFORMANCE_AMD:
-        case GL_DEBUG_TYPE_PERFORMANCE: {
-            typeString = "Performance";
-            break;
-        }
-        case GL_DEBUG_CATEGORY_OTHER_AMD:
-        case GL_DEBUG_TYPE_OTHER: {
-            typeString = "Other";
-            break;
-        }
-        default: {
-            typeString = "Unknown";
-            break;
-        }
-    }
-
-    switch (severity) {
-        case GL_DEBUG_SEVERITY_HIGH: {
-            severityString = "High";
-            break;
-        }
-        case GL_DEBUG_SEVERITY_MEDIUM: {
-            severityString = "Medium";
-            break;
-        }
-        case GL_DEBUG_SEVERITY_LOW: {
-            severityString = "Low";
-            break;
-        }
-        case GL_DEBUG_SEVERITY_NOTIFICATION: {
-            severityString = "Info";
-            break;
-        }
-        default: {
-            severityString = "Unknown";
-            break;
-        }
-    }
-
-    stringStream << "OpenGL Message: " << msg;
-    stringStream << " [Source = " << sourceString;
-    stringStream << ", Type = " << typeString;
-    stringStream << ", Severity = " << severityString;
-    stringStream << ", ID = " << id << "]";
-
-    return stringStream.str();
 }
