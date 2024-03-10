@@ -117,6 +117,8 @@ void run() {
             i.mesh.vao->bind();
             test_shader->vertexStage()->setUniform("u_model_mat", i.transform);
             for (auto &s : i.mesh.sections) {
+                if (s.material.albedo != nullptr)
+                    s.material.albedo->bind(0);
                 glDrawElementsBaseVertex(GL_TRIANGLES, s.length, GL_UNSIGNED_SHORT, 0, s.base);
             }
         }

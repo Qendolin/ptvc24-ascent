@@ -23,11 +23,7 @@ glm::mat4 loadNodeTransform(gltf::Node &node) {
 
     // Check if matrix is present
     if (node.matrix.size() == 16) {
-        // convert doubles to floats
-        std::vector<float> float_matrix(16);
-        std::transform(node.matrix.begin(), node.matrix.end(), float_matrix.begin(),
-                       [](double d) { return static_cast<float>(d); });
-        transform = glm::make_mat4(float_matrix.data());
+        transform = glm::make_mat4(node.matrix.data());
     } else {
         // Check if scale is present
         if (node.scale.size() == 3) {
@@ -51,6 +47,7 @@ void loadNode(gltf::Model &model, gltf::Node &node, const std::vector<Mesh> &mes
     glm::mat4 transform = loadNodeTransform(node);
     combined_transform = combined_transform * transform;
 
+    // Check if node has a mesh
     if (node.mesh >= 0) {
         instances.push_back(Instance{
             .name = node.name,
@@ -64,7 +61,7 @@ void loadNode(gltf::Model &model, gltf::Node &node, const std::vector<Mesh> &mes
     }
 }
 
-Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh) {
+Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> &materials) {
     Mesh result = {};
     result.name = mesh.name;
     result.vao = new GL::VertexArray();
@@ -207,10 +204,15 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh) {
         result.uvs->write(base * sizeof(glm::vec2), p.texcoordPtr, p.texcoordLength);
         result.indices->write(base * p.indexSize, p.indexPtr, p.indexLength);
 
+        Material material = {};
+        if (p.material >= 0) {
+            material = materials[p.material];
+        }
+
         result.sections.push_back(Section{
             .base = base,
             .length = p.vertexCount,
-            .material = p.material,
+            .material = material,
         });
 
         base += p.vertexCount;
@@ -225,6 +227,55 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh) {
 
     result.vao->layoutI(3, 3, 1, GL_UNSIGNED_SHORT, 0);
     result.vao->bindElementBuffer(*result.indices);
+
+    return result;
+}
+
+Material loadMaterial(const gltf::Model &model, gltf::Material &material) {
+    Material result = {};
+    result.name = material.name;
+    result.albedoFactor = glm::make_vec4(&material.pbrMetallicRoughness.baseColorFactor[0]);
+    result.metallicFactor = material.pbrMetallicRoughness.metallicFactor;
+    result.roughnessFactor = material.pbrMetallicRoughness.roughnessFactor;
+
+    // Check if material has an albedo texture
+    if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
+        // TODO:  extract function
+        if (material.pbrMetallicRoughness.baseColorTexture.texCoord != 0) {
+            throw std::exception("only texCoord=0 is supported");
+        }
+        gltf::Texture texture = model.textures[material.pbrMetallicRoughness.baseColorTexture.index];
+        gltf::Image image = model.images[texture.source];
+        if (image.bits != 8) {
+            throw std::exception("only 8-bit images are supported");
+        }
+
+        GLenum format;
+        if (image.component == 1) {
+            format = GL_RED;
+        } else if (image.component == 2) {
+            format = GL_RG;
+        } else if (image.component == 3) {
+            format = GL_RGB;
+        } else if (image.component == 4) {
+            format = GL_RGBA;
+        }
+
+        result.albedo = new GL::Texture(GL_TEXTURE_2D);
+        result.albedo->allocate(0, GL_SRGB8_ALPHA8, image.width, image.height, 1);
+        result.albedo->load(0, image.width, image.height, 1, format, GL_UNSIGNED_BYTE, image.image.data());
+        result.albedo->generateMipmap();
+    }
+
+    // Check if material has a metallic, roughness texture
+    if (material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0) {
+        // TODO:
+    }
+
+    // Check if material has a normal texture
+    if (material.normalTexture.index >= 0) {
+        // TODO:
+    }
 
     return result;
 }
@@ -261,9 +312,15 @@ std::vector<Instance> loadModel(const std::string filename) {
 
     const gltf::Scene &scene = model.scenes[model.defaultScene];
 
+    std::vector<Material> materials;
+    for (size_t i = 0; i < model.materials.size(); ++i) {
+        const Material material = loadMaterial(model, model.materials[i]);
+        materials.push_back(material);
+    }
+
     std::vector<Mesh> meshes;
     for (size_t i = 0; i < model.meshes.size(); ++i) {
-        const Mesh mesh = loadMesh(model, model.meshes[i]);
+        const Mesh mesh = loadMesh(model, model.meshes[i], materials);
         meshes.push_back(mesh);
     }
 

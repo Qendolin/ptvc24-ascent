@@ -112,7 +112,7 @@ static void APIENTRY debugCallback(
             stack += group + " > ";
         }
         stack = stack.substr(0, stack.length() - 3);
-        throw std::runtime_error(err + "\ndebug stack: " + stack);
+        throw std::runtime_error(err + "\nDebug group: " + stack + "\nTrace: " + std::to_string(std::stacktrace::current()));
     }
 
     std::cout << err << std::endl;
@@ -166,12 +166,13 @@ void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
 
     // enable these without using the manager
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     if (glDebugMessageCallback != NULL && !disableGlDebug) {
-        std::vector<std::string> group_stack = {"top"};
-        glDebugMessageCallback(debugCallback, &group_stack);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+        std::vector<std::string> *group_stack = new std::vector<std::string>{"top"};
+        glDebugMessageCallback(debugCallback, group_stack);
         glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, false);
         glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, false);
         const GLuint disabledMessages[] = {131185, 131218};
