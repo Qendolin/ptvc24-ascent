@@ -42,6 +42,12 @@ DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
     vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * 4);
 }
 
+void DirectBuffer::destroy() {
+    vao_->destroy();
+    vbo_->destroy();
+    delete this;
+}
+
 void DirectBuffer::push() {
     MatrixStackEntry head = stack_.back();
     stack_.push_back(head);

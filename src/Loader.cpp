@@ -116,19 +116,19 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> 
         gltf::Accessor &texcoord_access = model.accessors[texcoord_access_ref];
         gltf::Accessor &index_access = model.accessors[primitive.indices];
 
-        if (position_access.componentType != GL_FLOAT || position_access.type != TINYGLTF_TYPE_VEC3 || position_access.sparse.isSparse) {
+        if (position_access.componentType != GL_FLOAT || position_access.type != TINYGLTF_TYPE_VEC3 || position_access.sparse.isSparse || position_access.bufferView < 0) {
             std::cerr << "Primitive position attribute has invalid access" << std::endl;
             continue;
         }
-        if (normal_access.componentType != GL_FLOAT || normal_access.type != TINYGLTF_TYPE_VEC3 || normal_access.sparse.isSparse) {
+        if (normal_access.componentType != GL_FLOAT || normal_access.type != TINYGLTF_TYPE_VEC3 || normal_access.sparse.isSparse || normal_access.bufferView < 0) {
             std::cerr << "Primitive normal attribute has invalid access" << std::endl;
             continue;
         }
-        if (texcoord_access.componentType != GL_FLOAT || texcoord_access.type != TINYGLTF_TYPE_VEC2 || texcoord_access.sparse.isSparse) {
+        if (texcoord_access.componentType != GL_FLOAT || texcoord_access.type != TINYGLTF_TYPE_VEC2 || texcoord_access.sparse.isSparse || texcoord_access.bufferView < 0) {
             std::cerr << "Primitive texcoord attribute has invalid access" << std::endl;
             continue;
         }
-        if ((index_access.componentType != GL_UNSIGNED_SHORT && index_access.componentType != GL_UNSIGNED_INT) || index_access.type != TINYGLTF_TYPE_SCALAR || index_access.sparse.isSparse) {
+        if ((index_access.componentType != GL_UNSIGNED_SHORT && index_access.componentType != GL_UNSIGNED_INT) || index_access.type != TINYGLTF_TYPE_SCALAR || index_access.sparse.isSparse || index_access.bufferView < 0) {
             std::cerr << "Primitive index has invalid access" << std::endl;
             continue;
         }
@@ -188,6 +188,10 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> 
         total_vertex_count += vertex_count;
     }
 
+    if (total_vertex_count == 0) {
+        // TODO: handle error
+    }
+
     result.positions = new GL::Buffer();
     result.positions->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
     result.normals = new GL::Buffer();
@@ -231,51 +235,54 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> 
     return result;
 }
 
+GL::Texture *loadTexture(const gltf::Model &model, const gltf::TextureInfo &textureInfo, GLenum internalFormat) {
+    if (textureInfo.index < 0) {
+        return nullptr;
+    }
+    if (textureInfo.texCoord != 0) {
+        return nullptr;
+        // throw std::exception("only texCoord=0 is supported");
+    }
+    gltf::Texture texture = model.textures[textureInfo.index];
+    gltf::Image image = model.images[texture.source];
+    if (image.bits != 8) {
+        return nullptr;
+        // throw std::exception("only 8-bit images are supported");
+    }
+
+    GLenum format;
+    if (image.component == 1) {
+        format = GL_RED;
+    } else if (image.component == 2) {
+        format = GL_RG;
+    } else if (image.component == 3) {
+        format = GL_RGB;
+    } else if (image.component == 4) {
+        format = GL_RGBA;
+    }
+
+    GL::Texture *result = new GL::Texture(GL_TEXTURE_2D);
+    result->allocate(0, internalFormat, image.width, image.height, 1);
+    result->load(0, image.width, image.height, 1, format, GL_UNSIGNED_BYTE, image.image.data());
+    result->generateMipmap();
+    return result;
+}
+
 Material loadMaterial(const gltf::Model &model, gltf::Material &material) {
     Material result = {};
     result.name = material.name;
     result.albedoFactor = glm::make_vec4(&material.pbrMetallicRoughness.baseColorFactor[0]);
-    result.metallicFactor = material.pbrMetallicRoughness.metallicFactor;
-    result.roughnessFactor = material.pbrMetallicRoughness.roughnessFactor;
+    result.metallicRoughnessFactor = {
+        material.pbrMetallicRoughness.metallicFactor,
+        material.pbrMetallicRoughness.roughnessFactor,
+    };
 
-    // Check if material has an albedo texture
-    if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
-        // TODO:  extract function
-        if (material.pbrMetallicRoughness.baseColorTexture.texCoord != 0) {
-            throw std::exception("only texCoord=0 is supported");
-        }
-        gltf::Texture texture = model.textures[material.pbrMetallicRoughness.baseColorTexture.index];
-        gltf::Image image = model.images[texture.source];
-        if (image.bits != 8) {
-            throw std::exception("only 8-bit images are supported");
-        }
-
-        GLenum format;
-        if (image.component == 1) {
-            format = GL_RED;
-        } else if (image.component == 2) {
-            format = GL_RG;
-        } else if (image.component == 3) {
-            format = GL_RGB;
-        } else if (image.component == 4) {
-            format = GL_RGBA;
-        }
-
-        result.albedo = new GL::Texture(GL_TEXTURE_2D);
-        result.albedo->allocate(0, GL_SRGB8_ALPHA8, image.width, image.height, 1);
-        result.albedo->load(0, image.width, image.height, 1, format, GL_UNSIGNED_BYTE, image.image.data());
-        result.albedo->generateMipmap();
-    }
-
-    // Check if material has a metallic, roughness texture
-    if (material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0) {
-        // TODO:
-    }
-
-    // Check if material has a normal texture
-    if (material.normalTexture.index >= 0) {
-        // TODO:
-    }
+    result.albedo = loadTexture(model, material.pbrMetallicRoughness.baseColorTexture, GL_SRGB8_ALPHA8);
+    result.occlusionMetallicRoughness = loadTexture(model, material.pbrMetallicRoughness.metallicRoughnessTexture, GL_RGB8);
+    gltf::TextureInfo normal_info = {};
+    normal_info.index = material.normalTexture.index;
+    normal_info.texCoord = material.normalTexture.texCoord;
+    result.normal = loadTexture(model, normal_info, GL_RGB8);
 
     return result;
 }

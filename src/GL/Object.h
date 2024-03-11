@@ -57,6 +57,7 @@ class GLObject {
         }
         std::cerr << "GL " << typeString << " Object id=" << std::to_string(id) << labelString << " not destroyed!" << std::endl;
     }
+    ~GLObject() {}
 
    public:
     virtual void destroy() = 0;
@@ -67,8 +68,6 @@ class GLObject {
     GLObject(GLObject const&) = delete;
     GLObject& operator=(GLObject const&) = delete;
     GLObject() {}
-
-    virtual ~GLObject() {}
 };
 
 }  // namespace GL

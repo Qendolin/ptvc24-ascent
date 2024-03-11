@@ -13,11 +13,10 @@
 typedef struct Material {
     std::string name = "";
     GL::Texture *albedo = nullptr;
-    GL::Texture *metallicRoughness = nullptr;
+    GL::Texture *occlusionMetallicRoughness = nullptr;
     GL::Texture *normal = nullptr;
     glm::vec3 albedoFactor = {1, 1, 1};
-    float metallicFactor = 0;
-    float roughnessFactor = 1;
+    glm::vec2 metallicRoughnessFactor = {0, 1};
 } Material;
 
 typedef struct Section {

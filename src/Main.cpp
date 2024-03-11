@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include <format>
+#include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
@@ -43,18 +44,31 @@ void run() {
     quad->layout(0, 0, 2, GL_FLOAT, false, 0);
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
 
-    GL::ShaderPipeline *sky_shader = new GL::ShaderPipeline(
-        {new GL::ShaderProgram("assets/shaders/sky.vert"),
-         new GL::ShaderProgram("assets/shaders/sky.frag")});
+    std::vector<std::function<void()>> reload_callbacks;
 
-    GL::ShaderPipeline *dd_shader = new GL::ShaderPipeline(
-        {new GL::ShaderProgram("assets/shaders/direct.vert"),
-         new GL::ShaderProgram("assets/shaders/direct.frag")});
-    DirectBuffer *dd = new DirectBuffer(dd_shader);
+    GL::ShaderPipeline *sky_shader = nullptr;
+    GL::ShaderPipeline *test_shader = nullptr;
 
-    GL::ShaderPipeline *test_shader = new GL::ShaderPipeline(
-        {new GL::ShaderProgram("assets/shaders/test.vert"),
-         new GL::ShaderProgram("assets/shaders/test.frag")});
+    DirectBuffer *dd = nullptr;
+
+    // defer loading assets
+    reload_callbacks.push_back([&sky_shader, &dd, &test_shader]() {
+        if (sky_shader) sky_shader->destroy();
+        sky_shader = new GL::ShaderPipeline(
+            {new GL::ShaderProgram("assets/shaders/sky.vert"),
+             new GL::ShaderProgram("assets/shaders/sky.frag")});
+
+        if (dd) dd->destroy();
+        auto dd_shader = new GL::ShaderPipeline(
+            {new GL::ShaderProgram("assets/shaders/direct.vert"),
+             new GL::ShaderProgram("assets/shaders/direct.frag")});
+        dd = new DirectBuffer(dd_shader);
+
+        if (test_shader) test_shader->destroy();
+        test_shader = new GL::ShaderPipeline(
+            {new GL::ShaderProgram("assets/shaders/test.vert"),
+             new GL::ShaderProgram("assets/shaders/test.frag")});
+    });
 
     int32_t viewport_dimensions[4];
     glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
@@ -64,7 +78,12 @@ void run() {
     Camera *camera = new Camera(glm::radians(90.), viewport_size, 0.1, 100., glm::vec3{}, glm::vec3{});
     bool mouse_captured = false;
 
-    auto instances = loadModel("assets/models/sponza.glb");
+    auto instances = loadModel("assets/models/pbr_test.glb");
+
+    // load assets
+    for (const auto &callback : reload_callbacks) {
+        callback();
+    }
 
     // =========
     // Main loop
@@ -85,6 +104,13 @@ void run() {
         if (input->isKeyPress(GLFW_KEY_ESCAPE) && mouse_captured) {
             mouse_captured = false;
             glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        // Reload assets
+        if (input->isKeyPress(GLFW_KEY_F5)) {
+            LOG("Reloading assets");
+            for (const auto &callback : reload_callbacks) {
+                callback();
+            }
         }
 
         // Camera movement
@@ -112,13 +138,20 @@ void run() {
         GL::manager->depthFunc(GL::DepthFunc::Less);
         test_shader->bind();
         test_shader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
+        test_shader->fragmentStage()->setUniform("u_camera_pos", camera->position);
 
         for (auto &i : instances) {
             i.mesh.vao->bind();
             test_shader->vertexStage()->setUniform("u_model_mat", i.transform);
             for (auto &s : i.mesh.sections) {
+                test_shader->fragmentStage()->setUniform("u_albedo_fac", s.material.albedoFactor);
+                test_shader->fragmentStage()->setUniform("u_metallic_roughness_fac", s.material.metallicRoughnessFactor);
                 if (s.material.albedo != nullptr)
                     s.material.albedo->bind(0);
+                if (s.material.occlusionMetallicRoughness != nullptr)
+                    s.material.occlusionMetallicRoughness->bind(1);
+                if (s.material.normal != nullptr)
+                    s.material.normal->bind(2);
                 glDrawElementsBaseVertex(GL_TRIANGLES, s.length, GL_UNSIGNED_SHORT, 0, s.base);
             }
         }

@@ -9,13 +9,13 @@ namespace GL {
 
 class Texture : public GLObject {
    private:
-    GLuint glId = 0;
-    GLenum glType = 0;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    uint32_t depth = 0;
+    GLuint id_ = 0;
+    GLenum type_ = 0;
+    uint32_t width_ = 0;
+    uint32_t height_ = 0;
+    uint32_t depth_ = 0;
 
-    Texture(GLenum type, GLuint id) : glType(type), glId(id) {
+    Texture(GLenum type, GLuint id) : type_(type), id_(id) {
     }
 
    public:
@@ -56,7 +56,7 @@ class Texture : public GLObject {
 
 class Sampler : public GLObject {
    private:
-    GLuint glId = 0;
+    GLuint id_ = 0;
 
    public:
     Sampler();

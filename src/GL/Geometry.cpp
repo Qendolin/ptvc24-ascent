@@ -13,9 +13,12 @@ Buffer::Buffer() {
 }
 
 void Buffer::destroy() {
-    glDeleteBuffers(1, &id_);
-    manager->unbindBuffer(id_);
-    id_ = 0;
+    if (id_ != 0) {
+        glDeleteBuffers(1, &id_);
+        manager->unbindBuffer(id_);
+        id_ = 0;
+    }
+    delete this;
 }
 
 GLuint Buffer::id() const {
@@ -150,9 +153,12 @@ VertexArray::VertexArray() : bindingRanges_(32, std::pair(0, 0)) {
 }
 
 void VertexArray::destroy() {
-    glDeleteVertexArrays(1, &id_);
-    manager->unbindVertexArray(id_);
-    id_ = 0;
+    if (id_ != 0) {
+        glDeleteVertexArrays(1, &id_);
+        manager->unbindVertexArray(id_);
+        id_ = 0;
+    }
+    delete this;
 }
 
 GLuint VertexArray::id() const {

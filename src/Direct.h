@@ -31,8 +31,12 @@ class DirectBuffer {
     bool autoShade_ = false;
     glm::vec3 normal_ = {0, 0, 0};
 
+    ~DirectBuffer() {};
+
    public:
     DirectBuffer(GL::ShaderPipeline* shader);
+
+    void destroy();
 
     /**
      * Adds a new entry to the transformation stack.

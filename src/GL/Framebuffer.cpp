@@ -12,9 +12,12 @@ Renderbuffer::Renderbuffer() {
 }
 
 void Renderbuffer::destroy() {
-    glDeleteRenderbuffers(1, &id_);
-    manager->unbindRenderbuffer(id_);
-    id_ = 0;
+    if (id_ != 0) {
+        glDeleteRenderbuffers(1, &id_);
+        manager->unbindRenderbuffer(id_);
+        id_ = 0;
+    }
+    delete this;
 }
 
 GLuint Renderbuffer::id() const {
@@ -53,9 +56,12 @@ Framebuffer::Framebuffer() : textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuff
 }
 
 void Framebuffer::destroy() {
-    glDeleteFramebuffers(1, &id_);
-    manager->unbindFramebuffer(id_);
-    id_ = 0;
+    if (id_ != 0) {
+        glDeleteFramebuffers(1, &id_);
+        manager->unbindFramebuffer(id_);
+        id_ = 0;
+    }
+    delete this;
 }
 
 GLuint Framebuffer::id() const {

@@ -54,7 +54,7 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* geomStage_ = nullptr;
     ShaderProgram* fragStage_ = nullptr;
     ShaderProgram* compStage_ = nullptr;
-    std::initializer_list<ShaderProgram*> ownedPrograms_;
+    std::vector<ShaderProgram*> ownedPrograms_;
 
    public:
     ShaderPipeline();
