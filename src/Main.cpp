@@ -21,6 +21,7 @@
 #include "GL/Texture.h"
 #include "Input.h"
 #include "Loader.h"
+#include "Physics.h"
 #include "Setup.h"
 #include "Utils.h"
 
@@ -86,12 +87,49 @@ void run() {
     }
 
     // =========
+    // Physics
+    // =========
+
+    JPH::PhysicsSystem *physics_system;
+    JPH::TempAllocator *temp_allocator;
+    JPH::JobSystem *job_system;
+    createPhysicsSystem(physics_system, temp_allocator, job_system);
+    DebugRendererImpl *physics_debug_renderer = static_cast<DebugRendererImpl *>(JPH::DebugRenderer::sInstance);
+    JPH::BodyInterface &body_interface = physics_system->GetBodyInterface();
+
+    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0f, 5.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+    // make it bouncy
+    sphere_settings.mRestitution = 0.9;
+    body_interface.CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
+
+    JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(100.0f, 1.0f, 100.0f));
+    JPH::ShapeRefC floor_shape = floor_shape_settings.Create().Get();
+    JPH::BodyCreationSettings floor_settings(floor_shape, JPH::RVec3(0.0, -1.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+    body_interface.CreateAndAddBody(floor_settings, JPH::EActivation::DontActivate);
+
+    physics_system->OptimizeBroadPhase();
+
+    bool physics_update_enabled = false;
+    float physics_update_timer = 0;
+    const float physics_update_interval = 1.0f / 60.0f;
+
+    // =========
     // Main loop
     // =========
 
     LOG("Entering main loop");
     while (!glfwWindowShouldClose(win)) {
+        // FIXME: sometimes keypresses are not registering
         input->update();
+
+        if (physics_update_enabled) {
+            physics_update_timer += input->timeDelta();
+
+            if (physics_update_timer > physics_update_interval) {
+                physics_update_timer -= physics_update_interval;
+                physics_system->Update(physics_update_interval, 1, temp_allocator, job_system);
+            }
+        }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -111,6 +149,11 @@ void run() {
             for (const auto &callback : reload_callbacks) {
                 callback();
             }
+        }
+        // Un- / Pause physics
+        if (input->isKeyPress(GLFW_KEY_P)) {
+            LOG("Toggle phyics update");
+            physics_update_enabled = !physics_update_enabled;
         }
 
         // Camera movement
@@ -156,14 +199,14 @@ void run() {
             }
         }
 
-        // Draw a shaded "gorund plane" at y=-1
-        dd->shaded();
-        dd->color(1.0, 1.0, 1.0);
-        dd->plane({-10, -1, -10}, {10, -1, 10});
+        physics_debug_renderer->setViewProjectionMatrix(camera->viewProjectionMatrix());
+        physics_system->DrawBodies({}, JPH::DebugRenderer::sInstance);
 
         // Draw debug
         dd->draw(camera->viewProjectionMatrix(), camera->position);
 
+        GL::manager->setEnabled({GL::Capability::DepthTest});
+        GL::manager->depthFunc(GL::DepthFunc::LessOrEqual);
         // Draw sky
         quad->bind();
         sky_shader->bind();
@@ -175,12 +218,13 @@ void run() {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         // Finish the frame
-        glfwPollEvents();
         glfwSwapBuffers(win);
     }
 }
 
 int main(int argc, char **argv) {
+    LOG("Build from " << __DATE__ << " " << __TIME__);
+
     LOG("Parsing arguments");
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);

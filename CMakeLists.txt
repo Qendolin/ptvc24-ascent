@@ -7,6 +7,8 @@ endif()
 
 project(PTVC_Project_GL)
 
+include(FetchContent)
+
 if(MSVC)
     # https://docs.microsoft.com/en-us/previous-versions/958x11bc(v=vs.140)
     add_compile_options("$<$<CONFIG:Debug>:/MTd>$<$<CONFIG:Release>:/MT>")
@@ -30,10 +32,20 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
+# Include Jolt
+FetchContent_Declare(
+        JoltPhysics
+        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+        GIT_TAG "v4.0.2"
+		SOURCE_SUBDIR "Build"
+)
+FetchContent_MakeAvailable(JoltPhysics)
+
 set(LINK_LIBRARIES
     debug glfw3d optimized glfw3
     debug glew32sd optimized glew32s
     OpenGL::GL
+    Jolt
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

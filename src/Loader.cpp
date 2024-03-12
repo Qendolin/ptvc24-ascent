@@ -330,6 +330,9 @@ std::vector<Instance> loadModel(const std::string filename) {
         const Mesh mesh = loadMesh(model, model.meshes[i], materials);
         meshes.push_back(mesh);
     }
+    // TODO: For performance all mesh parts should be filtered out if they are unused and then
+    // concatenated into a single, large, immutable buffer, sorted by their material id.
+    // Optionally the draw commands could be staticially allocated, I think.
 
     std::vector<Instance> instances;
     for (size_t i = 0; i < scene.nodes.size(); ++i) {

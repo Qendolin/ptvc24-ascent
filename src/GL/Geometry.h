@@ -49,7 +49,7 @@ class Buffer : public GLObject {
     bool grow(size_t size);
 
     template <typename T>
-    void write(int offset, const T* data, size_t size) {
+    void write(size_t offset, const T* data, size_t size) {
         glNamedBufferSubData(id_, offset, size, data);
     }
 

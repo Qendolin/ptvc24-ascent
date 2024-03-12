@@ -37,6 +37,7 @@
 **/cmake-build-release/
 **/test/
 **/_project/
+**/_bin/
 
 # Prebuild files and assets
 assets/textures/
@@ -67,7 +68,6 @@ Tools/**/*.cache
 # Visual Studio
 
 **/.vs
-**/.vscode/settings.json
 
 # CLion
 **/.idea
