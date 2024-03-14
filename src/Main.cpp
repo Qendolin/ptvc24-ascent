@@ -119,7 +119,6 @@ void run() {
 
     LOG("Entering main loop");
     while (!glfwWindowShouldClose(win)) {
-        // FIXME: sometimes keypresses are not registering
         input->update();
 
         if (physics_update_enabled) {
