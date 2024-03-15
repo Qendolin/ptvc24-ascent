@@ -26,9 +26,9 @@ Input::Input() {
 void Input::update() {
     glfwPollEvents();
 
-    time_ = glfwGetTime();
-    timeDelta_ = time_ - prevTime_;
-    prevTime_ = time_;
+    float time = glfwGetTime();
+    timeDelta_ = time - timeRead_;
+    timeRead_ = time;
 
     mouseDelta_ = mousePosWrite_ - mousePosRead_;
     mousePosRead_ = mousePosWrite_;

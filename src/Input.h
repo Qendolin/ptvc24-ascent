@@ -8,6 +8,29 @@
 #include <memory>
 #include <vector>
 
+/**
+ * The input class handles user input.
+ * There quite a few considerations to be made:
+ * - An input should register, no matter how short it is
+ *   This is solved by using GLFW's input callbacks and using "latching" bits.
+ *   There is a latching bit for presses and releases. They are only reset during the update,
+ *   ensuring that a key tap during a lag frame still registers as a press and release.
+ *
+ * - An input should register, no matter how late or early it is
+ *   This is solved by using double buffering.
+ *
+ * - Querying the input state must be consistent / idempotent during a frame.
+ *   Meaning: it doesn't matter when the state is queried, during a frame it will always return the same result.
+ *   This is solved by using double buffering.
+ *
+ * - Multiple input actions (press / release) during a frame must all be registered.
+ *   This is partially solved by using "latching" bits as explained above.
+ *   This allows for one press and release action during a frame.
+ *   This is a fine compromise since more than one tap per frame is unlikely.
+ *
+ * Note:
+ *  - isKeyPressed() == true does not imply that isKeyReleased() == false, both can be true.
+ */
 class Input {
    private:
     enum class State : uint8_t {
@@ -26,8 +49,7 @@ class Input {
 
     static Input *instance_;
 
-    float prevTime_ = 0;
-    float time_ = 0;
+    float timeRead_ = 0;
     float timeDelta_ = 0;
     glm::vec2 mousePosRead_ = {};
     glm::vec2 mousePosWrite_ = {};
@@ -46,7 +68,7 @@ class Input {
     /**
      * @return the mouse position
      */
-    const glm::vec2 mousePos() { return mousePosWrite_; }
+    const glm::vec2 mousePos() { return mousePosRead_; }
     /**
      * @return the mouse position difference since the last frame
      */
@@ -59,6 +81,10 @@ class Input {
      * @return the time difference since the last frame
      */
     const float timeDelta() { return timeDelta_; }
+    /**
+     * @return the time since GLFW was initialized
+     */
+    const float time() { return timeRead_; }
 
     /**
      * @param button one of `GLFW_MOUSE_BUTTON_*`
