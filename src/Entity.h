@@ -5,7 +5,7 @@
 #include "Camera.h"
 #include "Physics/Physics.h"
 
-// Entity represents objects in the world that need to process game logic
+// Entity represents objects that need to process game logic
 class Entity {
    public:
     virtual ~Entity() {}
@@ -23,13 +23,21 @@ class Entity {
     virtual void postPhysicsUpdate() {}
 };
 
+// The character controller handles movement and mouse look.
+// It links the character physics body to the camera.
 class CharacterController : public Entity {
    private:
+    // Walking speed in m/s
     inline static const float SPEED = 2.5;
+    // Speed multiplier when shift is held down
     inline static const float SHIFT_SPEED_FACTOR = 5.0;
+    // How much the camera turns when moving the mouse. The unit is Degrees / Pixel.
+    inline static const float LOOK_SENSITIVITY = 0.333;
 
     JPH::Character* body_ = nullptr;
     glm::vec3 velocity_ = {};
+
+    // The start and end position of the camera interpolation
     glm::vec3 cameraLerpStart_ = {};
     glm::vec3 cameraLerpEnd_ = {};
 

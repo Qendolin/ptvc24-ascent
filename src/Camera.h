@@ -12,6 +12,7 @@ class Camera {
     glm::mat4 viewMatrix_;
     glm::mat4 projectionMatrix_;
 
+    // Recalculate the projection matrix
     void updateProjectionMatrix_();
 
    public:
@@ -28,6 +29,7 @@ class Camera {
      */
     Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 position, glm::vec3 angles);
 
+    // Recalculate the view matrix
     void updateViewMatrix();
 
     /**

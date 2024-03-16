@@ -93,17 +93,17 @@ class Physics {
     float updateTimer_ = 0;
     bool updateEnabled_ = true;
 
-    JPH::Factory *factory_;
-    JPH::TempAllocator *tempAllocator_;
-    JPH::JobSystem *jobSystem_;
+    JPH::Factory *factory_ = nullptr;
+    JPH::TempAllocator *tempAllocator_ = nullptr;
+    JPH::JobSystem *jobSystem_ = nullptr;
 
 #ifdef JPH_DEBUG_RENDERER
-    DebugRendererImpl *debugRenderer_;
+    DebugRendererImpl *debugRenderer_ = nullptr;
 #endif
 
    public:
-    JPH::PhysicsSystem *system;
-    SensorContactListener *contactListener;
+    JPH::PhysicsSystem *system = nullptr;
+    SensorContactListener *contactListener = nullptr;
 
     Physics(PhysicsSetupConfig config);
     ~Physics();

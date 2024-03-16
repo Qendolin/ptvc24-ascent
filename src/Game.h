@@ -5,14 +5,16 @@
 
 #include "Camera.h"
 #include "Direct.h"
+#include "Entity.h"
 #include "Input.h"
 #include "Loader.h"
-#include "Entity.h"
 #include "Physics/Physics.h"
 
 class Game {
    private:
+    // Called on every game loop iteration
     void loop_();
+    // Process user input
     void processInput_();
 
    public:
@@ -30,19 +32,25 @@ class Game {
     Input *input = nullptr;
     Camera *camera = nullptr;
 
+    // A quad with dimensions (-1,-1) to (1,1)
     GL::VertexArray *quad = nullptr;
     DirectBuffer *dd = nullptr;
 
     GL::ShaderPipeline *skyShader = nullptr;
     GL::ShaderPipeline *pbrShader = nullptr;
 
+    // All visual instances that need to be rendered.
+    // Loaded from the gltf file.
     std::vector<Scene::Instance> scene = {};
-	std::vector<Entity*> entities = {};
-    JPH::Character *characterBody = nullptr;
+    // All entities that need to process game logic
+    std::vector<Entity *> entities = {};
 
+    // Initializes the games subsystems like input handling and physics
     Game(GLFWwindow *window);
 
+    // Load assets and such
     void setup();
 
+    // Run the game until the window is closed
     void run();
 };

@@ -3,7 +3,9 @@
 #include "Utils.h"
 
 int main(int argc, char** argv) {
-    LOG("Build from " << __DATE__ << " " << __TIME__);
+    // Print out the date and time of when this binary was built.
+    // Note: Local time, not UTC.
+    LOG("Build from " << __TIMESTAMP__);
 
     LOG("Parsing arguments");
     bool enableCompatibilityProfile = false;
