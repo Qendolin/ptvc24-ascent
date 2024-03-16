@@ -16,44 +16,44 @@ uniform vec2 u_metallic_roughness_fac;
 
 const float PI = 3.14159265359;
 
-float distribution_ggx(vec3 N, vec3 H, float roughness)
+float distributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness*roughness;
-    float a2 = a*a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
+    float a_2 = a*a;
+    float n_dot_h = max(dot(N, H), 0.0);
+    float n_dot_h_2 = n_dot_h*n_dot_h;
 
-    float nom   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    float nom   = a_2;
+    float denom = (n_dot_h_2 * (a_2 - 1.0) + 1.0);
     // when roughness is zero and N = H denom would be 0
     denom = PI * denom * denom + 5e-6;
 
     return nom / denom;
 }
 
-float geometry_schlick_ggx(float NdotV, float roughness)
+float geometrySchlickGGX(float n_dot_v, float roughness)
 {
     float r = (roughness + 1.0);
     float k = (r*r) / 8.0;
 
-    float nom   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
+    float nom   = n_dot_v;
+    float denom = n_dot_v * (1.0 - k) + k;
 
     return nom / denom;
 }
 
-float geometry_smith(vec3 N, vec3 V, vec3 L, float roughness)
+float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     // + 5e-6 to prevent artifacts, value is from https://google.github.io/filament/Filament.html#materialsystem/specularbrdf:~:text=float%20NoV%20%3D%20abs(dot(n%2C%20v))%20%2B%201e%2D5%3B
-    float NdotV = max(dot(N, V), 0.0) + 5e-6;
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = geometry_schlick_ggx(NdotV, roughness);
-    float ggx1 = geometry_schlick_ggx(NdotL, roughness);
+    float n_dot_v = max(dot(N, V), 0.0) + 5e-6;
+    float n_dot_l = max(dot(N, L), 0.0);
+    float ggx2 = geometrySchlickGGX(n_dot_v, roughness);
+    float ggx1 = geometrySchlickGGX(n_dot_l, roughness);
 
     return ggx1 * ggx2;
 }
 
-vec3 fresnel_schlick(float cosTheta, vec3 F0)
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
@@ -94,12 +94,14 @@ void main()
         //     float attenuation = light.attenuation.x + light.attenuation.y * d + light.attenuation.z * d * d;
         //     radiance = (light.color.rgb * light.color.a) / attenuation;
         // }
+
+        // The half way vector
         vec3 H = normalize(V + L);
 
         // Cook-Torrance BRDF
-        float NDF = distribution_ggx(N, H, roughness);
-        float G   = geometry_smith(N, V, L, roughness);
-        vec3 F    = fresnel_schlick(max(dot(H, V), 0.0), F0);
+        float NDF = distributionGGX(N, H, roughness);
+        float G   = geometrySmith(N, V, L, roughness);
+        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
         vec3 numerator    = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 1e-5; // + 1e-5 to prevent divide by zero
@@ -116,15 +118,15 @@ void main()
         // have no diffuse light).
         kD *= 1.0 - metallic;
 
-        // scale light by NdotL
-        float NdotL = max(dot(N, L), 0.0);
+        // scale light by n_dot_l
+        float n_dot_l = max(dot(N, L), 0.0);
 
         // add to outgoing radiance Lo
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        Lo += (kD * albedo / PI + specular) * radiance * n_dot_l;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
 
     // ambient lighting
-    vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
+    vec3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;	  
     vec3 irradiance = vec3(1.0, 1.0, 1.0) * 0.03;
