@@ -127,7 +127,7 @@ void main()
     vec3 kS = fresnel_schlick(max(dot(N, V), 0.0), F0);
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;	  
-    vec3 irradiance = vec3(0.8, 1.0, 1.0) * 0.03;
+    vec3 irradiance = vec3(1.0, 1.0, 1.0) * 0.03;
     vec3 diffuse = irradiance * albedo;
     vec3 ambient = (kD * diffuse);
 
