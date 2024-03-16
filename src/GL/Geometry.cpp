@@ -64,7 +64,7 @@ void Buffer::allocateEmptyMutable(size_t size, GLenum usage) {
     this->size_ = size;
 }
 
-void Buffer::allocate(const void* data, size_t size, GLbitfield flags) {
+void Buffer::allocate_(const void* data, size_t size, GLbitfield flags) {
     if (immutable_) {
         PANIC("VBO is immutable");
     }
@@ -78,7 +78,7 @@ void Buffer::allocate(const void* data, size_t size, GLbitfield flags) {
     immutable_ = true;
 }
 
-void Buffer::allocateMutable(const void* data, size_t size, GLbitfield usage) {
+void Buffer::allocateMutable_(const void* data, size_t size, GLbitfield usage) {
     if (immutable_) {
         PANIC("VBO is immutable");
     }
@@ -158,6 +158,11 @@ void VertexArray::destroy() {
         manager->unbindVertexArray(id_);
         id_ = 0;
     }
+
+    for (auto&& b : ownedBuffers_) {
+        b->destroy();
+    }
+    ownedBuffers_ = {};
     delete this;
 }
 
@@ -201,6 +206,16 @@ void VertexArray::bindElementBuffer(const Buffer& ebo) {
 
 void VertexArray::attribDivisor(int bufferIndex, int divisor) {
     glVertexArrayBindingDivisor(id_, bufferIndex, divisor);
+}
+
+void VertexArray::own(const std::initializer_list<Buffer*> buffers) {
+    for (auto& buffer : buffers) {
+        own(buffer);
+    }
+}
+
+void VertexArray::own(Buffer* buffer) {
+    ownedBuffers_.push_back(buffer);
 }
 
 }  // namespace GL

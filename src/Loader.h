@@ -10,6 +10,9 @@
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/main/gltfTutorial/README.md
 // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
+namespace Scene
+{
+
 typedef struct Material {
     std::string name = "";
     GL::Texture *albedo = nullptr;
@@ -41,4 +44,6 @@ typedef struct Instance {
     const Mesh mesh;
 } Instance;
 
-std::vector<Instance> loadModel(const std::string filename);
+std::vector<Instance> load(const std::string filename);
+
+} // namespace Assets

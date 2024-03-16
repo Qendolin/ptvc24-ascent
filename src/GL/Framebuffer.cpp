@@ -42,7 +42,7 @@ void Renderbuffer::allocateMS(GLenum internalFormat, uint32_t width, uint32_t he
 
 const int MAX_ATTACHMENTS = 8;
 
-int Framebuffer::mapAttachmentIndex(int index) const {
+int Framebuffer::mapAttachmentIndex_(int index) const {
     if (index == GL_DEPTH_ATTACHMENT || index == GL_DEPTH_STENCIL_ATTACHMENT) {
         return 0;
     } else if (index == GL_STENCIL_ATTACHMENT) {
@@ -118,7 +118,7 @@ void Framebuffer::attachTexture(int index, const Texture* texture) {
 }
 
 void Framebuffer::attachTextureLevel(int index, const Texture* texture, int level) {
-    textures_[mapAttachmentIndex(index)] = texture;
+    textures_[mapAttachmentIndex_(index)] = texture;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
@@ -130,7 +130,7 @@ void Framebuffer::attachTextureLayer(int index, const Texture* texture, int laye
 }
 
 void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int layer, int level) {
-    textures_[mapAttachmentIndex(index)] = texture;
+    textures_[mapAttachmentIndex_(index)] = texture;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
@@ -146,7 +146,7 @@ void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int
 }
 
 void Framebuffer::attachRenderbuffer(int index, const Renderbuffer* renderbuffer) {
-    renderbuffers_[mapAttachmentIndex(index)] = renderbuffer;
+    renderbuffers_[mapAttachmentIndex_(index)] = renderbuffer;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
     }
@@ -154,11 +154,11 @@ void Framebuffer::attachRenderbuffer(int index, const Renderbuffer* renderbuffer
 }
 
 const Texture* Framebuffer::getTexture(int index) const {
-    return textures_[mapAttachmentIndex(index)];
+    return textures_[mapAttachmentIndex_(index)];
 }
 
 const Renderbuffer* Framebuffer::getRenderbuffer(int index) const {
-    return renderbuffers_[mapAttachmentIndex(index)];
+    return renderbuffers_[mapAttachmentIndex_(index)];
 }
 
 }  // namespace GL

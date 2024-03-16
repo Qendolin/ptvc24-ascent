@@ -12,12 +12,12 @@ class Renderbuffer : public GLObject {
    private:
     GLuint id_ = 0;
 
-   public:
-    Renderbuffer();
-
     ~Renderbuffer() {
         checkDestroyed(GL_RENDERBUFFER);
     }
+
+   public:
+    Renderbuffer();
 
     void destroy();
 
@@ -38,14 +38,14 @@ class Framebuffer : public GLObject {
     std::vector<const Texture*> textures_;
     std::vector<const Renderbuffer*> renderbuffers_;
 
-    int mapAttachmentIndex(int index) const;
-
-   public:
-    Framebuffer();
+    int mapAttachmentIndex_(int index) const;
 
     ~Framebuffer() {
         checkDestroyed(GL_FRAMEBUFFER);
     }
+
+   public:
+    Framebuffer();
 
     void destroy();
 

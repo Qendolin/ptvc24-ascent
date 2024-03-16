@@ -16,13 +16,13 @@ class ShaderProgram : public GLObject {
     std::string sourceModified_ = "";
     GLenum stage_ = 0;
 
-   public:
-    ShaderProgram(std::string source, GLenum stage, std::map<std::string, std::string> substitutions = {});
-    ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions = {});
-
     ~ShaderProgram() {
         checkDestroyed(GL_PROGRAM);
     }
+
+   public:
+    ShaderProgram(std::string source, GLenum stage, std::map<std::string, std::string> substitutions = {});
+    ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions = {});
 
     void destroy();
 
@@ -56,17 +56,17 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* compStage_ = nullptr;
     std::vector<ShaderProgram*> ownedPrograms_;
 
-   public:
-    ShaderPipeline();
-    ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs);
-
     ~ShaderPipeline() {
         checkDestroyed(GL_PROGRAM_PIPELINE);
         for (auto&& p : ownedPrograms_) {
-            delete p;
+            p->destroy();
         }
         ownedPrograms_ = {};
     }
+
+   public:
+    ShaderPipeline();
+    ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs);
 
     void destroy();
 
@@ -85,6 +85,10 @@ class ShaderPipeline : public GLObject {
     void attach(const std::initializer_list<ShaderProgram*> programs);
 
     void attach(ShaderProgram* program);
+
+    void own(const std::initializer_list<ShaderProgram*> programs);
+
+    void own(ShaderProgram* program);
 
     void reAttach(int stages);
 

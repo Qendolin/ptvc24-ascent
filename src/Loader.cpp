@@ -17,6 +17,8 @@
 
 namespace gltf = tinygltf;
 
+namespace Scene {
+
 glm::mat4 loadNodeTransform(gltf::Node &node) {
     glm::mat4 transform = glm::mat4(1.0);
     // A Node can have either a full transformation matrix or individual scale, rotation and translatin components
@@ -287,7 +289,7 @@ Material loadMaterial(const gltf::Model &model, gltf::Material &material) {
     return result;
 }
 
-std::vector<Instance> loadModel(const std::string filename) {
+std::vector<Instance> load(const std::string filename) {
     gltf::TinyGLTF loader;
     std::string err;
     std::string warn;
@@ -340,3 +342,5 @@ std::vector<Instance> loadModel(const std::string filename) {
     }
     return instances;
 }
+
+}  // namespace Scene

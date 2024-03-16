@@ -1,6 +1,4 @@
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "Setup.h"
 
 #include <exception>
 #include <memory>
@@ -8,8 +6,6 @@
 
 #include "GL/StateManager.h"
 #include "Utils.h"
-
-static std::string formatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, const char *msg);
 
 static void APIENTRY debugCallback(
     GLenum source,
@@ -20,16 +16,22 @@ static void APIENTRY debugCallback(
     const GLchar *message,
     const GLvoid *userParam) {
     if (id == 131185 || id == 131218) {
-        // glDebugMessageControl is ignored in nsight, so double check to prevent log spam
+        // glDebugMessageControl is ignored in nvidia nsight, so double check to prevent log spam
         return;
     }
 
     auto group_stack = *reinterpret_cast<const std::vector<std::string> *>(userParam);
 
     if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
+        if (group_stack.size() > 16) {
+            throw std::runtime_error("Debug group stack exceeded size limit: 16\nTrace: " + std::to_string(std::stacktrace::current()));
+        }
         group_stack.push_back(message);
         return;
     } else if (type == GL_DEBUG_TYPE_POP_GROUP) {
+        if (group_stack.empty()) {
+            throw std::runtime_error("Debug group stack popped when it was empty\nTrace: " + std::to_string(std::stacktrace::current()));
+        }
         group_stack.pop_back();
         return;
     }
@@ -118,7 +120,7 @@ static void APIENTRY debugCallback(
     std::cout << err << std::endl;
 }
 
-void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
+GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
     LOG("Initializing GLFW");
     if (glfwInit() != GLFW_TRUE) {
         throw std::runtime_error("GLFW init failed");
@@ -131,6 +133,7 @@ void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     if (enableCompatibilityProfile) {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
@@ -148,6 +151,13 @@ void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
     glfwMakeContextCurrent(win);
     glfwSwapInterval(0);
 
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(win, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
+    return win;
+}
+
+void initializeOpenGL(bool enableDebug) {
     LOG("Initializing OpenGL");
 
     glewExperimental = true;
@@ -164,10 +174,14 @@ void setupOpenGL(bool enableCompatibilityProfile, bool disableGlDebug) {
 
     GL::manager = std::make_unique<GL::StateManager>(GL::createEnvironment());
 
-    // enable these without using the manager
+    // set these without using the manager
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-    if (glDebugMessageCallback != NULL && !disableGlDebug) {
+    // Oh OpenGL, why do you have to be stupid?
+    // Anayway, we are using a reversed, infinite projection matrix.
+    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
+    if (enableDebug && glDebugMessageCallback != NULL) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 

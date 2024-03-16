@@ -18,13 +18,12 @@ class Texture : public GLObject {
     Texture(GLenum type, GLuint id) : type_(type), id_(id) {
     }
 
-   public:
-    Texture(GLenum type);
-
     ~Texture() {
         checkDestroyed(GL_TEXTURE);
     }
 
+   public:
+    Texture(GLenum type);
     Texture* as(GLuint glType);
 
     void setDebugLabel(const std::string& label);
@@ -58,12 +57,12 @@ class Sampler : public GLObject {
    private:
     GLuint id_ = 0;
 
-   public:
-    Sampler();
-
     ~Sampler() {
         checkDestroyed(GL_SAMPLER);
     }
+
+   public:
+    Sampler();
 
     void destroy();
 

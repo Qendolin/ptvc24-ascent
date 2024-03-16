@@ -1,4 +1,6 @@
 #pragma once
+
+// #include <initializer_list>
 #include <vector>
 
 #include "Object.h"
@@ -12,15 +14,15 @@ class Buffer : public GLObject {
     uint32_t flags_ = 0;
     bool immutable_ = false;
 
-    void allocate(const void* data, size_t size, GLbitfield flags);
-    void allocateMutable(const void* data, size_t size, GLenum usage);
-
-   public:
-    Buffer();
+    void allocate_(const void* data, size_t size, GLbitfield flags);
+    void allocateMutable_(const void* data, size_t size, GLenum usage);
 
     ~Buffer() {
         checkDestroyed(GL_BUFFER);
     }
+
+   public:
+    Buffer();
 
     void destroy();
 
@@ -38,12 +40,12 @@ class Buffer : public GLObject {
 
     template <typename T>
     void allocate(const T* data, size_t size, GLbitfield flags) {
-        allocate(static_cast<const void*>(data), size, flags);
+        allocate_(static_cast<const void*>(data), size, flags);
     }
 
     template <typename T>
     void allocateMutable(const T* data, size_t size, GLenum usage) {
-        allocateMutable(static_cast<const void*>(data), size, flags_);
+        allocateMutable_(static_cast<const void*>(data), size, flags_);
     }
 
     bool grow(size_t size);
@@ -64,13 +66,14 @@ class VertexArray : public GLObject {
    private:
     GLuint id_ = 0;
     std::vector<std::pair<int, int>> bindingRanges_;
-
-   public:
-    VertexArray();
+    std::vector<Buffer*> ownedBuffers_;
 
     ~VertexArray() {
         checkDestroyed(GL_VERTEX_ARRAY);
     }
+
+   public:
+    VertexArray();
 
     void destroy();
 
@@ -91,6 +94,10 @@ class VertexArray : public GLObject {
     void bindElementBuffer(const Buffer& ebo);
 
     void attribDivisor(int bufferIndex, int divisor);
+
+    void own(const std::initializer_list<Buffer*> buffers);
+
+    void own(Buffer* buffer);
 };
 
 }  // namespace GL

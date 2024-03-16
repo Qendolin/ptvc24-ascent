@@ -34,11 +34,10 @@ find_package(OpenGL REQUIRED)
 
 # Include Jolt
 FetchContent_Declare(
-        JoltPhysics
-        GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
-        GIT_TAG "v4.0.2"
-		SOURCE_SUBDIR "Build"
-)
+    JoltPhysics
+    GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
+    GIT_TAG "v4.0.2"
+    SOURCE_SUBDIR "Build")
 FetchContent_MakeAvailable(JoltPhysics)
 
 set(LINK_LIBRARIES

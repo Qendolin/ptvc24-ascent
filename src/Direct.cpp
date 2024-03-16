@@ -281,7 +281,7 @@ void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     shader_->vertexStage()->setUniform("u_view_projection_mat", view_proj_mat);
     shader_->fragmentStage()->setUniform("u_camera_position", camera_pos);
     GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::PolygonOffsetFill});
-    GL::manager->depthFunc(GL::DepthFunc::Less);
+    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
     GL::manager->depthMask(true);
     GL::manager->polygonOffset(-1, -1);
     glDrawArrays(GL_TRIANGLES, 0, data_.size() / 9);

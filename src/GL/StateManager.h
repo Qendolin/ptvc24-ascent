@@ -246,4 +246,12 @@ class StateManager {
 
 inline std::unique_ptr<StateManager> manager;
 
+inline void pushDebugGroup(const std::string& name) {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name.c_str());
+}
+
+inline void popDebugGroup() {
+    glPopDebugGroup();
+}
+
 }  // namespace GL

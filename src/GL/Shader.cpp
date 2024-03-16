@@ -248,6 +248,16 @@ void ShaderPipeline::attach(ShaderProgram* program) {
     getRef(program->stage()) = program;
 }
 
+void ShaderPipeline::own(const std::initializer_list<ShaderProgram*> programs) {
+    for (auto& program : programs) {
+        own(program);
+    }
+}
+
+void ShaderPipeline::own(ShaderProgram* program) {
+    ownedPrograms_.push_back(program);
+}
+
 void ShaderPipeline::reAttach(int stage) {
     ShaderProgram*& program = getRef(stage);
     if (program == nullptr) {
