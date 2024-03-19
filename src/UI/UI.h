@@ -18,6 +18,10 @@
 #include "../GL/Texture.h"
 #include "../Input.h"
 
+// References:
+// https://github.dev/Immediate-Mode-UI/Nuklear/blob/master/demo/glfw_opengl4/nuklear_glfw_gl4.h
+// https://immediate-mode-ui.github.io/Nuklear/doc/index.html
+
 namespace NK {
 
 typedef struct Vertex {

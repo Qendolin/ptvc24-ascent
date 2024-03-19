@@ -27,6 +27,11 @@
 #include "Debug.h"
 #include "Layers.h"
 
+// References:
+// https://github.com/jrouwe/JoltPhysicsHelloWorld/blob/main/Source/HelloWorld.cpp
+// https://github.com/jrouwe/JoltPhysics/tree/master/Samples
+// https://jrouwe.github.io/JoltPhysics/index.html
+
 namespace PH {
 
 inline JPH::Vec3 convert(glm::vec3 v) {
