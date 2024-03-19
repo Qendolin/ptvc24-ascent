@@ -78,7 +78,7 @@ void StateManager::setEnabled(const std::vector<Capability>& caps) {
 }
 
 void StateManager::disable(Capability cap) {
-    if (!caps.at(cap)) {
+    if (caps.count(cap) && !caps.at(cap)) {
         return;
     }
 
