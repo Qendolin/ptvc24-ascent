@@ -9,6 +9,7 @@
 #include "Input.h"
 #include "Loader.h"
 #include "Physics/Physics.h"
+#include "UI/UI.h"
 
 class Game {
    private:
@@ -22,13 +23,14 @@ class Game {
 
     GLFWwindow *window = nullptr;
     PH::Physics *physics = nullptr;
+    NK::Backend *ui = nullptr;
+    NK::FontAtlas *fonts = nullptr;
 
     // Callbacks for laoding / unloading assets
     // Doing it this way makes reloading easy
     std::vector<std::function<void()>> onLoad = {};
     std::vector<std::function<void()>> onUnload = {};
 
-    bool mouseCaptured = false;
     Input *input = nullptr;
     Camera *camera = nullptr;
 

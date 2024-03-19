@@ -75,7 +75,7 @@ Texture* Texture::createView(GLenum type, GLenum internalFormat, int minLevel, i
     return new Texture(type_, viewId);
 }
 
-void Texture::allocate(GLint levels, GLuint internalFormat, uint32_t width, uint32_t height, uint32_t depth) {
+void Texture::allocate(GLint levels, GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth) {
     if (levels == 0) {
         uint32_t max = std::max(std::max(width, height), depth);
         levels = static_cast<int>(std::log2(max));
@@ -121,7 +121,7 @@ void Texture::allocateMS(GLenum internalFormat, uint32_t width, uint32_t height,
     }
 }
 
-void Texture::load(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, GLenum type, void* data) {
+void Texture::load(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, GLenum type, const void* data) {
     switch (dimensions()) {
         case 1:
             glTextureSubImage1D(id_, level, 0, width, format, type, data);

@@ -33,7 +33,7 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
         PANIC("Invalid file extension ." + ext);
     }
 
-    sourceOriginal_ = loadFile(filename);
+    sourceOriginal_ = loadTextFile(filename);
     sourceModified_ = sourceOriginal_;
     compile(substitutions);
 }

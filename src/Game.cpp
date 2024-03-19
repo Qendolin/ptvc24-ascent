@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <chrono>
+
 #include "GL/StateManager.h"
 #include "Utils.h"
 
@@ -24,6 +26,9 @@ Game::Game(GLFWwindow *window) {
     glm::vec2 viewport_size = glm::vec2(viewport_dimensions[2], viewport_dimensions[3]);
 
     input = Input::init(window);
+    glfwSetWindowFocusCallback(window, [](GLFWwindow *window, int focused) {
+        Input::instance()->invalidate();
+    });
 
     // Create camera with a 90° vertical FOV
     camera = new Camera(glm::radians(90.), viewport_size, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
@@ -74,6 +79,11 @@ void Game::setup() {
             {new GL::ShaderProgram("assets/shaders/direct.vert"),
              new GL::ShaderProgram("assets/shaders/direct.frag")});
         dd = new DirectBuffer(dd_shader);
+
+        fonts = new NK::FontAtlas({{"assets/fonts/DroidSans.ttf",
+                                    {{"droid_30", 30}}}},
+                                  "droid_30");
+        ui = new NK::Backend(fonts->defaultFont());
     });
 
     onUnload.push_back([this]() {
@@ -88,6 +98,14 @@ void Game::setup() {
         if (dd) {
             dd->destroy();
             dd = nullptr;
+        }
+        if (ui) {
+            delete ui;
+            ui = nullptr;
+        }
+        if (fonts) {
+            delete fonts;
+            fonts = nullptr;
         }
     });
 
@@ -118,17 +136,15 @@ void Game::run() {
 
 void Game::processInput_() {
     // Capture mouse
-    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && !mouseCaptured) {
-        mouseCaptured = true;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased()) {
+        input->captureMouse();
     }
     // Release mouse
-    if (input->isKeyPress(GLFW_KEY_ESCAPE) && mouseCaptured) {
-        mouseCaptured = false;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    if (input->isKeyPress(GLFW_KEY_ESCAPE) && input->isMouseCaptured()) {
+        input->releaseMouse();
     }
 
-    if (!mouseCaptured) return;
+    if (!input->isMouseCaptured()) return;
 
     // Reload assets
     if (input->isKeyPress(GLFW_KEY_F5)) {
@@ -150,6 +166,27 @@ void Game::processInput_() {
 void Game::loop_() {
     input->update();
     processInput_();
+    ui->update(input);
+
+    nk_context *nk = ui->context();
+    struct nk_style *s = &nk->style;
+    // make window transparent
+    nk_style_push_color(nk, &s->text.color, nk_rgba(255, 80, 80, 255));
+    nk_style_push_color(nk, &s->window.background, nk_rgba(0, 0, 0, 0));
+    nk_style_push_style_item(nk, &s->window.fixed_background, nk_style_item_color(nk_rgba(0, 0, 0, 0)));
+    if (nk_begin(nk, "gui", nk_rect(0, 0, 1600, 900), 0)) {
+        nk_layout_row_dynamic(nk, 30, 1);
+        std::chrono::duration<float> total_seconds(input->time());
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
+        auto seconds = total_seconds - minutes;
+
+        std::string time = std::format("Time: {:02}:{:02}", round(minutes.count()), round(seconds.count()));
+        nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
+    }
+    nk_end(nk);
+    nk_style_pop_color(nk);
+    nk_style_pop_color(nk);
+    nk_style_pop_style_item(nk);
 
     // Update and step physics
     physics->update(input->timeDelta());
@@ -171,6 +208,8 @@ void Game::loop_() {
     }
 
     // Render scene
+    GL::manager->disable(GL::Capability::ScissorTest);
+    GL::manager->disable(GL::Capability::StencilTest);
 
     glClearDepth(0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -217,6 +256,18 @@ void Game::loop_() {
 
     // The sky is rendered using a single, full-screen quad
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    // Draw UI
+    int32_t viewport_dimensions[4];
+    glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
+    glm::ivec2 viewport_size = glm::ivec2(viewport_dimensions[2], viewport_dimensions[3]);
+    glm::mat4 projection_matrix = glm::mat4(
+        2.0f / viewport_size.x, 0.0f, 0.0f, 0.0f,
+        0.0f, -2.0f / viewport_size.y, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f, 1.0f);
+
+    ui->render(projection_matrix, viewport_size);
 
     // Finish the frame
     glfwSwapBuffers(window);

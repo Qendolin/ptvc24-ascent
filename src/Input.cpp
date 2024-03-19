@@ -16,15 +16,48 @@ constexpr inline Input::State &operator&=(Input::State &lhs, Input::State rhs) {
     return lhs = lhs & rhs;
 }
 
-Input::Input() {
+Input::Input(GLFWwindow *window) : window_(window) {
     std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::ZERO);
     std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::ZERO);
     std::fill(std::begin(keysWrite_), std::end(keysWrite_), State::ZERO);
     std::fill(std::begin(keysRead_), std::end(keysRead_), State::ZERO);
+
+    for (int key = GLFW_KEY_SPACE; key <= keysWrite_.size(); key++) {
+        const char *name = glfwGetKeyName(key, 0);
+        if (name != nullptr) {
+            keyMap_[name] = key;
+        }
+    }
+}
+
+void Input::pollState_() {
+    stateInvalid_ = false;
+
+    for (int key = GLFW_KEY_SPACE; key < keysWrite_.size(); key++) {
+        int state = glfwGetKey(window_, key);
+        keysWrite_[key] = state == GLFW_PRESS ? State::PERSISTENT_PRESSED_MASK : State::ZERO;
+    }
+
+    for (int button = GLFW_MOUSE_BUTTON_1; button < mouseButtonsWrite_.size(); button++) {
+        int state = glfwGetMouseButton(window_, button);
+        mouseButtonsWrite_[button] = state == GLFW_PRESS ? State::PERSISTENT_PRESSED_MASK : State::ZERO;
+    }
+
+    double mouse_x = 0, mouse_y = 0;
+    glfwGetCursorPos(window_, &mouse_x, &mouse_y);
+    mousePosWrite_ = {mouse_x, mouse_y};
+    // No mouse delta
+    mousePosRead_ = mousePosWrite_;
+
+    mouseCaptured_ = glfwGetInputMode(window_, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
 }
 
 void Input::update() {
     glfwPollEvents();
+
+    if (stateInvalid_) {
+        pollState_();
+    }
 
     float time = glfwGetTime();
     timeDelta_ = time - timeRead_;
@@ -94,7 +127,7 @@ Input *Input::instance() {
 }
 
 Input *Input::init(GLFWwindow *window) {
-    Input::instance_ = new Input();
+    Input::instance_ = new Input(window);
     glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) { Input::instance_->onKey(window, key, scancode, action, mods); });
     glfwSetCursorPosCallback(window, [](GLFWwindow *window, double x, double y) { Input::instance_->onCursorPos(window, x, y); });
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) { Input::instance_->onMouseButton(window, button, action, mods); });

@@ -34,11 +34,10 @@ void CharacterController::init() {
 }
 
 void CharacterController::update() {
-    if (camera == nullptr) {
+    Input* input = Game::instance->input;
+    if (camera == nullptr || input->isMouseReleased()) {
         return;
     }
-
-    Input* input = Game::instance->input;
 
     // Camera movement
     // yaw

@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <iterator>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -49,8 +51,10 @@ class Input {
 
     static Input *instance_;
 
+    GLFWwindow *window_ = nullptr;
     float timeRead_ = 0;
     float timeDelta_ = 0;
+    bool mouseCaptured_ = false;
     glm::vec2 mousePosRead_ = {};
     glm::vec2 mousePosWrite_ = {};
     glm::vec2 mouseDelta_ = {};
@@ -60,9 +64,18 @@ class Input {
     std::array<State, GLFW_MOUSE_BUTTON_LAST + 1> mouseButtonsWrite_;
     std::array<State, GLFW_KEY_LAST + 1> keysRead_;
     std::array<State, GLFW_KEY_LAST + 1> keysWrite_;
+    std::unordered_map<std::string, int> keyMap_ = {};
+
+    bool stateInvalid_ = true;
+
+    /**
+     * Polls every key and mouse button to ensure that the internal state is up to date.
+     * Is called after invalidate.
+     */
+    void pollState_();
 
    public:
-    Input();
+    Input(GLFWwindow *window);
     ~Input();
 
     /**
@@ -87,10 +100,34 @@ class Input {
     const float time() { return timeRead_; }
 
     /**
+     * @return `true` if the mouse is captured (aka. grabbed).
+     */
+    bool isMouseCaptured() {
+        return mouseCaptured_;
+    }
+
+    void captureMouse() {
+        glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        mouseCaptured_ = true;
+    }
+
+    /**
+     * Opposite of isMouseCaptured
+     */
+    bool isMouseReleased() {
+        return !mouseCaptured_;
+    }
+
+    void releaseMouse() {
+        glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        mouseCaptured_ = false;
+    }
+
+    /**
      * @param button one of `GLFW_MOUSE_BUTTON_*`
      * @return `true` if the given button is being held down.
      */
-    const bool isMouseDown(int button) {
+    bool isMouseDown(int button) const {
         return (mouseButtonsRead_[button] & State::PERSISTENT_PRESSED_MASK) != State::ZERO;
     }
 
@@ -98,7 +135,7 @@ class Input {
      * @param button one of `GLFW_MOUSE_BUTTON_*`
      * @return `true` if the given button has been pressed down since the last frame.
      */
-    const bool isMousePress(int button) {
+    bool isMousePress(int button) const {
         return (mouseButtonsRead_[button] & State::PRESSED_BIT) != State::ZERO;
     }
 
@@ -106,7 +143,7 @@ class Input {
      * @param button one of `GLFW_MOUSE_BUTTON_*`
      * @return `true` if the given button has been pressed down since the last frame.
      */
-    const bool isMouseRelease(int button) {
+    bool isMouseRelease(int button) const {
         return (mouseButtonsRead_[button] & State::RELEASED_BIT) != State::ZERO;
     }
 
@@ -114,15 +151,25 @@ class Input {
      * @param key one of `GLFW_KEY_*`
      * @return `true` if the given key is being held down.
      */
-    const bool isKeyDown(int key) {
+    bool isKeyDown(int key) const {
         return (keysRead_[key] & State::PERSISTENT_PRESSED_MASK) != State::ZERO;
     }
 
     /**
-     * @param key one of `GLFW_KEY_*`
+     * @param key the printed key symbol.
+     * @return `true` if the given key is being held down.
+     */
+    bool isKeyDown(std::string key) const {
+        if (keyMap_.count(key) == 0)
+            return false;
+        return isKeyDown(keyMap_.at(key));
+    }
+
+    /**
+     * @param key one of `GLFW_KEY_*`. Note: This uses the physical position in the US layout.
      * @return `true` if the given key has been pressed down since the last frame.
      */
-    const bool isKeyPress(int key) {
+    bool isKeyPress(int key) const {
         return (keysRead_[key] & State::PRESSED_BIT) != State::ZERO;
     }
 
@@ -130,11 +177,16 @@ class Input {
      * @param key one of `GLFW_KEY_*`
      * @return `true` if the given key has been released up since the last frame.
      */
-    const bool isKeyRelease(int key) {
+    bool isKeyRelease(int key) const {
         return (keysRead_[key] & State::RELEASED_BIT) != State::ZERO;
     }
 
     void update();
+
+    // sets a flag that will poll the true input state on the next update
+    void invalidate() {
+        stateInvalid_ = true;
+    }
 
     void onKey(GLFWwindow *window, int key, int scancode, int action, int mods);
     void onCursorPos(GLFWwindow *window, double x, double y);

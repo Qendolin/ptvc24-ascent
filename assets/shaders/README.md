@@ -4,6 +4,8 @@
   e.g: `layout(location = 0) in vec3 in_position;`
 - Use explicit fragment shader output locations. [more](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)#Fragment_shader_buffer_output)  
   e.g: `layout(location = 0) out vec4 out_color;`
+- Use explicit sampler binding locations. [more](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)#Binding_points)  
+  e.g: `layout(binding = 0) uniform sampler2D u_texture;`
 - Use seperable shader programs. [more](https://www.khronos.org/opengl/wiki/Shader_Compilation#Program_pipelines)  
   Don't forget to declare `out gl_PerVertex { vec4 gl_Position; };` inside vertex shaders.
 - Use gamma correct colors. Work in linear space. 

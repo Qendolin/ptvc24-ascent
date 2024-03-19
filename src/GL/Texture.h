@@ -44,7 +44,7 @@ class Texture : public GLObject {
 
     void allocateMS(GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth, int samples, bool fixedSampleLocations);
 
-    void load(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, GLenum type, void* data);
+    void load(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, GLenum type, const void* data);
 
     void generateMipmap();
 
