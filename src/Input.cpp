@@ -2,20 +2,6 @@
 
 #include <algorithm>
 
-// Why must this be so cumbersome?
-constexpr inline Input::State operator|(Input::State lhs, Input::State rhs) {
-    return static_cast<Input::State>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
-constexpr inline Input::State operator&(Input::State lhs, Input::State rhs) {
-    return static_cast<Input::State>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
-}
-constexpr inline Input::State &operator|=(Input::State &lhs, Input::State rhs) {
-    return lhs = lhs | rhs;
-}
-constexpr inline Input::State &operator&=(Input::State &lhs, Input::State rhs) {
-    return lhs = lhs & rhs;
-}
-
 Input::Input(GLFWwindow *window) : window_(window) {
     std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::ZERO);
     std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::ZERO);

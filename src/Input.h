@@ -44,10 +44,20 @@ class Input {
         PERSISTENT_PRESSED_MASK = PRESSED_BIT | PERSISTENT_PRESSED_BIT,
     };
 
-    friend constexpr inline State operator|(State lhs, State rhs);
-    friend constexpr inline State operator&(State lhs, State rhs);
-    friend constexpr inline State &operator|=(State &lhs, State rhs);
-    friend constexpr inline State &operator&=(State &lhs, State rhs);
+    // Operators need to defined explicitly for enums. This allows bitwise operations like `&` and `|`.
+    // Why must this be so cumbersome?
+    friend constexpr inline State operator|(State lhs, State rhs) {
+        return static_cast<Input::State>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    }
+    friend constexpr inline State operator&(State lhs, State rhs) {
+        return static_cast<Input::State>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+    }
+    friend constexpr inline State &operator|=(State &lhs, State rhs) {
+        return lhs = lhs | rhs;
+    }
+    friend constexpr inline State &operator&=(State &lhs, State rhs) {
+        return lhs = lhs & rhs;
+    }
 
     static Input *instance_;
 

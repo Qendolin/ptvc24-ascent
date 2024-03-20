@@ -1,5 +1,5 @@
 @ECHO OFF
-set PROJECT_DIR=_project
+set PROJECT_DIR=build
 set INSTALL_DIR=_bin
 
 if "%~1"=="" goto BLANK
@@ -7,6 +7,7 @@ if "%~1"=="debug" goto DEBUG
 if "%~1"=="release" goto RELEASE
 if "%~1"=="install" goto INSTALL
 if "%~1"=="clean" goto CLEAN
+if "%~1"=="rebuild" goto REBUILD
 @ECHO ON
 
 :BLANK
@@ -32,6 +33,12 @@ GOTO DONE
 :CLEAN
 rmdir /Q /S %PROJECT_DIR% 2>NUL
 rmdir /Q /S %INSTALL_DIR% 2>NUL
+GOTO DONE
+
+:REBUILD
+rmdir /Q /S "build/Debug/" 2>NUL
+rmdir /Q /S "build/PTVC_Project_GL.dir/" 2>NUL
+cmake --build %PROJECT_DIR% --config Debug --target ALL_BUILD
 GOTO DONE
 
 :DONE
