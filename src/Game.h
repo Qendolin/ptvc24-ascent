@@ -25,13 +25,15 @@ class Game {
     PH::Physics *physics = nullptr;
     NK::Backend *ui = nullptr;
     NK::FontAtlas *fonts = nullptr;
+    Input *input = nullptr;
 
     // Callbacks for laoding / unloading assets
     // Doing it this way makes reloading easy
     std::vector<std::function<void()>> onLoad = {};
     std::vector<std::function<void()>> onUnload = {};
 
-    Input *input = nullptr;
+    // Thew viewport size is the window size minus the border and title bar
+    glm::ivec2 viewportSize = {1600, 900};
     Camera *camera = nullptr;
 
     // A quad with dimensions (-1,-1) to (1,1)

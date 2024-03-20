@@ -132,7 +132,7 @@ GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     if (enableCompatibilityProfile) {

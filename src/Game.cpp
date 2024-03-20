@@ -20,11 +20,6 @@ GL::VertexArray *createQuad() {
 Game::Game(GLFWwindow *window) {
     this->window = window;
 
-    // TODO: support window resizing
-    int32_t viewport_dimensions[4];
-    glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
-    glm::vec2 viewport_size = glm::vec2(viewport_dimensions[2], viewport_dimensions[3]);
-
     input = Input::instance = new Input(window);
     glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
         Input::instance->onKey(window, key, scancode, action, mods);
@@ -41,18 +36,24 @@ Game::Game(GLFWwindow *window) {
     glfwSetWindowFocusCallback(window, [](GLFWwindow *window, int focused) {
         Input::instance->invalidate();
     });
-    glfwSetWindowSizeCallback(window, [](GLFWwindow *window, int width, int height) {
-        Game::instance->resize(width, height);
-    });
 
     // Create camera with a 90° vertical FOV
-    camera = new Camera(glm::radians(90.), viewport_size, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = new Camera(glm::radians(90.), {1600, 900}, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
+
+    // window / viewport size
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+        Game::instance->resize(width, height);
+    });
+    int vp_width, vp_height;
+    glfwGetFramebufferSize(window, &vp_width, &vp_height);
+    Game::resize(vp_width, vp_height);
 
     physics = new PH::Physics({});
 }
 
 void Game::resize(int width, int height) {
-    // TODO:
+    viewportSize = glm::ivec2(width, height);
+    camera->setViewportSize(viewportSize);
 }
 
 // This is temporary
@@ -227,6 +228,7 @@ void Game::loop_() {
     }
 
     // Render scene
+    GL::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
     GL::manager->disable(GL::Capability::ScissorTest);
     GL::manager->disable(GL::Capability::StencilTest);
 
@@ -277,16 +279,13 @@ void Game::loop_() {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     // Draw UI
-    int32_t viewport_dimensions[4];
-    glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
-    glm::ivec2 viewport_size = glm::ivec2(viewport_dimensions[2], viewport_dimensions[3]);
     glm::mat4 projection_matrix = glm::mat4(
-        2.0f / viewport_size.x, 0.0f, 0.0f, 0.0f,
-        0.0f, -2.0f / viewport_size.y, 0.0f, 0.0f,
+        2.0f / viewportSize.x, 0.0f, 0.0f, 0.0f,
+        0.0f, -2.0f / viewportSize.y, 0.0f, 0.0f,
         0.0f, 0.0f, 1.0f, 0.0f,
         -1.0f, 1.0f, 0.0f, 1.0f);
 
-    ui->render(projection_matrix, viewport_size);
+    ui->render(projection_matrix, viewportSize);
 
     // Finish the frame
     glfwSwapBuffers(window);
