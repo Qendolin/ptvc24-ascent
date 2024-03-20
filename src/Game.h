@@ -19,7 +19,7 @@ class Game {
     void processInput_();
 
    public:
-    inline static Game *instance;
+    inline static Game *instance = nullptr;
 
     GLFWwindow *window = nullptr;
     PH::Physics *physics = nullptr;
@@ -55,4 +55,7 @@ class Game {
 
     // Run the game until the window is closed
     void run();
+
+    // Resize the window's contents, not the window itself.
+    void resize(int width, int height);
 };

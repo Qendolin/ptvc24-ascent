@@ -59,8 +59,6 @@ class Input {
         return lhs = lhs & rhs;
     }
 
-    static Input *instance_;
-
     GLFWwindow *window_ = nullptr;
     float timeRead_ = 0;
     float timeDelta_ = 0;
@@ -82,9 +80,11 @@ class Input {
      * Polls every key and mouse button to ensure that the internal state is up to date.
      * Is called after invalidate.
      */
-    void pollState_();
+    void pollCurrentState_();
 
    public:
+    inline static Input *instance = nullptr;
+
     Input(GLFWwindow *window);
     ~Input();
 
@@ -203,6 +203,5 @@ class Input {
     void onMouseButton(GLFWwindow *window, int button, int action, int mods);
     void onScroll(GLFWwindow *window, double dx, double dy);
 
-    static Input *instance();
     static Input *init(GLFWwindow *window);
 };

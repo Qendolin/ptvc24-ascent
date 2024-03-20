@@ -25,15 +25,34 @@ Game::Game(GLFWwindow *window) {
     glGetIntegerv(GL_VIEWPORT, &viewport_dimensions[0]);
     glm::vec2 viewport_size = glm::vec2(viewport_dimensions[2], viewport_dimensions[3]);
 
-    input = Input::init(window);
+    input = Input::instance = new Input(window);
+    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+        Input::instance->onKey(window, key, scancode, action, mods);
+    });
+    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double x, double y) {
+        Input::instance->onCursorPos(window, x, y);
+    });
+    glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) {
+        Input::instance->onMouseButton(window, button, action, mods);
+    });
+    glfwSetScrollCallback(window, [](GLFWwindow *window, double dx, double dy) {
+        Input::instance->onScroll(window, dx, dy);
+    });
     glfwSetWindowFocusCallback(window, [](GLFWwindow *window, int focused) {
-        Input::instance()->invalidate();
+        Input::instance->invalidate();
+    });
+    glfwSetWindowSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+        Game::instance->resize(width, height);
     });
 
     // Create camera with a 90° vertical FOV
     camera = new Camera(glm::radians(90.), viewport_size, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
 
     physics = new PH::Physics({});
+}
+
+void Game::resize(int width, int height) {
+    // TODO:
 }
 
 // This is temporary

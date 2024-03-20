@@ -16,7 +16,7 @@ Input::Input(GLFWwindow *window) : window_(window) {
     }
 }
 
-void Input::pollState_() {
+void Input::pollCurrentState_() {
     stateInvalid_ = false;
 
     for (int key = GLFW_KEY_SPACE; key < keysWrite_.size(); key++) {
@@ -42,7 +42,7 @@ void Input::update() {
     glfwPollEvents();
 
     if (stateInvalid_) {
-        pollState_();
+        pollCurrentState_();
     }
 
     float time = glfwGetTime();
@@ -107,18 +107,3 @@ void Input::onScroll(GLFWwindow *window, double dx, double dy) {
     scrollDeltaWrite_.x += dx;
     scrollDeltaWrite_.y += dy;
 }
-
-Input *Input::instance() {
-    return Input::instance_;
-}
-
-Input *Input::init(GLFWwindow *window) {
-    Input::instance_ = new Input(window);
-    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) { Input::instance_->onKey(window, key, scancode, action, mods); });
-    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double x, double y) { Input::instance_->onCursorPos(window, x, y); });
-    glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) { Input::instance_->onMouseButton(window, button, action, mods); });
-    glfwSetScrollCallback(window, [](GLFWwindow *window, double dx, double dy) { Input::instance_->onScroll(window, dx, dy); });
-    return Input::instance_;
-}
-
-Input *Input::instance_ = nullptr;
