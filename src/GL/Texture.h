@@ -34,17 +34,43 @@ class Texture : public GLObject {
 
     GLuint id() const;
 
+    uint32_t width() const;
+
+    uint32_t height() const;
+
+    uint32_t depth() const;
+
     void bind(int unit);
 
     void destroy();
 
     Texture* createView(GLenum type, GLenum internalFormat, int minLevel, int maxLevel, int minLayer, int maxLayer);
 
-    void allocate(GLint levels, GLuint internalFormat, uint32_t width, uint32_t height, uint32_t depth);
+    void allocate(GLint levels, GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth);
+
+    void allocate(GLint levels, GLenum internalFormat, uint32_t width, uint32_t height) {
+        allocate(levels, internalFormat, width, height, 1);
+    }
+
+    void allocate(GLint levels, GLenum internalFormat, uint32_t width) {
+        allocate(levels, internalFormat, width, 1, 1);
+    }
 
     void allocateMS(GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth, int samples, bool fixedSampleLocations);
 
+    void allocateMS(GLenum internalFormat, uint32_t width, uint32_t height, int samples, bool fixedSampleLocations) {
+        allocateMS(internalFormat, width, height, 1, samples, fixedSampleLocations);
+    }
+
     void load(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, GLenum type, const void* data);
+
+    void load(int level, uint32_t width, uint32_t height, GLenum format, GLenum type, const void* data) {
+        load(level, width, height, 1, format, type, data);
+    }
+
+    void load(int level, uint32_t width, GLenum format, GLenum type, const void* data) {
+        load(level, width, 1, 1, format, type, data);
+    }
 
     void generateMipmap();
 

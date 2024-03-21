@@ -28,6 +28,18 @@ GLuint Texture::id() const {
     return id_;
 }
 
+GLuint Texture::width() const {
+    return width_;
+}
+
+GLuint Texture::height() const {
+    return height_;
+}
+
+GLuint Texture::depth() const {
+    return depth_;
+}
+
 void Texture::bind(int unit) {
     manager->bindTextureUnit(unit, id_);
 }
