@@ -40,10 +40,11 @@
 **/_bin/
 
 # Prebuild files and assets
-assets/textures/
-assets/settings/
 lib/
-include/
+include/GL/**
+include/GLFW/**
+include/gli/**
+include/glm/**
 
 # Source Code
 *.ilk
