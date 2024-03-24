@@ -15,9 +15,48 @@
 #include <glm/glm.hpp>
 
 #include "../GL/StateManager.h"
+#include "../Loader/Loader.h"
 #include "../Utils.h"
 
 namespace NK {
+
+static float dp_to_px = 1.0f;
+static float vw_to_px = 1600.0f / 100.0f;
+static float vh_to_px = 900.0f / 100.0f;
+
+void set_scale(int width, int height, float dpi_scale) {
+    dp_to_px = dpi_scale * width / 1600.0f;
+    vw_to_px = width / 100.0f;
+    vh_to_px = height / 100.0f;
+}
+
+namespace literals {
+
+float operator"" _dp(long double value) {
+    return static_cast<float>(value) * dp_to_px;
+}
+
+float operator"" _dp(unsigned long long value) {
+    return static_cast<float>(value) * dp_to_px;
+}
+
+float operator"" _vw(long double value) {
+    return static_cast<float>(value) * vw_to_px;
+}
+
+float operator"" _vw(unsigned long long value) {
+    return static_cast<float>(value) * vw_to_px;
+}
+
+float operator"" _vh(long double value) {
+    return static_cast<float>(value) * vh_to_px;
+}
+
+float operator"" _vh(unsigned long long value) {
+    return static_cast<float>(value) * vh_to_px;
+}
+
+}  // namespace literals
 
 FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string default_font)
     : defaultFont_(default_font) {
@@ -28,7 +67,7 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     struct nk_font_config config = nk_font_config(default_height);
 
     for (auto &entry : entries) {
-        std::vector<uint8_t> data = loadBinaryFile(entry.filename);
+        std::vector<uint8_t> data = Loader::binary(entry.filename);
         for (auto &size : entry.sizes) {
             struct nk_font *font = nk_font_atlas_add_from_memory(&baker, data.data(), data.size(), size.size, &config);
             fonts_[size.name] = font;
@@ -58,8 +97,8 @@ FontAtlas::~FontAtlas() {
     }
 }
 
-Backend::Backend(struct nk_font *default_font, int max_vertices, int max_indices) {
-    if (!nk_init_default(&context_, &default_font->handle)) {
+Backend::Backend(FontAtlas *font_atlas, int max_vertices, int max_indices) : fontAtlas_(font_atlas) {
+    if (!nk_init_default(&context_, &font_atlas->defaultFont()->handle)) {
         PANIC("Nuklear initialization failed.");
     }
     nk_style_default(&context_);
@@ -69,6 +108,10 @@ Backend::Backend(struct nk_font *default_font, int max_vertices, int max_indices
         new GL::ShaderProgram("assets/shaders/nuklear.vert"),
         new GL::ShaderProgram("assets/shaders/nuklear.frag"),
     });
+
+    sampler_ = new GL::Sampler();
+    sampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
+    sampler_->filterMode(GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR);
 
     vao_ = new GL::VertexArray();
     vao_->layout(0, 0, 2, GL_FLOAT, false, offsetof(struct Vertex, position));
@@ -95,6 +138,10 @@ Backend::~Backend() {
     if (shader_) {
         shader_->destroy();
         shader_ = nullptr;
+    }
+    if (sampler_) {
+        sampler_->destroy();
+        sampler_ = nullptr;
     }
     if (vao_) {
         vao_->destroy();
@@ -190,6 +237,7 @@ void Backend::render(glm::mat4 projection_matrix, glm::ivec2 viewport) {
     vao_->bind();
     shader_->bind();
     shader_->vertexStage()->setUniform("u_projection_mat", projection_matrix);
+    sampler_->bind(0);
 
     const struct nk_draw_command *cmd;
     const nk_draw_index *offset = NULL;
@@ -207,6 +255,8 @@ void Backend::render(glm::mat4 projection_matrix, glm::ivec2 viewport) {
         glDrawElements(GL_TRIANGLES, cmd->elem_count, GL_UNSIGNED_SHORT, offset);
         offset += cmd->elem_count;
     }
+
+    GL::manager->bindSampler(0, 0);
 
     nk_clear(&context_);
     nk_buffer_clear(&commands_);

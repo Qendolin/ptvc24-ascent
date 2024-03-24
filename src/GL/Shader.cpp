@@ -1,5 +1,6 @@
 #include "Shader.h"
 
+#include "../Loader/Loader.h"
 #include "../Utils.h"
 #include "StateManager.h"
 
@@ -33,7 +34,7 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
         PANIC("Invalid file extension ." + ext);
     }
 
-    sourceOriginal_ = loadTextFile(filename);
+    sourceOriginal_ = Loader::text(filename);
     sourceModified_ = sourceOriginal_;
     compile(substitutions);
 }

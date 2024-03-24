@@ -2,17 +2,24 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <tweeny/tweeny.h>
+
+#include <variant>
 
 #include "Camera.h"
 #include "Direct.h"
 #include "Entity.h"
 #include "Input.h"
-#include "Loader.h"
+#include "Loader/Loader.h"
 #include "Physics/Physics.h"
+#include "UI/Screen.h"
 #include "UI/UI.h"
 
 class Game {
    private:
+    float tweenTimer_ = 0.0;
+    int tweenTimeStep_ = 0;
+
     // Called on every game loop iteration
     void loop_();
     // Process user input
@@ -43,9 +50,10 @@ class Game {
     GL::ShaderPipeline *skyShader = nullptr;
     GL::ShaderPipeline *pbrShader = nullptr;
 
+    Screen *screen = nullptr;
     // All visual instances that need to be rendered.
     // Loaded from the gltf file.
-    std::vector<Scene::Instance> scene = {};
+    std::vector<Asset::Instance> scene = {};
     // All entities that need to process game logic
     std::vector<Entity *> entities = {};
 
@@ -60,4 +68,9 @@ class Game {
 
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
+
+    template <typename T, typename... Ts>
+    void tween(tweeny::tween<T, Ts...> &tween) {
+        tween.step(tweenTimeStep_);
+    }
 };

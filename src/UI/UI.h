@@ -21,8 +21,38 @@
 // References:
 // https://github.dev/Immediate-Mode-UI/Nuklear/blob/master/demo/glfw_opengl4/nuklear_glfw_gl4.h
 // https://immediate-mode-ui.github.io/Nuklear/doc/index.html
+// https://github.com/Immediate-Mode-UI/Nuklear/wiki
+// https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 
 namespace NK {
+
+void set_scale(int width, int height, float dpi_scale);
+
+// These literal operators help with designing gui's that scale across different
+// window sizes and monitor resolutions.
+namespace literals {
+
+float operator"" _dp(long double value);
+
+// dynamic point
+// 1 dp equals 1 pixel for a 1600x900 reference size.
+// On high resoltuon displays it will be more than one pixel.
+// On high dpi displays it will also be more than 1 pixel.
+float operator"" _dp(unsigned long long value);
+
+float operator"" _vw(long double value);
+
+// viewport width
+// 100 vw equals the entire width of the viewport
+float operator"" _vw(unsigned long long value);
+
+float operator"" _vh(long double value);
+
+// viewport height
+// 100 vh equals the entire height of the viewport
+float operator"" _vh(unsigned long long value);
+
+}  // namespace literals
 
 typedef struct Vertex {
     glm::vec2 position;
@@ -32,11 +62,11 @@ typedef struct Vertex {
 
 typedef struct FontEntry {
     struct FontSize {
-        std::string name;
-        float size;
+        std::string name = "";
+        float size = 0;
     };
 
-    std::string filename;
+    std::string filename = "";
     std::vector<FontSize> sizes = {};
 } FontEntry;
 
@@ -52,12 +82,12 @@ class FontAtlas {
 
     ~FontAtlas();
 
-    struct nk_font* defaultFont() {
-        return fonts_[defaultFont_];
+    struct nk_font* defaultFont() const {
+        return fonts_.at(defaultFont_);
     }
 
-    struct nk_font* get(std::string name) {
-        return fonts_[name];
+    struct nk_font* get(std::string name) const {
+        return fonts_.at(name);
     }
 };
 
@@ -88,6 +118,7 @@ class Backend {
     };
 
     GL::ShaderPipeline* shader_ = nullptr;
+    GL::Sampler* sampler_ = nullptr;
     GL::VertexArray* vao_ = nullptr;
     GL::Buffer* vbo_ = nullptr;
     // points into the vbo using glMapNamedBufferRange
@@ -99,7 +130,7 @@ class Backend {
     FontAtlas* fontAtlas_ = nullptr;
 
    public:
-    Backend(struct nk_font* default_font, int max_vertices = 4 * 1024, int max_indices = 4 * 1024);
+    Backend(FontAtlas* font_atlas, int max_vertices = 4 * 1024, int max_indices = 4 * 1024);
     ~Backend();
 
     void update(Input* input);
@@ -112,6 +143,10 @@ class Backend {
 
     nk_context* context() {
         return &context_;
+    }
+
+    const FontAtlas* fonts() const {
+        return fontAtlas_;
     }
 };
 

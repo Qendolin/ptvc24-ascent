@@ -3,6 +3,9 @@
 #include <chrono>
 
 #include "GL/StateManager.h"
+// #include "Menu.h"
+#include "UI/Screens/MainMenu.h"
+#include "UI/Style.h"
 #include "Utils.h"
 
 GL::VertexArray *createQuad() {
@@ -38,7 +41,7 @@ Game::Game(GLFWwindow *window) {
     });
 
     // Create camera with a 90° vertical FOV
-    camera = new Camera(glm::radians(90.), {1600, 900}, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = new Camera(glm::radians(90.), viewportSize, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
@@ -54,6 +57,9 @@ Game::Game(GLFWwindow *window) {
 void Game::resize(int width, int height) {
     viewportSize = glm::ivec2(width, height);
     camera->setViewportSize(viewportSize);
+    float x_scale, y_scale;
+    glfwGetWindowContentScale(window, &x_scale, &y_scale);
+    NK::set_scale(width, height, x_scale);
 }
 
 // This is temporary
@@ -87,6 +93,8 @@ void createPhysicsScene(PH::Physics *physics) {
 void Game::setup() {
     quad = createQuad();
 
+    screen = new MainMenuScreen();
+
     // defer loading assets
     onLoad.push_back([this]() {
         skyShader = new GL::ShaderPipeline(
@@ -100,10 +108,14 @@ void Game::setup() {
              new GL::ShaderProgram("assets/shaders/direct.frag")});
         dd = new DirectBuffer(dd_shader);
 
-        fonts = new NK::FontAtlas({{"assets/fonts/DroidSans.ttf",
-                                    {{"droid_30", 30}}}},
-                                  "droid_30");
-        ui = new NK::Backend(fonts->defaultFont());
+        fonts = new NK::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
+                                    {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
+                                  "menu_md");
+        ui = new NK::Backend(fonts);
+
+        // TODO: this should be part of ui, also cleanup
+        Skin skin = load_skin();
+        skin.apply(ui->context());
     });
 
     onUnload.push_back([this]() {
@@ -129,7 +141,7 @@ void Game::setup() {
         }
     });
 
-    scene = Scene::load("assets/models/pbr_test.glb");
+    scene = Loader::gltf("assets/models/pbr_test.glb");
     createPhysicsScene(physics);
 
     entities.push_back(new CharacterController(camera));
@@ -149,6 +161,7 @@ void Game::run() {
 
     LOG("Entering main loop");
     glfwShowWindow(window);
+    input->invalidate();
     while (!glfwWindowShouldClose(window)) {
         loop_();
     }
@@ -156,7 +169,7 @@ void Game::run() {
 
 void Game::processInput_() {
     // Capture mouse
-    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased()) {
+    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased() && screen == nullptr) {
         input->captureMouse();
     }
     // Release mouse
@@ -188,13 +201,16 @@ void Game::loop_() {
     processInput_();
     ui->update(input);
 
+    tweenTimer_ += input->timeDelta() * 1000.0;
+    // LOG(tweenTimer_);
+    tweenTimeStep_ = (int)floor(tweenTimer_);
+    tweenTimer_ -= tweenTimeStep_;
+
     nk_context *nk = ui->context();
     struct nk_style *s = &nk->style;
     // make window transparent
-    nk_style_push_color(nk, &s->text.color, nk_rgba(255, 80, 80, 255));
-    nk_style_push_color(nk, &s->window.background, nk_rgba(0, 0, 0, 0));
-    nk_style_push_style_item(nk, &s->window.fixed_background, nk_style_item_color(nk_rgba(0, 0, 0, 0)));
-    if (nk_begin(nk, "gui", nk_rect(0, 0, 1600, 900), 0)) {
+    // window_style_transparent(nk);
+    if (nk_begin(nk, "gui", nk_rect(0, 0, viewportSize.x, viewportSize.y), 0)) {
         nk_layout_row_dynamic(nk, 30, 1);
         std::chrono::duration<float> total_seconds(input->time());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
@@ -204,9 +220,7 @@ void Game::loop_() {
         nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
     }
     nk_end(nk);
-    nk_style_pop_color(nk);
-    nk_style_pop_color(nk);
-    nk_style_pop_style_item(nk);
+    // drawMenu(this);
 
     // Update and step physics
     physics->update(input->timeDelta());
@@ -225,6 +239,10 @@ void Game::loop_() {
     // Update entities
     for (auto &&ent : entities) {
         ent->update();
+    }
+
+    if (screen != nullptr) {
+        screen->draw();
     }
 
     // Render scene

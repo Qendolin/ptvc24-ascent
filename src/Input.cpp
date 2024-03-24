@@ -36,6 +36,9 @@ void Input::pollCurrentState_() {
     mousePosRead_ = mousePosWrite_;
 
     mouseCaptured_ = glfwGetInputMode(window_, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+
+    // No time delta
+    timeRead_ = glfwGetTime();
 }
 
 void Input::update() {

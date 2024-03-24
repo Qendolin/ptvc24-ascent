@@ -1,23 +1,23 @@
-#include "Loader.h"
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 
+#include "Loader.h"
+
 #define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #undef APIENTRY
 #include <tiny_gltf.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "Utils.h"
+#include "../Utils.h"
 
 namespace gltf = tinygltf;
 
-namespace Scene {
+using namespace Asset;
+
+namespace Loader {
 
 glm::mat4 loadNodeTransform(gltf::Node &node) {
     glm::mat4 transform = glm::mat4(1.0);
@@ -289,7 +289,7 @@ Material loadMaterial(const gltf::Model &model, gltf::Material &material) {
     return result;
 }
 
-std::vector<Instance> load(const std::string filename) {
+std::vector<Asset::Instance> gltf(const std::string filename) {
     gltf::TinyGLTF loader;
     std::string err;
     std::string warn;
@@ -343,4 +343,4 @@ std::vector<Instance> load(const std::string filename) {
     return instances;
 }
 
-}  // namespace Scene
+}  // namespace Loader

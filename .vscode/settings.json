@@ -85,7 +85,10 @@
 		"shared_mutex": "cpp",
 		"stop_token": "cpp",
 		"thread": "cpp",
-		"unordered_set": "cpp"
+		"unordered_set": "cpp",
+		"any": "cpp",
+		"*.tcc": "cpp",
+		"variant": "cpp"
 	},
 	"git.detectSubmodules": false
 }
