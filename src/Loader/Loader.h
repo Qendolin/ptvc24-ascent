@@ -27,27 +27,49 @@ typedef struct Material {
     glm::vec2 metallicRoughnessFactor = {0, 1};
 } Material;
 
+struct Instance;
+struct Mesh;
+
 typedef struct Section {
-    uint32_t base = 0;
-    uint32_t length = 0;
-    const Material material;
+    uint32_t baseIndex = 0;
+    uint32_t baseVertex = 0;
+    uint32_t elementCount = 0;
+    uint32_t vertexCount = 0;
+    const Mesh *mesh;
+    const Material *material;
 } Section;
 
 typedef struct Mesh {
     std::string name = "";
-    GL::VertexArray *vao = nullptr;
-    GL::Buffer *positions = nullptr;
-    GL::Buffer *normals = nullptr;
-    GL::Buffer *uvs = nullptr;
-    GL::Buffer *indices = nullptr;
     std::vector<Section> sections = {};
+    std::vector<const Instance *> instances = {};
+    uint32_t totalElementCount = 0;
+    uint32_t totalVertexCount = 0;
 } Mesh;
+
+typedef struct InstanceAttributes {
+    glm::mat4 transform = glm::mat4(1);
+} InstanceAttributes;
 
 typedef struct Instance {
     std::string name = "";
-    glm::mat4 transform = glm::mat4(1);
-    const Mesh mesh;
+    uint32_t attributesIndex;
+    const Mesh *mesh;
 } Instance;
+
+typedef struct MaterialBatch {
+    const Material *material;
+    GL::DrawElementsIndirectCommand *commandOffset;
+    uint32_t commandCount;
+} MaterialBatch;
+
+typedef struct Scene {
+    std::string name = "";
+    std::vector<Instance *> instances = {};
+    GL::VertexArray *vao = nullptr;
+    std::vector<MaterialBatch> batches = {};
+    GL::Buffer *drawCommandBuffer = nullptr;
+} Scene;
 
 }  // namespace Asset
 
@@ -67,7 +89,8 @@ GL::Texture *texture(std::string filename);
 // https://kcoley.github.io/glTF/specification/2.0/figures/gltfOverview-2.0.0a.png
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/main/gltfTutorial/README.md
 // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+// https://www.khronos.org/files/gltf20-reference-guide.pdf
 
-std::vector<Asset::Instance> gltf(const std::string filename);
+Asset::Scene gltf(const std::string filename);
 
 }  // namespace Loader

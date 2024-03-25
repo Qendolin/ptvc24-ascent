@@ -39,6 +39,9 @@
 **/_project/
 **/_bin/
 
+# Assets
+*.blend1
+
 # Prebuild files and assets
 lib/
 include/GL/**

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <limits>
 
 #include "Loader.h"
 
@@ -45,46 +46,48 @@ glm::mat4 loadNodeTransform(gltf::Node &node) {
     return transform;
 }
 
-void loadNode(gltf::Model &model, gltf::Node &node, const std::vector<Mesh> &meshes, std::vector<Instance> &instances, glm::mat4 combined_transform) {
+void loadNodeRecursive(gltf::Model &model, gltf::Node &node, const std::vector<Mesh *> &meshes, std::vector<Instance *> &instances, std::vector<InstanceAttributes> &attributes, glm::mat4 combined_transform) {
     glm::mat4 transform = loadNodeTransform(node);
     combined_transform = combined_transform * transform;
 
     // Check if node has a mesh
     if (node.mesh >= 0) {
-        instances.push_back(Instance{
-            .name = node.name,
+        Instance *instance = new Instance();
+        instance->attributesIndex = attributes.size();
+        attributes.emplace_back(InstanceAttributes{
             .transform = combined_transform,
-            .mesh = meshes[node.mesh],
         });
+        instances.push_back(instance);
+        meshes[node.mesh]->instances.push_back(instance);
     }
 
     for (size_t i = 0; i < node.children.size(); i++) {
-        loadNode(model, model.nodes[node.children[i]], meshes, instances, combined_transform);
+        loadNodeRecursive(model, model.nodes[node.children[i]], meshes, instances, attributes, combined_transform);
     }
 }
 
-Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> &materials) {
-    Mesh result = {};
-    result.name = mesh.name;
-    result.vao = new GL::VertexArray();
+typedef struct Chunk {
+    void *positionPtr = nullptr;
+    size_t positionLength;
+    void *normalPtr = nullptr;
+    size_t normalLength;
+    void *texcoordPtr = nullptr;
+    size_t texcoordLength;
+    void *indexPtr = nullptr;
+    size_t indexLength;
+    uint8_t indexSize;
+    uint32_t elementCount;
+    uint32_t vertexCount;
+    int32_t material;
+    Section *section = nullptr;
+} Chunk;
 
-    struct Block {
-        void *positionPtr;
-        size_t positionLength;
-        void *normalPtr;
-        size_t normalLength;
-        void *texcoordPtr;
-        size_t texcoordLength;
-        void *indexPtr;
-        size_t indexLength;
-        uint8_t indexSize;
-        uint32_t vertexCount;
-        int32_t material;
-    };
+Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<const Material *> &materials, std::vector<Chunk> &chunks) {
+    int first_chunk_index = chunks.size();
+    Mesh *result = new Mesh();
+    result->name = mesh.name;
 
-    std::vector<struct Block> primitives;
-
-    uint32_t total_vertex_count = 0;
+    uint32_t total_vertex_count = 0, total_element_count = 0;
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
         gltf::Primitive &primitive = mesh.primitives[i];
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES) {
@@ -172,8 +175,9 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> 
         gltf::Buffer &texcoord_buffer = model.buffers[texcoord_view.buffer];
         gltf::Buffer &index_buffer = model.buffers[index_view.buffer];
 
-        uint32_t vertex_count = index_access.count;
-        primitives.push_back(Block{
+        uint32_t element_count = index_access.count;
+        uint32_t vertex_count = position_access.count;
+        chunks.emplace_back(Chunk{
             .positionPtr = &position_buffer.data.at(0) + position_view.byteOffset,
             .positionLength = position_view.byteLength,
             .normalPtr = &normal_buffer.data.at(0) + normal_view.byteOffset,
@@ -183,56 +187,41 @@ Mesh loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<Material> 
             .indexPtr = &index_buffer.data.at(0) + index_view.byteOffset,
             .indexLength = index_view.byteLength,
             .indexSize = index_size,
+            .elementCount = element_count,
             .vertexCount = vertex_count,
             .material = primitive.material,
         });
 
+        total_element_count += element_count;
         total_vertex_count += vertex_count;
     }
 
-    if (total_vertex_count == 0) {
-        // TODO: handle error
+    if (total_vertex_count == 0 || total_element_count == 0) {
+        LOG("Mesh has no valid vertices. TODO: handle error");
     }
 
-    result.positions = new GL::Buffer();
-    result.positions->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
-    result.normals = new GL::Buffer();
-    result.normals->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
-    result.uvs = new GL::Buffer();
-    result.uvs->allocateEmpty(total_vertex_count * sizeof(glm::vec2), GL_DYNAMIC_STORAGE_BIT);
-    result.indices = new GL::Buffer();
-    result.indices->allocateEmpty(total_vertex_count * sizeof(uint16_t), GL_DYNAMIC_STORAGE_BIT);
-
-    uint32_t base = 0;
-    for (auto &p : primitives) {
-        result.positions->write(base * sizeof(glm::vec3), p.positionPtr, p.positionLength);
-        result.normals->write(base * sizeof(glm::vec3), p.normalPtr, p.normalLength);
-        result.uvs->write(base * sizeof(glm::vec2), p.texcoordPtr, p.texcoordLength);
-        result.indices->write(base * p.indexSize, p.indexPtr, p.indexLength);
-
-        Material material = {};
-        if (p.material >= 0) {
-            material = materials[p.material];
+    // The vector must not grow / shrink, so it is initialized to the correct size
+    // If it reallocates the chunk.section reference would turn invalid
+    result->sections.reserve(chunks.size());
+    for (size_t i = first_chunk_index; i < chunks.size(); i++) {
+        Chunk &chunk = chunks[i];
+        const Material *material = nullptr;
+        if (chunk.material >= 0) {
+            material = materials[chunk.material];
         }
 
-        result.sections.push_back(Section{
-            .base = base,
-            .length = p.vertexCount,
+        result->sections.emplace_back(Section{
+            .baseIndex = 0,
+            .baseVertex = 0,
+            .elementCount = chunk.elementCount,
+            .vertexCount = chunk.vertexCount,
+            .mesh = result,
             .material = material,
         });
-
-        base += p.vertexCount;
+        result->totalElementCount += chunk.elementCount;
+        result->totalVertexCount += chunk.vertexCount;
+        chunk.section = &result->sections.back();
     }
-
-    result.vao->layout(0, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    result.vao->bindBuffer(0, *result.positions, 0, sizeof(glm::vec3));
-    result.vao->layout(1, 1, 3, GL_FLOAT, GL_FALSE, 0);
-    result.vao->bindBuffer(1, *result.normals, 0, sizeof(glm::vec3));
-    result.vao->layout(2, 2, 2, GL_FLOAT, GL_FALSE, 0);
-    result.vao->bindBuffer(2, *result.uvs, 0, sizeof(glm::vec2));
-
-    result.vao->layoutI(3, 3, 1, GL_UNSIGNED_SHORT, 0);
-    result.vao->bindElementBuffer(*result.indices);
 
     return result;
 }
@@ -270,26 +259,26 @@ GL::Texture *loadTexture(const gltf::Model &model, const gltf::TextureInfo &text
     return result;
 }
 
-Material loadMaterial(const gltf::Model &model, gltf::Material &material) {
-    Material result = {};
-    result.name = material.name;
-    result.albedoFactor = glm::make_vec4(&material.pbrMetallicRoughness.baseColorFactor[0]);
-    result.metallicRoughnessFactor = {
+Material *loadMaterial(const gltf::Model &model, gltf::Material &material) {
+    Material *result = new Material();
+    result->name = material.name;
+    result->albedoFactor = glm::make_vec4(&material.pbrMetallicRoughness.baseColorFactor[0]);
+    result->metallicRoughnessFactor = {
         material.pbrMetallicRoughness.metallicFactor,
         material.pbrMetallicRoughness.roughnessFactor,
     };
 
-    result.albedo = loadTexture(model, material.pbrMetallicRoughness.baseColorTexture, GL_SRGB8_ALPHA8);
-    result.occlusionMetallicRoughness = loadTexture(model, material.pbrMetallicRoughness.metallicRoughnessTexture, GL_RGB8);
+    result->albedo = loadTexture(model, material.pbrMetallicRoughness.baseColorTexture, GL_SRGB8_ALPHA8);
+    result->occlusionMetallicRoughness = loadTexture(model, material.pbrMetallicRoughness.metallicRoughnessTexture, GL_RGB8);
     gltf::TextureInfo normal_info = {};
     normal_info.index = material.normalTexture.index;
     normal_info.texCoord = material.normalTexture.texCoord;
-    result.normal = loadTexture(model, normal_info, GL_RGB8);
+    result->normal = loadTexture(model, normal_info, GL_RGB8);
 
     return result;
 }
 
-std::vector<Asset::Instance> gltf(const std::string filename) {
+Asset::Scene gltf(const std::string filename) {
     gltf::TinyGLTF loader;
     std::string err;
     std::string warn;
@@ -320,27 +309,128 @@ std::vector<Asset::Instance> gltf(const std::string filename) {
     }
 
     const gltf::Scene &scene = model.scenes[model.defaultScene];
+    Scene result = {};
 
-    std::vector<Material> materials;
+    std::vector<const Material *> materials;
     for (size_t i = 0; i < model.materials.size(); ++i) {
-        const Material material = loadMaterial(model, model.materials[i]);
+        const Material *material = loadMaterial(model, model.materials[i]);
         materials.push_back(material);
     }
 
-    std::vector<Mesh> meshes;
+    uint32_t total_vertex_count = 0;
+    uint32_t total_element_count = 0;
+    std::vector<Mesh *> meshes;
+    std::vector<Chunk> chunks;
     for (size_t i = 0; i < model.meshes.size(); ++i) {
-        const Mesh mesh = loadMesh(model, model.meshes[i], materials);
+        Mesh *mesh = loadMesh(model, model.meshes[i], materials, chunks);
         meshes.push_back(mesh);
+        total_element_count += mesh->totalElementCount;
+        total_vertex_count += mesh->totalVertexCount;
     }
-    // TODO: For performance all mesh parts should be filtered out if they are unused and then
-    // concatenated into a single, large, immutable buffer, sorted by their material id.
-    // Optionally the draw commands could be staticially allocated, I think.
 
-    std::vector<Instance> instances;
+    std::vector<InstanceAttributes> attributes;
+    // this may allocate a little bit more than needed, but it doesn't matter
+    attributes.reserve(model.nodes.size());
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        loadNode(model, model.nodes[scene.nodes[i]], meshes, instances, glm::mat4(1.0));
+        loadNodeRecursive(model, model.nodes[scene.nodes[i]], meshes, result.instances, attributes, glm::mat4(1.0));
     }
-    return instances;
+
+    // sort all of the sections by material id
+    // this allowes them to be drawn in larger batches
+    std::sort(chunks.begin(), chunks.end(), [](Chunk const &a, Chunk const &b) {
+        return a.material < b.material;
+    });
+
+    // For performance all mesh sections are concatenated into a single, large, immutable buffer
+    auto position_buffer = new GL::Buffer();
+    position_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
+    auto normal_buffer = new GL::Buffer();
+    normal_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
+    auto uv_buffer = new GL::Buffer();
+    uv_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec2), GL_DYNAMIC_STORAGE_BIT);
+    auto element_buffer = new GL::Buffer();
+    element_buffer->allocateEmpty(total_element_count * sizeof(uint16_t), GL_DYNAMIC_STORAGE_BIT);
+
+    auto attributes_buffer = new GL::Buffer();
+    attributes_buffer->allocate(attributes.data(), attributes.size() * sizeof(InstanceAttributes), 0);
+
+    auto vao = new GL::VertexArray();
+    result.vao = vao;
+    vao->layout(0, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    vao->bindBuffer(0, *position_buffer, 0, sizeof(glm::vec3));
+    vao->own(position_buffer);
+    vao->layout(1, 1, 3, GL_FLOAT, GL_FALSE, 0);
+    vao->bindBuffer(1, *normal_buffer, 0, sizeof(glm::vec3));
+    vao->own(normal_buffer);
+    vao->layout(2, 2, 2, GL_FLOAT, GL_FALSE, 0);
+    vao->bindBuffer(2, *uv_buffer, 0, sizeof(glm::vec2));
+    vao->own(uv_buffer);
+    vao->bindElementBuffer(*element_buffer);
+    vao->own(element_buffer);
+
+    // instance attribute layout
+    // 4 attributes for the 4 columns of the transformation matrix
+    vao->layout(3, 3, 4, GL_FLOAT, GL_FALSE, 0 * sizeof(glm::vec4));
+    vao->layout(3, 4, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(glm::vec4));
+    vao->layout(3, 5, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4));
+    vao->layout(3, 6, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4));
+    vao->attribDivisor(3, 1);
+    vao->bindBuffer(3, *attributes_buffer, 0, sizeof(InstanceAttributes));
+    vao->own(attributes_buffer);
+
+    std::vector<GL::DrawElementsIndirectCommand> draw_commands;
+    int32_t base_vertex = 0;
+    uint32_t base_index = 0;
+    int32_t batch_material_index = std::numeric_limits<int32_t>::max();  // just some value to mark the start
+    MaterialBatch batch = {};
+    for (auto &&chunk : chunks) {
+        position_buffer->write(base_vertex * sizeof(glm::vec3), chunk.positionPtr, chunk.positionLength);
+        normal_buffer->write(base_vertex * sizeof(glm::vec3), chunk.normalPtr, chunk.normalLength);
+        uv_buffer->write(base_vertex * sizeof(glm::vec2), chunk.texcoordPtr, chunk.texcoordLength);
+        element_buffer->write(base_index * chunk.indexSize, chunk.indexPtr, chunk.indexLength);
+        chunk.section->baseIndex = base_index;
+        chunk.section->baseVertex = base_vertex;
+
+        // start a new batch
+        if (batch_material_index != chunk.material) {
+            batch_material_index = chunk.material;
+
+            // push previous one
+            if (batch.commandCount != 0)
+                result.batches.emplace_back(batch);
+
+            batch = {
+                .material = chunk.material < 0 ? nullptr : materials[chunk.material],
+                .commandOffset = reinterpret_cast<GL::DrawElementsIndirectCommand *>(draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand)),
+                .commandCount = 0,
+            };
+        }
+
+        uint32_t instance_count = static_cast<uint32_t>(chunk.section->mesh->instances.size());
+        if (instance_count > 0) {
+            uint32_t base_instance = chunk.section->mesh->instances[0]->attributesIndex;
+            GL::DrawElementsIndirectCommand cmd = {
+                .count = chunk.elementCount,
+                .instanceCount = instance_count,
+                .firstIndex = base_index,
+                .baseVertex = base_vertex,
+                .baseInstance = base_instance,
+            };
+            draw_commands.push_back(cmd);
+            batch.commandCount++;
+        }
+
+        base_vertex += chunk.vertexCount;
+        base_index += chunk.elementCount;
+    }
+    // push last one
+    if (batch.commandCount != 0)
+        result.batches.emplace_back(batch);
+
+    result.drawCommandBuffer = new GL::Buffer();
+    result.drawCommandBuffer->allocate(draw_commands.data(), draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand), 0);
+
+    return result;
 }
 
 }  // namespace Loader

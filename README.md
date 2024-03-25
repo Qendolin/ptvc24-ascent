@@ -24,12 +24,17 @@ Disables the OpenGL debug callback
   https://www.khronos.org/opengl/wiki/Direct_State_Access
   - Separate Programs / Shader Pipelines  
   https://www.khronos.org/opengl/wiki/Shader_Compilation#Separate_programs
+  - Indirect rendering  
+  https://www.khronos.org/opengl/wiki/Vertex_Rendering#Indirect_rendering
   - Immutable Storage  
   https://www.khronos.org/opengl/wiki/Buffer_Object#Immutable_Storage  
   - Explicit uniform locations  
   https://www.khronos.org/opengl/wiki/Layout_Qualifier_(GLSL)#Explicit_uniform_location
   - Separate attribute format  
   https://www.khronos.org/opengl/wiki/Vertex_Specification#Separate_attribute_format
+
+- Material Batching  
+[Read more](./docs/Rendering.md)
 
 - GLTF Loading  
 https://github.com/syoyo/tinygltf

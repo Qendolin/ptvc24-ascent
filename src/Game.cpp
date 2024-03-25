@@ -141,7 +141,7 @@ void Game::setup() {
         }
     });
 
-    scene = Loader::gltf("assets/models/pbr_test.glb");
+    scene = Loader::gltf("assets/models/batching_test.glb");
     createPhysicsScene(physics);
 
     entities.push_back(new CharacterController(camera));
@@ -254,6 +254,8 @@ void Game::loop_() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw the loaded instances of the GLTF scene
+    // See docs/Rendering.md for a rough explanation
+    GL::pushDebugGroup("Game::DrawStatic");
     GL::manager->setEnabled({GL::Capability::DepthTest});
     GL::manager->depthMask(true);
     GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
@@ -262,21 +264,21 @@ void Game::loop_() {
     pbrShader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
     pbrShader->fragmentStage()->setUniform("u_camera_pos", camera->position);
 
-    for (auto &node : scene) {
-        node.mesh.vao->bind();
-        pbrShader->vertexStage()->setUniform("u_model_mat", node.transform);
-        for (auto &s : node.mesh.sections) {
-            pbrShader->fragmentStage()->setUniform("u_albedo_fac", s.material.albedoFactor);
-            pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", s.material.metallicRoughnessFactor);
-            if (s.material.albedo != nullptr)
-                s.material.albedo->bind(0);
-            if (s.material.occlusionMetallicRoughness != nullptr)
-                s.material.occlusionMetallicRoughness->bind(1);
-            if (s.material.normal != nullptr)
-                s.material.normal->bind(2);
-            glDrawElementsBaseVertex(GL_TRIANGLES, s.length, GL_UNSIGNED_SHORT, 0, s.base);
-        }
+    scene.vao->bind();
+    scene.drawCommandBuffer->bind(GL_DRAW_INDIRECT_BUFFER);
+    for (auto &&batch : scene.batches) {
+        auto material = batch.material;
+        pbrShader->fragmentStage()->setUniform("u_albedo_fac", material->albedoFactor);
+        pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material->metallicRoughnessFactor);
+        if (material->albedo != nullptr)
+            material->albedo->bind(0);
+        if (material->occlusionMetallicRoughness != nullptr)
+            material->occlusionMetallicRoughness->bind(1);
+        if (material->normal != nullptr)
+            material->normal->bind(2);
+        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, batch.commandOffset, batch.commandCount, 0);
     }
+    GL::popDebugGroup();
 
     // Draw physics debugging shapes
     physics->debugDraw(camera->viewProjectionMatrix());
