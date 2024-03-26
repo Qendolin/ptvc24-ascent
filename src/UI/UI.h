@@ -13,10 +13,10 @@
 #include <map>
 #include <span>
 
-#include "../GL/Geometry.h"
-#include "../GL/Shader.h"
 #include "../GL/Texture.h"
 #include "../Input.h"
+#include "Renderer.h"
+#include "Skin.h"
 
 // References:
 // https://github.dev/Immediate-Mode-UI/Nuklear/blob/master/demo/glfw_opengl4/nuklear_glfw_gl4.h
@@ -24,7 +24,7 @@
 // https://github.com/Immediate-Mode-UI/Nuklear/wiki
 // https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 
-namespace NK {
+namespace UI {
 
 void set_scale(int width, int height, float dpi_scale);
 
@@ -54,12 +54,6 @@ float operator"" _vh(unsigned long long value);
 
 }  // namespace literals
 
-typedef struct Vertex {
-    glm::vec2 position;
-    glm::vec2 uv;
-    uint32_t color;
-} Vertex;
-
 typedef struct FontEntry {
     struct FontSize {
         std::string name = "";
@@ -72,7 +66,7 @@ typedef struct FontEntry {
 
 class FontAtlas {
    private:
-    struct nk_font_atlas baker = {};
+    struct nk_font_atlas baker_ = {};
     std::map<std::string, struct nk_font*> fonts_ = {};
     GL::Texture* texture_ = nullptr;
     std::string defaultFont_ = "";
@@ -93,53 +87,21 @@ class FontAtlas {
 
 class Backend {
    private:
-    inline static const struct nk_draw_vertex_layout_element VERTEX_LAYOUT_[] = {
-        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(struct Vertex, position)},
-        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(struct Vertex, uv)},
-        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(struct Vertex, color)},
-        {NK_VERTEX_LAYOUT_END}};
-
     struct nk_context context_ = {};
     struct nk_buffer commands_ = {};
     // used for drawing shapes.
     // TODO:
     struct nk_draw_null_texture nullTexture_ = {};
-    struct nk_convert_config convertConfig_ = {
-        .global_alpha = 1.0f,
-        .line_AA = NK_ANTI_ALIASING_ON,
-        .shape_AA = NK_ANTI_ALIASING_ON,
-        .circle_segment_count = 22,
-        .arc_segment_count = 22,
-        .curve_segment_count = 22,
-        .tex_null = {.texture = 0, .uv = {0, 0}},
-        .vertex_layout = VERTEX_LAYOUT_,
-        .vertex_size = sizeof(Vertex),
-        .vertex_alignment = NK_ALIGNOF(struct Vertex),
-    };
 
-    GL::ShaderPipeline* shader_ = nullptr;
-    GL::Sampler* sampler_ = nullptr;
-    GL::VertexArray* vao_ = nullptr;
-    GL::Buffer* vbo_ = nullptr;
-    // points into the vbo using glMapNamedBufferRange
-    std::span<Vertex> vertices_ = {};
-    GL::Buffer* ebo_ = nullptr;
-    // points into the ebo using glMapNamedBufferRange
-    std::span<uint16_t> indices_ = {};
-
+    Renderer* renderer_ = nullptr;
     FontAtlas* fontAtlas_ = nullptr;
+    Skin* skin_ = nullptr;
 
    public:
-    Backend(FontAtlas* font_atlas, int max_vertices = 4 * 1024, int max_indices = 4 * 1024);
+    Backend(FontAtlas* font_atlas, Skin* skin, Renderer* renderer);
     ~Backend();
 
     void update(Input* input);
-
-    /**
-     * @param projection_matrix the orthographic projection matrix
-     * @param viewport the viewport size
-     */
-    void render(glm::mat4 projection_matrix, glm::ivec2 viewport);
 
     nk_context* context() {
         return &context_;
@@ -148,6 +110,14 @@ class Backend {
     const FontAtlas* fonts() const {
         return fontAtlas_;
     }
+
+    void setViewport(glm::ivec2 viewport) {
+        renderer_->setViewport(viewport);
+    }
+
+    void render() {
+        renderer_->render(&context_, &commands_);
+    }
 };
 
-}  // namespace NK
+}  // namespace UI

@@ -15,7 +15,7 @@ MainMenuScreen::~MainMenuScreen() {
 }
 
 void MainMenuScreen::draw() {
-    using namespace NK::literals;
+    using namespace UI::literals;
 
     Game* game = Game::instance;
     nk_context* nk = game->ui->context();

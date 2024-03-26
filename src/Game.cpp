@@ -5,7 +5,7 @@
 #include "GL/StateManager.h"
 // #include "Menu.h"
 #include "UI/Screens/MainMenu.h"
-#include "UI/Style.h"
+#include "UI/Skin.h"
 #include "Utils.h"
 
 GL::VertexArray *createQuad() {
@@ -58,10 +58,16 @@ Game::Game(GLFWwindow *window) {
 
 void Game::resize(int width, int height) {
     viewportSize = glm::ivec2(width, height);
-    camera->setViewportSize(viewportSize);
+
+    if (camera != nullptr)
+        camera->setViewportSize(viewportSize);
+
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
-    NK::set_scale(width, height, x_scale);
+    UI::set_scale(width, height, x_scale);
+
+    if (ui != nullptr)
+        ui->setViewport(viewportSize);
 }
 
 // This is temporary
@@ -113,14 +119,12 @@ void Game::setup() {
         dd_shader->setDebugLabel("direct_buffer/shader");
         dd = new DirectBuffer(dd_shader);
 
-        fonts = new NK::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
-                                    {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
-                                  "menu_md");
-        ui = new NK::Backend(fonts);
-
-        // TODO: this should be part of ui, also cleanup
-        Skin skin = load_skin();
-        skin.apply(ui->context());
+        auto fonts = new UI::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
+                                         {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
+                                       "menu_md");
+        auto skin = UI::loadSkin();
+        ui = new UI::Backend(fonts, skin, new UI::Renderer());
+        ui->setViewport(viewportSize);
     });
 
     onUnload.push_back([this]() {
@@ -140,13 +144,9 @@ void Game::setup() {
             delete ui;
             ui = nullptr;
         }
-        if (fonts) {
-            delete fonts;
-            fonts = nullptr;
-        }
     });
 
-    scene = Loader::gltf("assets/models/batching_test.glb");
+    scene = Loader::gltf("assets/models/test_course.glb");
     createPhysicsScene(physics);
 
     entities.push_back(new CharacterController(camera));
@@ -314,13 +314,7 @@ void Game::loop_() {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     // Draw UI
-    glm::mat4 projection_matrix = glm::mat4(
-        2.0f / viewportSize.x, 0.0f, 0.0f, 0.0f,
-        0.0f, -2.0f / viewportSize.y, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f);
-
-    ui->render(projection_matrix, viewportSize);
+    ui->render();
 
     // Finish the frame
     glfwSwapBuffers(window);

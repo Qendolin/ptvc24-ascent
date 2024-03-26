@@ -30,8 +30,7 @@ class Game {
 
     GLFWwindow *window = nullptr;
     PH::Physics *physics = nullptr;
-    NK::Backend *ui = nullptr;
-    NK::FontAtlas *fonts = nullptr;
+    UI::Backend *ui = nullptr;
     Input *input = nullptr;
 
     // Callbacks for laoding / unloading assets

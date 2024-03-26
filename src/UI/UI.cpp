@@ -18,14 +18,18 @@
 #include "../Loader/Loader.h"
 #include "../Utils.h"
 
-namespace NK {
+namespace UI {
+
+static const float REFERENCE_WIDTH = 1600.0f;
+static const float REFERENCE_HEIGHT = 900.0f;
 
 static float dp_to_px = 1.0f;
-static float vw_to_px = 1600.0f / 100.0f;
-static float vh_to_px = 900.0f / 100.0f;
+static float vw_to_px = REFERENCE_WIDTH / 100.0f;
+static float vh_to_px = REFERENCE_HEIGHT / 100.0f;
 
 void set_scale(int width, int height, float dpi_scale) {
-    dp_to_px = dpi_scale * width / 1600.0f;
+    // should dp only depend on the viewport width?
+    dp_to_px = dpi_scale * width / REFERENCE_WIDTH;
     vw_to_px = width / 100.0f;
     vh_to_px = height / 100.0f;
 }
@@ -60,8 +64,8 @@ float operator"" _vh(unsigned long long value) {
 
 FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string default_font)
     : defaultFont_(default_font) {
-    nk_font_atlas_init_default(&baker);
-    nk_font_atlas_begin(&baker);
+    nk_font_atlas_init_default(&baker_);
+    nk_font_atlas_begin(&baker_);
 
     const float default_height = 16.0f;
     struct nk_font_config config = nk_font_config(default_height);
@@ -69,7 +73,7 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     for (auto &entry : entries) {
         std::vector<uint8_t> data = Loader::binary(entry.filename);
         for (auto &size : entry.sizes) {
-            struct nk_font *font = nk_font_atlas_add_from_memory(&baker, data.data(), data.size(), size.size, &config);
+            struct nk_font *font = nk_font_atlas_add_from_memory(&baker_, data.data(), data.size(), size.size, &config);
             fonts_[size.name] = font;
         }
     }
@@ -77,20 +81,20 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     int atlas_width = 0, atlas_height = 0;
     const void *atlas_data = nullptr;
     // TODO: figure out the difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
-    atlas_data = nk_font_atlas_bake(&baker, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
+    atlas_data = nk_font_atlas_bake(&baker_, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
     texture_ = new GL::Texture(GL_TEXTURE_2D);
     texture_->setDebugLabel("nk/font");
     texture_->allocate(1, GL_RGBA8, atlas_width, atlas_height, 1);
     texture_->load(0, atlas_width, atlas_height, 1, GL_RGBA, GL_UNSIGNED_BYTE, atlas_data);
 
     // cleanup
-    nk_font_atlas_end(&baker, nk_handle_id(texture_->id()), nullptr);
-    nk_font_atlas_cleanup(&baker);
+    nk_font_atlas_end(&baker_, nk_handle_id(texture_->id()), nullptr);
+    nk_font_atlas_cleanup(&baker_);
 }
 
 FontAtlas::~FontAtlas() {
-    nk_font_atlas_clear(&baker);
-    baker = {};
+    nk_font_atlas_clear(&baker_);
+    baker_ = {};
 
     if (texture_) {
         texture_->destroy();
@@ -98,72 +102,31 @@ FontAtlas::~FontAtlas() {
     }
 }
 
-Backend::Backend(FontAtlas *font_atlas, int max_vertices, int max_indices) : fontAtlas_(font_atlas) {
+Backend::Backend(FontAtlas *font_atlas, Skin *skin, Renderer *renderer)
+    : fontAtlas_(font_atlas), skin_(skin), renderer_(renderer) {
     if (!nk_init_default(&context_, &font_atlas->defaultFont()->handle)) {
         PANIC("Nuklear initialization failed.");
     }
     nk_style_default(&context_);
     nk_buffer_init_default(&commands_);
 
-    shader_ = new GL::ShaderPipeline({
-        new GL::ShaderProgram("assets/shaders/nuklear.vert"),
-        new GL::ShaderProgram("assets/shaders/nuklear.frag"),
-    });
-    shader_->setDebugLabel("nk/shader");
-
-    sampler_ = new GL::Sampler();
-    sampler_->setDebugLabel("nk/sampler");
-    sampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
-    sampler_->filterMode(GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR);
-
-    vao_ = new GL::VertexArray();
-    vao_->setDebugLabel("nk/vao");
-    vao_->layout(0, 0, 2, GL_FLOAT, false, offsetof(struct Vertex, position));
-    vao_->layout(0, 1, 2, GL_FLOAT, false, offsetof(struct Vertex, uv));
-    vao_->layout(0, 2, 4, GL_UNSIGNED_BYTE, true, offsetof(struct Vertex, color));
-
-    GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-    vbo_ = new GL::Buffer();
-    vbo_->setDebugLabel("nk/vbo");
-    size_t vbo_size = sizeof(Vertex) * max_vertices;
-    vbo_->allocateEmpty(vbo_size, flags);
-    vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
-    Vertex *mapped_vbo = reinterpret_cast<Vertex *>(glMapNamedBufferRange(vbo_->id(), 0, vbo_size, flags));
-    vertices_ = {mapped_vbo, vbo_size};
-
-    ebo_ = new GL::Buffer();
-    ebo_->setDebugLabel("nk/ebo");
-    size_t ebo_size = sizeof(uint16_t) * max_indices;
-    ebo_->allocateEmpty(ebo_size, flags);
-    vao_->bindElementBuffer(*ebo_);
-    uint16_t *mapped_ebo = reinterpret_cast<uint16_t *>(glMapNamedBufferRange(ebo_->id(), 0, ebo_size, flags));
-    indices_ = {mapped_ebo, ebo_size};
+    skin->apply(&context_);
 }
 
 Backend::~Backend() {
-    if (shader_) {
-        shader_->destroy();
-        shader_ = nullptr;
+    if (fontAtlas_ != nullptr) {
+        delete fontAtlas_;
+        fontAtlas_ = nullptr;
     }
-    if (sampler_) {
-        sampler_->destroy();
-        sampler_ = nullptr;
+
+    if (renderer_ != nullptr) {
+        delete renderer_;
+        renderer_ = nullptr;
     }
-    if (vao_) {
-        vao_->destroy();
-        vao_ = nullptr;
-    }
-    if (vbo_) {
-        glUnmapNamedBuffer(vbo_->id());
-        vertices_ = {};
-        vbo_->destroy();
-        vbo_ = nullptr;
-    }
-    if (ebo_) {
-        glUnmapNamedBuffer(ebo_->id());
-        indices_ = {};
-        ebo_->destroy();
-        ebo_ = nullptr;
+
+    if (skin_ != nullptr) {
+        delete skin_;
+        skin_ = nullptr;
     }
 
     nk_buffer_free(&commands_);
@@ -228,45 +191,4 @@ void Backend::update(Input *input) {
     nk_input_end(&context_);
 }
 
-void Backend::render(glm::mat4 projection_matrix, glm::ivec2 viewport) {
-    GL::pushDebugGroup("Nuklear::Draw");
-
-    struct nk_buffer vertex_buffer = {}, element_buffer = {};
-    nk_buffer_init_fixed(&vertex_buffer, vertices_.data(), vertices_.size_bytes());
-    nk_buffer_init_fixed(&element_buffer, indices_.data(), indices_.size_bytes());
-    nk_convert(&context_, &commands_, &vertex_buffer, &element_buffer, &convertConfig_);
-
-    GL::manager->setEnabled({GL::Capability::Blend, GL::Capability::ScissorTest});
-    GL::manager->blendEquation(GL::BlendEquation::FuncAdd);
-    GL::manager->blendFunc(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
-
-    vao_->bind();
-    shader_->bind();
-    shader_->vertexStage()->setUniform("u_projection_mat", projection_matrix);
-    sampler_->bind(0);
-
-    const struct nk_draw_command *cmd;
-    const nk_draw_index *offset = NULL;
-
-    nk_draw_foreach(cmd, &context_, &commands_) {
-        if (!cmd->elem_count) continue;
-
-        GL::manager->bindTextureUnit(0, cmd->texture.id);
-        shader_->fragmentStage()->setUniform("u_use_texture", static_cast<int>(cmd->texture.id != 0));
-        GL::manager->setScissor(
-            cmd->clip_rect.x,
-            viewport.y - (cmd->clip_rect.y + cmd->clip_rect.h),
-            cmd->clip_rect.w,
-            cmd->clip_rect.h);
-        glDrawElements(GL_TRIANGLES, cmd->elem_count, GL_UNSIGNED_SHORT, offset);
-        offset += cmd->elem_count;
-    }
-
-    GL::manager->bindSampler(0, 0);
-
-    nk_clear(&context_);
-    nk_buffer_clear(&commands_);
-    GL::popDebugGroup();
-}
-
-}  // namespace NK
+}  // namespace UI
