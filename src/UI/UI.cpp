@@ -79,6 +79,7 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     // TODO: figure out the difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
     atlas_data = nk_font_atlas_bake(&baker, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
     texture_ = new GL::Texture(GL_TEXTURE_2D);
+    texture_->setDebugLabel("nk/font");
     texture_->allocate(1, GL_RGBA8, atlas_width, atlas_height, 1);
     texture_->load(0, atlas_width, atlas_height, 1, GL_RGBA, GL_UNSIGNED_BYTE, atlas_data);
 
@@ -108,18 +109,22 @@ Backend::Backend(FontAtlas *font_atlas, int max_vertices, int max_indices) : fon
         new GL::ShaderProgram("assets/shaders/nuklear.vert"),
         new GL::ShaderProgram("assets/shaders/nuklear.frag"),
     });
+    shader_->setDebugLabel("nk/shader");
 
     sampler_ = new GL::Sampler();
+    sampler_->setDebugLabel("nk/sampler");
     sampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
     sampler_->filterMode(GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR);
 
     vao_ = new GL::VertexArray();
+    vao_->setDebugLabel("nk/vao");
     vao_->layout(0, 0, 2, GL_FLOAT, false, offsetof(struct Vertex, position));
     vao_->layout(0, 1, 2, GL_FLOAT, false, offsetof(struct Vertex, uv));
     vao_->layout(0, 2, 4, GL_UNSIGNED_BYTE, true, offsetof(struct Vertex, color));
 
     GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
     vbo_ = new GL::Buffer();
+    vbo_->setDebugLabel("nk/vbo");
     size_t vbo_size = sizeof(Vertex) * max_vertices;
     vbo_->allocateEmpty(vbo_size, flags);
     vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
@@ -127,6 +132,7 @@ Backend::Backend(FontAtlas *font_atlas, int max_vertices, int max_indices) : fon
     vertices_ = {mapped_vbo, vbo_size};
 
     ebo_ = new GL::Buffer();
+    ebo_->setDebugLabel("nk/ebo");
     size_t ebo_size = sizeof(uint16_t) * max_indices;
     ebo_->allocateEmpty(ebo_size, flags);
     vao_->bindElementBuffer(*ebo_);

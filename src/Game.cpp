@@ -10,10 +10,12 @@
 
 GL::VertexArray *createQuad() {
     GL::Buffer *vbo = new GL::Buffer();
+    vbo->setDebugLabel("generic_quad/vbo");
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
 
     GL::VertexArray *quad = new GL::VertexArray();
+    quad->setDebugLabel("generic_quad/vao");
     quad->layout(0, 0, 2, GL_FLOAT, false, 0);
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
     quad->own(vbo);
@@ -100,12 +102,15 @@ void Game::setup() {
         skyShader = new GL::ShaderPipeline(
             {new GL::ShaderProgram("assets/shaders/sky.vert"),
              new GL::ShaderProgram("assets/shaders/sky.frag")});
+        skyShader->setDebugLabel("sky_shader");
         pbrShader = new GL::ShaderPipeline(
             {new GL::ShaderProgram("assets/shaders/test.vert"),
              new GL::ShaderProgram("assets/shaders/test.frag")});
+        pbrShader->setDebugLabel("pbr_shader");
         auto dd_shader = new GL::ShaderPipeline(
             {new GL::ShaderProgram("assets/shaders/direct.vert"),
              new GL::ShaderProgram("assets/shaders/direct.frag")});
+        dd_shader->setDebugLabel("direct_buffer/shader");
         dd = new DirectBuffer(dd_shader);
 
         fonts = new NK::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",

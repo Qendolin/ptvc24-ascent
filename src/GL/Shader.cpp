@@ -236,6 +236,29 @@ ShaderProgram* ShaderPipeline::fragmentStage() const {
 
 void ShaderPipeline::setDebugLabel(const std::string& label) {
     glObjectLabel(GL_PROGRAM_PIPELINE, id_, -1, label.c_str());
+    for (auto&& program : ownedPrograms_) {
+        if (label == "") {
+            program->setDebugLabel("");
+            continue;
+        }
+        switch (program->stage()) {
+            case GL_FRAGMENT_SHADER:
+                program->setDebugLabel(label + "/" + "frag");
+                break;
+            case GL_VERTEX_SHADER:
+                program->setDebugLabel(label + "/" + "vert");
+                break;
+            case GL_COMPUTE_SHADER:
+                program->setDebugLabel(label + "/" + "comp");
+                break;
+            case GL_TESS_CONTROL_SHADER:
+                program->setDebugLabel(label + "/" + "tesc");
+                break;
+            case GL_TESS_EVALUATION_SHADER:
+                program->setDebugLabel(label + "/" + "tese");
+                break;
+        }
+    }
 }
 
 void ShaderPipeline::attach(const std::initializer_list<ShaderProgram*> programs) {

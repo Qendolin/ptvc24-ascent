@@ -31,6 +31,7 @@ bool assertFailedCallback(const char *expression, const char *message, const cha
 #ifdef JPH_DEBUG_RENDERER
 DebugRendererImpl::DebugRendererImpl() {
     vao_ = new GL::VertexArray();
+    vao_->setDebugLabel("physics/debug/vao");
     // Position
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
     // Normal
@@ -41,8 +42,10 @@ DebugRendererImpl::DebugRendererImpl() {
     vao_->layout(0, 3, 4, GL_UNSIGNED_BYTE, true, 8 * sizeof(float));
 
     vbo_ = new GL::Buffer();
+    vbo_->setDebugLabel("physics/debug/vbo");
     vbo_->allocateEmptyMutable(sizeof(Vertex) * 8192, GL_DYNAMIC_DRAW);
     ebo_ = new GL::Buffer();
+    ebo_->setDebugLabel("physics/debug/ebo");
     ebo_->allocateEmptyMutable(sizeof(uint32_t) * 8192, GL_DYNAMIC_DRAW);
 
     vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
@@ -50,7 +53,7 @@ DebugRendererImpl::DebugRendererImpl() {
 
     shader_ = new GL::ShaderPipeline({new GL::ShaderProgram("assets/shaders/physics_debug.vert"),
                                       new GL::ShaderProgram("assets/shaders/physics_debug.frag")});
-
+    shader_->setDebugLabel("physics/debug/shader");
     DebugRenderer::Initialize();
 }
 

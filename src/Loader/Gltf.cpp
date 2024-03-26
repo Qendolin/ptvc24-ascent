@@ -292,11 +292,14 @@ Material *loadMaterial(const gltf::Model &model, gltf::Material &material) {
     };
 
     result->albedo = loadTexture(model, material.pbrMetallicRoughness.baseColorTexture, GL_SRGB8_ALPHA8);
+    if (result->albedo != nullptr) result->albedo->setDebugLabel("gltf/texture/albedo");
     result->occlusionMetallicRoughness = loadTexture(model, material.pbrMetallicRoughness.metallicRoughnessTexture, GL_RGB8);
+    if (result->occlusionMetallicRoughness != nullptr) result->occlusionMetallicRoughness->setDebugLabel("gltf/texture/orm");
     gltf::TextureInfo normal_info = {};
     normal_info.index = material.normalTexture.index;
     normal_info.texCoord = material.normalTexture.texCoord;
     result->normal = loadTexture(model, normal_info, GL_RGB8);
+    if (result->normal != nullptr) result->normal->setDebugLabel("gltf/texture/normal");
 
     return result;
 }
@@ -307,8 +310,11 @@ Material *createDefaultMaterial() {
     result->albedoFactor = glm::vec4(1.0);
     result->metallicRoughnessFactor = glm::vec2(0.0, 1.0);
     result->albedo = Loader::texture("assets/textures/default_albedo.png", {.srgb = true});
+    result->albedo->setDebugLabel("gltf/texture/default_albedo");
     result->occlusionMetallicRoughness = Loader::texture("assets/textures/default_orm.png");
+    result->occlusionMetallicRoughness->setDebugLabel("gltf/texture/default_orm");
     result->normal = Loader::texture("assets/textures/default_normal.png");
+    result->normal->setDebugLabel("gltf/texture/default_normal");
 
     return result;
 }
@@ -383,18 +389,24 @@ std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
 
     // For performance all mesh sections are concatenated into a single, large, immutable buffer
     auto position_buffer = new GL::Buffer();
+    position_buffer->setDebugLabel("gltf/vbo/position");
     position_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
     auto normal_buffer = new GL::Buffer();
+    normal_buffer->setDebugLabel("gltf/vbo/normal");
     normal_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
     auto uv_buffer = new GL::Buffer();
+    uv_buffer->setDebugLabel("gltf/vbo/uv");
     uv_buffer->allocateEmpty(total_vertex_count * sizeof(glm::vec2), GL_DYNAMIC_STORAGE_BIT);
     auto element_buffer = new GL::Buffer();
+    element_buffer->setDebugLabel("gltf/ebo");
     element_buffer->allocateEmpty(total_element_count * sizeof(uint16_t), GL_DYNAMIC_STORAGE_BIT);
 
     auto attributes_buffer = new GL::Buffer();
+    attributes_buffer->setDebugLabel("gltf/vbo/instance_attributes");
     attributes_buffer->allocate(attributes.data(), attributes.size() * sizeof(InstanceAttributes), 0);
 
     auto vao = new GL::VertexArray();
+    vao->setDebugLabel("gltf/vao");
     result->vao = vao;
     vao->layout(0, 0, 3, GL_FLOAT, GL_FALSE, 0);
     vao->bindBuffer(0, *position_buffer, 0, sizeof(glm::vec3));
@@ -468,6 +480,7 @@ std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
         result->batches.emplace_back(batch);
 
     result->drawCommandBuffer = new GL::Buffer();
+    result->drawCommandBuffer->setDebugLabel("gltf/command_buffer");
     result->drawCommandBuffer->allocate(draw_commands.data(), draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand), 0);
 
     result->materials = materials;

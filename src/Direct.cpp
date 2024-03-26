@@ -33,10 +33,12 @@ glm::vec3 perpendicular(glm::vec3 v) {
 
 DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
     vao_ = new GL::VertexArray();
+    vao_->setDebugLabel("direct_buffer/vao");
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
     vao_->layout(0, 1, 3, GL_FLOAT, false, 3 * 4);
     vao_->layout(0, 2, 3, GL_FLOAT, false, 6 * 4);
     vbo_ = new GL::Buffer();
+    vbo_->setDebugLabel("direct_buffer/vbo");
     vbo_->allocateEmpty(1e6, GL_DYNAMIC_STORAGE_BIT);
     // 3 floats position + 3 floats color + 3 float normal
     vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * 4);
