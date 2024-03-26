@@ -8,6 +8,8 @@
 
 namespace GL {
 
+// References;
+// https://www.khronos.org/opengl/wiki/Renderbuffer_Object
 class Renderbuffer : public GLObject {
    private:
     GLuint id_ = 0;
@@ -32,13 +34,17 @@ class Renderbuffer : public GLObject {
     void allocateMS(GLenum internalFormat, uint32_t width, uint32_t height, int samples);
 };
 
+// References:
+// https://www.khronos.org/opengl/wiki/Framebuffer
+// https://www.khronos.org/opengl/wiki/Framebuffer_Object
 class Framebuffer : public GLObject {
    private:
     GLuint id_ = 0;
     std::vector<const Texture*> textures_;
     std::vector<const Renderbuffer*> renderbuffers_;
 
-    int mapAttachmentIndex_(int index) const;
+    // maps an attachment to it's index in the vector
+    int mapAttachmentIndex_(int attachment) const;
 
     ~Framebuffer() {
         checkDestroyed(GL_FRAMEBUFFER);
@@ -53,20 +59,28 @@ class Framebuffer : public GLObject {
 
     void setDebugLabel(const std::string& label);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawBuffers.xhtml)
     void bindTargets(const std::vector<int>& indices);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCheckFramebufferStatus.xhtml)
     void check(GLenum target) const;
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindFramebuffer.xhtml)
     void bind(GLenum target) const;
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferTexture.xhtml)
     void attachTexture(int index, const Texture* texture);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferTexture.xhtml)
     void attachTextureLevel(int index, const Texture* texture, int level);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferTextureLayer.xhtml)
     void attachTextureLayer(int index, const Texture* texture, int layer);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferTextureLayer.xhtml)
     void attachTextureLayerLevel(int index, const Texture* texture, int layer, int level);
 
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glFramebufferRenderbuffer.xhtml)
     void attachRenderbuffer(int index, const Renderbuffer* renderbuffer);
 
     const Texture* getTexture(int index) const;

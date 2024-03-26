@@ -42,13 +42,13 @@ void Renderbuffer::allocateMS(GLenum internalFormat, uint32_t width, uint32_t he
 
 const int MAX_ATTACHMENTS = 8;
 
-int Framebuffer::mapAttachmentIndex_(int index) const {
-    if (index == GL_DEPTH_ATTACHMENT || index == GL_DEPTH_STENCIL_ATTACHMENT) {
+int Framebuffer::mapAttachmentIndex_(int attachment) const {
+    if (attachment == GL_DEPTH_ATTACHMENT || attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
         return 0;
-    } else if (index == GL_STENCIL_ATTACHMENT) {
+    } else if (attachment == GL_STENCIL_ATTACHMENT) {
         return 1;
     }
-    return index + 2;
+    return attachment + 2;
 }
 
 Framebuffer::Framebuffer() : textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {

@@ -94,6 +94,7 @@ bool Buffer::grow(size_t size) {
     }
     int newSize = this->size_;
     int doubleSize = newSize + newSize;
+    // try to be smart about growing the buffer
     if (size > doubleSize) {
         newSize = size;
     } else if (this->size_ < 16384) {
@@ -178,34 +179,34 @@ void VertexArray::bind() const {
     manager->bindVertexArray(id_);
 }
 
-void VertexArray::layout(int bufferIndex, int attributeIndex, int size, GLenum dataType, bool normalized, int offset) {
-    glEnableVertexArrayAttrib(id_, attributeIndex);
-    glVertexArrayAttribFormat(id_, attributeIndex, size, dataType, normalized, offset);
-    glVertexArrayAttribBinding(id_, attributeIndex, bufferIndex);
+void VertexArray::layout(int buffer_index, int attribute_index, int size, GLenum data_type, bool normalized, size_t offset) {
+    glEnableVertexArrayAttrib(id_, attribute_index);
+    glVertexArrayAttribFormat(id_, attribute_index, size, data_type, normalized, offset);
+    glVertexArrayAttribBinding(id_, attribute_index, buffer_index);
 }
 
-void VertexArray::layoutI(int bufferIndex, int attributeIndex, int size, GLenum dataType, int offset) {
-    glEnableVertexArrayAttrib(id_, attributeIndex);
-    glVertexArrayAttribIFormat(id_, attributeIndex, size, dataType, offset);
-    glVertexArrayAttribBinding(id_, attributeIndex, bufferIndex);
+void VertexArray::layoutI(int buffer_index, int attribute_index, int size, GLenum data_type, size_t offset) {
+    glEnableVertexArrayAttrib(id_, attribute_index);
+    glVertexArrayAttribIFormat(id_, attribute_index, size, data_type, offset);
+    glVertexArrayAttribBinding(id_, attribute_index, buffer_index);
 }
 
-void VertexArray::bindBuffer(int bufferIndex, const Buffer& vbo, int offset, int stride) {
-    bindingRanges_[bufferIndex] = std::make_pair(offset, stride);
-    glVertexArrayVertexBuffer(id_, bufferIndex, vbo.id(), offset, stride);
+void VertexArray::bindBuffer(int buffer_index, const Buffer& vbo, size_t offset, size_t stride) {
+    bindingRanges_[buffer_index] = std::make_pair(offset, stride);
+    glVertexArrayVertexBuffer(id_, buffer_index, vbo.id(), offset, stride);
 }
 
-void VertexArray::reBindBuffer(int bufferIndex, const Buffer& vbo) {
-    const auto& range = bindingRanges_[bufferIndex];
-    glVertexArrayVertexBuffer(id_, bufferIndex, vbo.id(), range.first, range.second);
+void VertexArray::reBindBuffer(int buffer_index, const Buffer& vbo) {
+    const auto& range = bindingRanges_[buffer_index];
+    glVertexArrayVertexBuffer(id_, buffer_index, vbo.id(), range.first, range.second);
 }
 
 void VertexArray::bindElementBuffer(const Buffer& ebo) {
     glVertexArrayElementBuffer(id_, ebo.id());
 }
 
-void VertexArray::attribDivisor(int bufferIndex, int divisor) {
-    glVertexArrayBindingDivisor(id_, bufferIndex, divisor);
+void VertexArray::attribDivisor(int buffer_index, int divisor) {
+    glVertexArrayBindingDivisor(id_, buffer_index, divisor);
 }
 
 void VertexArray::own(const std::initializer_list<Buffer*> buffers) {

@@ -269,7 +269,7 @@ void ShaderPipeline::attach(const std::initializer_list<ShaderProgram*> programs
 
 void ShaderPipeline::attach(ShaderProgram* program) {
     glUseProgramStages(id_, shaderStageToBit(program->stage()), program->id());
-    getRef(program->stage()) = program;
+    getRef_(program->stage()) = program;
 }
 
 void ShaderPipeline::own(const std::initializer_list<ShaderProgram*> programs) {
@@ -282,8 +282,8 @@ void ShaderPipeline::own(ShaderProgram* program) {
     ownedPrograms_.push_back(program);
 }
 
-void ShaderPipeline::reAttach(int stage) {
-    ShaderProgram*& program = getRef(stage);
+void ShaderPipeline::reAttach(GLenum stage) {
+    ShaderProgram*& program = getRef_(stage);
     if (program == nullptr) {
         glUseProgramStages(id_, shaderStageToBit(stage), 0);
     } else {
@@ -291,17 +291,17 @@ void ShaderPipeline::reAttach(int stage) {
     }
 }
 
-void ShaderPipeline::detach(int stage) {
+void ShaderPipeline::detach(GLenum stage) {
     glUseProgramStages(id_, shaderStageToBit(stage), 0);
-    getRef(stage) = nullptr;
+    getRef_(stage) = nullptr;
 }
 
 ShaderProgram* ShaderPipeline::get(GLenum stage) const {
-    ShaderProgram*& program = const_cast<ShaderPipeline*>(this)->getRef(stage);
+    ShaderProgram*& program = const_cast<ShaderPipeline*>(this)->getRef_(stage);
     return program;
 }
 
-ShaderProgram*& ShaderPipeline::getRef(GLenum stage) {
+ShaderProgram*& ShaderPipeline::getRef_(GLenum stage) {
     switch (stage) {
         case GL_VERTEX_SHADER:
             return vertStage_;

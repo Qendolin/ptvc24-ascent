@@ -86,6 +86,14 @@ void StateManager::disable(Capability cap) {
     caps[cap] = false;
 }
 
+void StateManager::cull(GLenum face) {
+    if (cullFaceMask == face) {
+        return;
+    }
+    glCullFace(face);
+    cullFaceMask = face;
+}
+
 void StateManager::cullFront() {
     if (cullFaceMask == GL_FRONT) {
         return;

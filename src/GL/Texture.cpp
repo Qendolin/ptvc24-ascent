@@ -12,8 +12,8 @@ Texture::Texture(GLenum type) : type_(type) {
     manager->intelTextureBindingSetTarget(id_, type_);
 }
 
-Texture* Texture::as(GLuint glType) {
-    return new Texture(glType, id_);
+Texture* Texture::as(GLenum type) {
+    return new Texture(type, id_);
 }
 
 void Texture::setDebugLabel(const std::string& label) {
@@ -28,15 +28,15 @@ GLuint Texture::id() const {
     return id_;
 }
 
-GLuint Texture::width() const {
+uint32_t Texture::width() const {
     return width_;
 }
 
-GLuint Texture::height() const {
+uint32_t Texture::height() const {
     return height_;
 }
 
-GLuint Texture::depth() const {
+uint32_t Texture::depth() const {
     return depth_;
 }
 
@@ -79,15 +79,15 @@ int Texture::dimensions() const {
     }
 }
 
-Texture* Texture::createView(GLenum type, GLenum internalFormat, int minLevel, int maxLevel, int minLayer, int maxLayer) {
+Texture* Texture::createView(GLenum type, GLenum internal_format, int min_level, int max_level, int min_layer, int max_layer) {
     GLuint viewId;
     glGenTextures(1, &viewId);
-    glTextureView(viewId, type_, id_, internalFormat, minLevel, maxLevel - minLevel + 1, minLayer, maxLayer - minLayer + 1);
+    glTextureView(viewId, type_, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
     manager->intelTextureBindingSetTarget(id_, type_);
     return new Texture(type_, viewId);
 }
 
-void Texture::allocate(GLint levels, GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth) {
+void Texture::allocate(GLint levels, GLenum internal_format, uint32_t width, uint32_t height, uint32_t depth) {
     if (levels == 0) {
         uint32_t max = std::max(std::max(width, height), depth);
         levels = static_cast<int>(std::log2(max));
@@ -106,18 +106,18 @@ void Texture::allocate(GLint levels, GLenum internalFormat, uint32_t width, uint
 
     switch (dim) {
         case 1:
-            glTextureStorage1D(id_, levels, internalFormat, width);
+            glTextureStorage1D(id_, levels, internal_format, width);
             break;
         case 2:
-            glTextureStorage2D(id_, levels, internalFormat, width, height);
+            glTextureStorage2D(id_, levels, internal_format, width, height);
             break;
         case 3:
-            glTextureStorage3D(id_, levels, internalFormat, width, height, depth);
+            glTextureStorage3D(id_, levels, internal_format, width, height, depth);
             break;
     }
 }
 
-void Texture::allocateMS(GLenum internalFormat, uint32_t width, uint32_t height, uint32_t depth, int samples, bool fixedSampleLocations) {
+void Texture::allocateMS(GLenum internal_format, uint32_t width, uint32_t height, uint32_t depth, int samples, bool fixed_sample_locations) {
     this->width_ = width;
     this->height_ = height;
     this->depth_ = depth;
@@ -125,10 +125,10 @@ void Texture::allocateMS(GLenum internalFormat, uint32_t width, uint32_t height,
         case 1:
             throw std::runtime_error("1D texture cannot be allocated for multisampling");
         case 2:
-            glTextureStorage2DMultisample(id_, samples, internalFormat, width, height, fixedSampleLocations);
+            glTextureStorage2DMultisample(id_, samples, internal_format, width, height, fixed_sample_locations);
             break;
         case 3:
-            glTextureStorage3DMultisample(id_, samples, internalFormat, width, height, depth, fixedSampleLocations);
+            glTextureStorage3DMultisample(id_, samples, internal_format, width, height, depth, fixed_sample_locations);
             break;
     }
 }
