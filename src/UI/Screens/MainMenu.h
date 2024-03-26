@@ -12,7 +12,7 @@ class MainMenuScreen : public Screen {
 
    public:
     MainMenuScreen();
-    ~MainMenuScreen(){};
+    ~MainMenuScreen();
 
     virtual void draw() override;
 };

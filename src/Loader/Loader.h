@@ -103,6 +103,7 @@ class Scene {
     std::string name = "";
     std::vector<Instance *> instances = {};
     std::vector<Material *> materials = {};
+    Material *defaultMaterial = nullptr;
     std::vector<Mesh *> meshes = {};
     GL::VertexArray *vao = nullptr;
     std::vector<MaterialBatch> batches = {};
@@ -134,7 +135,15 @@ std::vector<uint8_t> binary(std::string filename);
 
 Asset::Image image(std::string filename);
 
-GL::Texture *texture(std::string filename);
+struct TextureParameters {
+    bool mipmap = true;
+    bool srgb = false;
+    GLenum internalFormat = GL_RGBA8;
+    GLenum fileFormat = GL_RGBA;
+    GLenum dataType = GL_UNSIGNED_BYTE;
+};
+
+GL::Texture *texture(std::string filename, TextureParameters params = {});
 
 // References:
 // https://kcoley.github.io/glTF/specification/2.0/figures/gltfOverview-2.0.0a.png

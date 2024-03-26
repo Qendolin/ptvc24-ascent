@@ -30,12 +30,22 @@ Asset::Image image(std::string filename) {
     };
 }
 
-GL::Texture *texture(std::string filename) {
+GL::Texture *texture(std::string filename, TextureParameters params) {
     Asset::Image img = image(filename);
     GL::Texture *texture = new GL::Texture(GL_TEXTURE_2D);
-    texture->allocate(0, GL_RGBA8, img.width, img.height, 1);
-    texture->load(0, img.width, img.height, 1, GL_RGBA, GL_UNSIGNED_BYTE, img.data.get());
-    texture->generateMipmap();
+    GLenum internal_format = params.internalFormat;
+    if (params.srgb) {
+        if (params.internalFormat == GL_RGB8 || params.internalFormat == GL_SRGB8)
+            internal_format = GL_SRGB8;
+        else if (params.internalFormat == GL_RGBA8 || params.internalFormat == GL_SRGB8_ALPHA8)
+            internal_format = GL_SRGB8_ALPHA8;
+        else
+            PANIC("Invalid texture params");
+    }
+    texture->allocate(params.mipmap ? 0 : 1, params.internalFormat, img.width, img.height, 1);
+    texture->load(0, img.width, img.height, 1, params.fileFormat, params.dataType, img.data.get());
+    if (params.mipmap)
+        texture->generateMipmap();
     return texture;
 }
 

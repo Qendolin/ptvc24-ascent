@@ -4,7 +4,14 @@
 #include "../../Loader/Loader.h"
 
 MainMenuScreen::MainMenuScreen() {
-    titleImage = Loader::texture("assets/textures/ui/title.png");
+    titleImage = Loader::texture("assets/textures/ui/title.png", {.srgb = true});
+}
+
+MainMenuScreen::~MainMenuScreen() {
+    if (titleImage != nullptr) {
+        titleImage->destroy();
+        titleImage = nullptr;
+    }
 }
 
 void MainMenuScreen::draw() {

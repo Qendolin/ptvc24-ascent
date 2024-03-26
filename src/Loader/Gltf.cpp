@@ -227,7 +227,7 @@ Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, std::vector<Material *> &ma
     result->sections.reserve(chunks.size());
     for (size_t i = first_chunk_index; i < chunks.size(); i++) {
         Chunk &chunk = chunks[i];
-        Material *material = nullptr;
+        Material *material = materials.back();
         if (chunk.material >= 0) {
             material = materials[chunk.material];
         }
@@ -254,14 +254,14 @@ GL::Texture *loadTexture(const gltf::Model &model, const gltf::TextureInfo &text
         return nullptr;
     }
     if (texture_info.texCoord != 0) {
+        LOG("only texCoord=0 is supported");
         return nullptr;
-        // throw std::exception("only texCoord=0 is supported");
     }
     gltf::Texture texture = model.textures[texture_info.index];
     gltf::Image image = model.images[texture.source];
     if (image.bits != 8) {
+        LOG("only 8-bit images are supported");
         return nullptr;
-        // throw std::exception("only 8-bit images are supported");
     }
 
     GLenum format;
@@ -297,6 +297,18 @@ Material *loadMaterial(const gltf::Model &model, gltf::Material &material) {
     normal_info.index = material.normalTexture.index;
     normal_info.texCoord = material.normalTexture.texCoord;
     result->normal = loadTexture(model, normal_info, GL_RGB8);
+
+    return result;
+}
+
+Material *createDefaultMaterial() {
+    Material *result = new Material();
+    result->name = "Default";
+    result->albedoFactor = glm::vec4(1.0);
+    result->metallicRoughnessFactor = glm::vec2(0.0, 1.0);
+    result->albedo = Loader::texture("assets/textures/default_albedo.png", {.srgb = true});
+    result->occlusionMetallicRoughness = Loader::texture("assets/textures/default_orm.png");
+    result->normal = Loader::texture("assets/textures/default_normal.png");
 
     return result;
 }
@@ -339,6 +351,9 @@ std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
         Material *material = loadMaterial(model, model.materials[i]);
         materials.push_back(material);
     }
+    result->defaultMaterial = createDefaultMaterial();
+    // the last material is the default one
+    materials.emplace_back(result->defaultMaterial);
 
     uint32_t total_vertex_count = 0;
     uint32_t total_element_count = 0;
@@ -425,7 +440,7 @@ std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
                 result->batches.emplace_back(batch);
 
             batch = {
-                .material = chunk.material < 0 ? nullptr : materials[chunk.material],
+                .material = chunk.material >= 0 ? materials[chunk.material] : materials.back(),
                 .commandOffset = reinterpret_cast<GL::DrawElementsIndirectCommand *>(draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand)),
                 .commandCount = 0,
             };
@@ -448,7 +463,7 @@ std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
         base_vertex += chunk.vertexCount;
         base_index += chunk.elementCount;
     }
-    // push last one
+    // push final one
     if (batch.commandCount != 0)
         result->batches.emplace_back(batch);
 

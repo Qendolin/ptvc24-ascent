@@ -271,12 +271,21 @@ void Game::loop_() {
         auto material = batch.material;
         pbrShader->fragmentStage()->setUniform("u_albedo_fac", material->albedoFactor);
         pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material->metallicRoughnessFactor);
-        if (material->albedo != nullptr)
+        if (material->albedo == nullptr) {
+            scene->defaultMaterial->albedo->bind(0);
+        } else {
             material->albedo->bind(0);
-        if (material->occlusionMetallicRoughness != nullptr)
+        }
+        if (material->occlusionMetallicRoughness == nullptr) {
+            scene->defaultMaterial->occlusionMetallicRoughness->bind(1);
+        } else {
             material->occlusionMetallicRoughness->bind(1);
-        if (material->normal != nullptr)
+        }
+        if (material->normal == nullptr) {
+            scene->defaultMaterial->normal->bind(2);
+        } else {
             material->normal->bind(2);
+        }
         glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, batch.commandOffset, batch.commandCount, 0);
     }
     GL::popDebugGroup();

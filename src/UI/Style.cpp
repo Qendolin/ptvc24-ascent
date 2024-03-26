@@ -38,7 +38,7 @@ struct nk_color rgb(int r, int g, int b) {
 }
 
 Skin load_skin() {
-    auto widgets = Loader::texture("assets/textures/ui/widgets.png");
+    auto widgets = Loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
 
     Skin skin = {};
 
