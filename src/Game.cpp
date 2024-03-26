@@ -149,7 +149,7 @@ void Game::setup() {
 
 void Game::run() {
     // Load all the assets
-    for (const auto &callback : onLoad) {
+    for (auto &callback : onLoad) {
         callback();
     }
 
@@ -256,17 +256,18 @@ void Game::loop_() {
     // Draw the loaded instances of the GLTF scene
     // See docs/Rendering.md for a rough explanation
     GL::pushDebugGroup("Game::DrawStatic");
-    GL::manager->setEnabled({GL::Capability::DepthTest});
+    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::CullFace});
     GL::manager->depthMask(true);
+    GL::manager->cullBack();
     GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
 
     pbrShader->bind();
     pbrShader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
     pbrShader->fragmentStage()->setUniform("u_camera_pos", camera->position);
 
-    scene.vao->bind();
-    scene.drawCommandBuffer->bind(GL_DRAW_INDIRECT_BUFFER);
-    for (auto &&batch : scene.batches) {
+    scene->vao->bind();
+    scene->drawCommandBuffer->bind(GL_DRAW_INDIRECT_BUFFER);
+    for (auto &&batch : scene->batches) {
         auto material = batch.material;
         pbrShader->fragmentStage()->setUniform("u_albedo_fac", material->albedoFactor);
         pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material->metallicRoughnessFactor);

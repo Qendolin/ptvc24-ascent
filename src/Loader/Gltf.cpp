@@ -20,6 +20,7 @@ using namespace Asset;
 
 namespace Loader {
 
+// loads the node's transformation information into a single glm::mat4
 glm::mat4 loadNodeTransform(gltf::Node &node) {
     glm::mat4 transform = glm::mat4(1.0);
     // A Node can have either a full transformation matrix or individual scale, rotation and translatin components
@@ -46,7 +47,15 @@ glm::mat4 loadNodeTransform(gltf::Node &node) {
     return transform;
 }
 
-void loadNodeRecursive(gltf::Model &model, gltf::Node &node, const std::vector<Mesh *> &meshes, std::vector<Instance *> &instances, std::vector<InstanceAttributes> &attributes, glm::mat4 combined_transform) {
+/**
+ * @param model the entire gltf model
+ * @param node the current node
+ * @param meshes all of the meshes, same order as in the gltf file
+ * @param instances an empty vector that will be filled with instances
+ * @param attributes an empty vector that will be filled with instance attributes (e.g. transform)
+ * @param combined_transform the combined transform of all parent nodes
+ */
+void loadNodeRecursive(gltf::Model &model, gltf::Node &node, std::vector<Mesh *> &meshes, std::vector<Instance *> &instances, std::vector<InstanceAttributes> &attributes, glm::mat4 combined_transform) {
     glm::mat4 transform = loadNodeTransform(node);
     combined_transform = combined_transform * transform;
 
@@ -67,22 +76,35 @@ void loadNodeRecursive(gltf::Model &model, gltf::Node &node, const std::vector<M
 }
 
 typedef struct Chunk {
+    // pointer into the gltf data (vector of three floats)
     void *positionPtr = nullptr;
+    // the length of the position data in bytes
     size_t positionLength;
+    // pointer into the gltf data (vector of three floats)
     void *normalPtr = nullptr;
+    // the length of the normal data in bytes
     size_t normalLength;
+    // pointer into the gltf data (vector of two floats)
     void *texcoordPtr = nullptr;
+    // the length of the texcoord data in bytes
     size_t texcoordLength;
+    // pointer into the gltf data (short or int)
     void *indexPtr = nullptr;
+    // the length of the index data in bytes
     size_t indexLength;
+    // the size, in bytes, of each index (2 or 4)
     uint8_t indexSize;
+    // then number of indices
     uint32_t elementCount;
+    // the number of vertices
     uint32_t vertexCount;
+    // the index of the material, negative if there is none
     int32_t material;
+    // the associated section of this chunk (1:1 relationship)
     Section *section = nullptr;
 } Chunk;
 
-Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<const Material *> &materials, std::vector<Chunk> &chunks) {
+Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, std::vector<Material *> &materials, std::vector<Chunk> &chunks) {
     int first_chunk_index = chunks.size();
     Mesh *result = new Mesh();
     result->name = mesh.name;
@@ -205,7 +227,7 @@ Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<const Mat
     result->sections.reserve(chunks.size());
     for (size_t i = first_chunk_index; i < chunks.size(); i++) {
         Chunk &chunk = chunks[i];
-        const Material *material = nullptr;
+        Material *material = nullptr;
         if (chunk.material >= 0) {
             material = materials[chunk.material];
         }
@@ -220,21 +242,22 @@ Mesh *loadMesh(gltf::Model &model, gltf::Mesh &mesh, const std::vector<const Mat
         });
         result->totalElementCount += chunk.elementCount;
         result->totalVertexCount += chunk.vertexCount;
+        // Note: this is only save because the vector is pre-allocated
         chunk.section = &result->sections.back();
     }
 
     return result;
 }
 
-GL::Texture *loadTexture(const gltf::Model &model, const gltf::TextureInfo &textureInfo, GLenum internalFormat) {
-    if (textureInfo.index < 0) {
+GL::Texture *loadTexture(const gltf::Model &model, const gltf::TextureInfo &texture_info, GLenum internalFormat) {
+    if (texture_info.index < 0) {
         return nullptr;
     }
-    if (textureInfo.texCoord != 0) {
+    if (texture_info.texCoord != 0) {
         return nullptr;
         // throw std::exception("only texCoord=0 is supported");
     }
-    gltf::Texture texture = model.textures[textureInfo.index];
+    gltf::Texture texture = model.textures[texture_info.index];
     gltf::Image image = model.images[texture.source];
     if (image.bits != 8) {
         return nullptr;
@@ -278,7 +301,7 @@ Material *loadMaterial(const gltf::Model &model, gltf::Material &material) {
     return result;
 }
 
-Asset::Scene gltf(const std::string filename) {
+std::shared_ptr<Asset::Scene> gltf(const std::string filename) {
     gltf::TinyGLTF loader;
     std::string err;
     std::string warn;
@@ -309,11 +332,11 @@ Asset::Scene gltf(const std::string filename) {
     }
 
     const gltf::Scene &scene = model.scenes[model.defaultScene];
-    Scene result = {};
+    std::shared_ptr<Scene> result = std::make_shared<Scene>();
 
-    std::vector<const Material *> materials;
+    std::vector<Material *> materials;
     for (size_t i = 0; i < model.materials.size(); ++i) {
-        const Material *material = loadMaterial(model, model.materials[i]);
+        Material *material = loadMaterial(model, model.materials[i]);
         materials.push_back(material);
     }
 
@@ -329,11 +352,13 @@ Asset::Scene gltf(const std::string filename) {
     }
 
     std::vector<InstanceAttributes> attributes;
+    std::vector<Instance *> instances;
     // this may allocate a little bit more than needed, but it doesn't matter
     attributes.reserve(model.nodes.size());
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        loadNodeRecursive(model, model.nodes[scene.nodes[i]], meshes, result.instances, attributes, glm::mat4(1.0));
+        loadNodeRecursive(model, model.nodes[scene.nodes[i]], meshes, instances, attributes, glm::mat4(1.0));
     }
+    result->instances = instances;
 
     // sort all of the sections by material id
     // this allowes them to be drawn in larger batches
@@ -355,7 +380,7 @@ Asset::Scene gltf(const std::string filename) {
     attributes_buffer->allocate(attributes.data(), attributes.size() * sizeof(InstanceAttributes), 0);
 
     auto vao = new GL::VertexArray();
-    result.vao = vao;
+    result->vao = vao;
     vao->layout(0, 0, 3, GL_FLOAT, GL_FALSE, 0);
     vao->bindBuffer(0, *position_buffer, 0, sizeof(glm::vec3));
     vao->own(position_buffer);
@@ -397,7 +422,7 @@ Asset::Scene gltf(const std::string filename) {
 
             // push previous one
             if (batch.commandCount != 0)
-                result.batches.emplace_back(batch);
+                result->batches.emplace_back(batch);
 
             batch = {
                 .material = chunk.material < 0 ? nullptr : materials[chunk.material],
@@ -425,10 +450,13 @@ Asset::Scene gltf(const std::string filename) {
     }
     // push last one
     if (batch.commandCount != 0)
-        result.batches.emplace_back(batch);
+        result->batches.emplace_back(batch);
 
-    result.drawCommandBuffer = new GL::Buffer();
-    result.drawCommandBuffer->allocate(draw_commands.data(), draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand), 0);
+    result->drawCommandBuffer = new GL::Buffer();
+    result->drawCommandBuffer->allocate(draw_commands.data(), draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand), 0);
+
+    result->materials = materials;
+    result->meshes = meshes;
 
     return result;
 }

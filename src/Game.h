@@ -53,7 +53,7 @@ class Game {
     Screen *screen = nullptr;
     // All visual instances that need to be rendered.
     // Loaded from the gltf file.
-    Asset::Scene scene = {};
+    std::shared_ptr<Asset::Scene> scene = nullptr;
     // All entities that need to process game logic
     std::vector<Entity *> entities = {};
 
