@@ -184,6 +184,7 @@ void initializeOpenGL(bool enableDebug) {
     if (enableDebug && glDebugMessageCallback != NULL) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        LOG("Enabled GL debug output");
 
         std::vector<std::string> *group_stack = new std::vector<std::string>{"top"};
         glDebugMessageCallback(debugCallback, group_stack);

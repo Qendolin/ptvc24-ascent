@@ -9,20 +9,24 @@ int main(int argc, char** argv) {
 
     LOG("Parsing arguments");
     bool enableCompatibilityProfile = false;
-    bool disableGlDebug = false;
+    bool enableGlDebug = false;
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
         if (arg == "--enable-compatibility-profile") {
             enableCompatibilityProfile = true;
         }
-        if (arg == "--disable-gl-debug") {
-            disableGlDebug = true;
+        if (arg == "--enable-gl-debug") {
+            enableGlDebug = true;
         }
     }
 
+#ifndef NDEBUG
+    enableGlDebug = true;
+#endif
+
     try {
         GLFWwindow* window = createOpenGLContext(enableCompatibilityProfile);
-        initializeOpenGL(!disableGlDebug);
+        initializeOpenGL(enableGlDebug);
 
         Game* game = new Game(window);
         Game::instance = game;

@@ -14,8 +14,8 @@ Use mouse to look.
 - `--enable-compatibility-profile`  
 Enables the OpenGL compatability profile
 
-- `--disable-gl-debug`  
-Disables the OpenGL debug callback
+- `--enable-gl-debug`  
+Enables the OpenGL debug callback. Always enabled in debug builds.
 
 ## Noteworthy Features
 
