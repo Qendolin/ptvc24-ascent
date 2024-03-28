@@ -206,10 +206,7 @@ void Game::loop_() {
     processInput_();
     ui->update(input);
 
-    tweenTimer_ += input->timeDelta() * 1000.0;
-    // LOG(tweenTimer_);
-    tweenTimeStep_ = (int)floor(tweenTimer_);
-    tweenTimer_ -= tweenTimeStep_;
+    tween.update(input->timeDelta());
 
     nk_context *nk = ui->context();
     struct nk_style *s = &nk->style;

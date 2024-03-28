@@ -29,7 +29,7 @@ void MainMenuScreen::draw() {
         float img_height = 40_vw * titleImage->height() / titleImage->width();
         nk_layout_row_dynamic(nk, img_height, 1);
         nk_image_color(nk, nk_image_id(titleImage->id()), nk_rgba_f(1.0, 1.0, 1.0, titleOpacity.peek()));
-        game->tween(titleOpacity);
+        game->tween.step(titleOpacity);
 
         // vertical spacer
         nk_layout_row_dynamic(nk, img_height / 2, 1);
