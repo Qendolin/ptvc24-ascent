@@ -36,12 +36,12 @@
 class Input {
    private:
     enum class State : uint8_t {
-        ZERO = 0,
-        RELEASED_BIT = 0b001,
-        PRESSED_BIT = 0b010,
-        PERSISTENT_PRESSED_BIT = 0b100,
-        CLEAR_MASK = static_cast<State>(~static_cast<uint8_t>(RELEASED_BIT | PRESSED_BIT)),
-        PERSISTENT_PRESSED_MASK = PRESSED_BIT | PERSISTENT_PRESSED_BIT,
+        Zero = 0,
+        ReleasedBit = 0b001,
+        PressedBit = 0b010,
+        PersistentPressedBit = 0b100,
+        ClearMask = static_cast<State>(~static_cast<uint8_t>(ReleasedBit | PressedBit)),
+        PersistentPressedMask = PressedBit | PersistentPressedBit,
     };
 
     // Operators need to defined explicitly for enums. This allows bitwise operations like `&` and `|`.
@@ -138,7 +138,7 @@ class Input {
      * @return `true` if the given button is being held down.
      */
     bool isMouseDown(int button) const {
-        return (mouseButtonsRead_[button] & State::PERSISTENT_PRESSED_MASK) != State::ZERO;
+        return (mouseButtonsRead_[button] & State::PersistentPressedMask) != State::Zero;
     }
 
     /**
@@ -146,7 +146,7 @@ class Input {
      * @return `true` if the given button has been pressed down since the last frame.
      */
     bool isMousePress(int button) const {
-        return (mouseButtonsRead_[button] & State::PRESSED_BIT) != State::ZERO;
+        return (mouseButtonsRead_[button] & State::PressedBit) != State::Zero;
     }
 
     /**
@@ -154,7 +154,7 @@ class Input {
      * @return `true` if the given button has been pressed down since the last frame.
      */
     bool isMouseRelease(int button) const {
-        return (mouseButtonsRead_[button] & State::RELEASED_BIT) != State::ZERO;
+        return (mouseButtonsRead_[button] & State::ReleasedBit) != State::Zero;
     }
 
     /**
@@ -162,7 +162,7 @@ class Input {
      * @return `true` if the given key is being held down.
      */
     bool isKeyDown(int key) const {
-        return (keysRead_[key] & State::PERSISTENT_PRESSED_MASK) != State::ZERO;
+        return (keysRead_[key] & State::PersistentPressedMask) != State::Zero;
     }
 
     /**
@@ -180,7 +180,7 @@ class Input {
      * @return `true` if the given key has been pressed down since the last frame.
      */
     bool isKeyPress(int key) const {
-        return (keysRead_[key] & State::PRESSED_BIT) != State::ZERO;
+        return (keysRead_[key] & State::PressedBit) != State::Zero;
     }
 
     /**
@@ -188,7 +188,7 @@ class Input {
      * @return `true` if the given key has been released up since the last frame.
      */
     bool isKeyRelease(int key) const {
-        return (keysRead_[key] & State::RELEASED_BIT) != State::ZERO;
+        return (keysRead_[key] & State::ReleasedBit) != State::Zero;
     }
 
     void update();

@@ -3,10 +3,10 @@
 #include <algorithm>
 
 Input::Input(GLFWwindow *window) : window_(window) {
-    std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::ZERO);
-    std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::ZERO);
-    std::fill(std::begin(keysWrite_), std::end(keysWrite_), State::ZERO);
-    std::fill(std::begin(keysRead_), std::end(keysRead_), State::ZERO);
+    std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::Zero);
+    std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::Zero);
+    std::fill(std::begin(keysWrite_), std::end(keysWrite_), State::Zero);
+    std::fill(std::begin(keysRead_), std::end(keysRead_), State::Zero);
 
     for (int key = GLFW_KEY_SPACE; key <= keysWrite_.size(); key++) {
         const char *name = glfwGetKeyName(key, 0);
@@ -21,12 +21,12 @@ void Input::pollCurrentState_() {
 
     for (int key = GLFW_KEY_SPACE; key < keysWrite_.size(); key++) {
         int state = glfwGetKey(window_, key);
-        keysWrite_[key] = state == GLFW_PRESS ? State::PERSISTENT_PRESSED_MASK : State::ZERO;
+        keysWrite_[key] = state == GLFW_PRESS ? State::PersistentPressedMask : State::Zero;
     }
 
     for (int button = GLFW_MOUSE_BUTTON_1; button < mouseButtonsWrite_.size(); button++) {
         int state = glfwGetMouseButton(window_, button);
-        mouseButtonsWrite_[button] = state == GLFW_PRESS ? State::PERSISTENT_PRESSED_MASK : State::ZERO;
+        mouseButtonsWrite_[button] = state == GLFW_PRESS ? State::PersistentPressedMask : State::Zero;
     }
 
     double mouse_x = 0, mouse_y = 0;
@@ -63,27 +63,27 @@ void Input::update() {
     std::copy(std::begin(keysWrite_), std::end(keysWrite_), std::begin(keysRead_));
     // The state changes (pressed, released) are cleared but the current state is kept
     for (size_t i = 0; i < keysWrite_.size(); i++) {
-        keysWrite_[i] &= State::CLEAR_MASK;
+        keysWrite_[i] &= State::ClearMask;
     }
 
     // Same for mouse buttons
     std::copy(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), std::begin(mouseButtonsRead_));
     for (size_t i = 0; i < mouseButtonsWrite_.size(); i++) {
-        mouseButtonsWrite_[i] &= State::CLEAR_MASK;
+        mouseButtonsWrite_[i] &= State::ClearMask;
     }
 }
 
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
         // set the pressed and down bit
-        keysWrite_[key] |= State::PRESSED_BIT;
-        keysWrite_[key] |= State::PERSISTENT_PRESSED_BIT;
+        keysWrite_[key] |= State::PressedBit;
+        keysWrite_[key] |= State::PersistentPressedBit;
     }
 
     if (action == GLFW_RELEASE) {
         // set the released and clear the down bit
-        keysWrite_[key] |= State::RELEASED_BIT;
-        keysWrite_[key] &= static_cast<State>(~static_cast<uint8_t>(State::PERSISTENT_PRESSED_BIT));
+        keysWrite_[key] |= State::ReleasedBit;
+        keysWrite_[key] &= static_cast<State>(~static_cast<uint8_t>(State::PersistentPressedBit));
     }
 }
 
@@ -95,14 +95,14 @@ void Input::onCursorPos(GLFWwindow *window, double x, double y) {
 void Input::onMouseButton(GLFWwindow *window, int button, int action, int mods) {
     if (action == GLFW_PRESS) {
         // set the pressed and down bit
-        mouseButtonsWrite_[button] |= State::PRESSED_BIT;
-        mouseButtonsWrite_[button] |= State::PERSISTENT_PRESSED_BIT;
+        mouseButtonsWrite_[button] |= State::PressedBit;
+        mouseButtonsWrite_[button] |= State::PersistentPressedBit;
     }
 
     if (action == GLFW_RELEASE) {
         // set the released and clear the down bit
-        mouseButtonsWrite_[button] |= State::RELEASED_BIT;
-        mouseButtonsWrite_[button] &= static_cast<State>(~static_cast<uint8_t>(State::PERSISTENT_PRESSED_BIT));
+        mouseButtonsWrite_[button] |= State::ReleasedBit;
+        mouseButtonsWrite_[button] &= static_cast<State>(~static_cast<uint8_t>(State::PersistentPressedBit));
     }
 }
 
