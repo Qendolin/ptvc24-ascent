@@ -213,13 +213,16 @@ void Game::loop_() {
     // make window transparent
     // window_style_transparent(nk);
     if (nk_begin(nk, "gui", nk_rect(0, 0, viewportSize.x, viewportSize.y), 0)) {
-        nk_layout_row_dynamic(nk, 30, 1);
+        nk_layout_row_dynamic(nk, 30, 2);
         std::chrono::duration<float> total_seconds(input->time());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
         auto seconds = total_seconds - minutes;
 
         std::string time = std::format("Time: {:02}:{:02}", round(minutes.count()), round(seconds.count()));
         nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
+
+        float fps = floor(1.0 / input->timeDelta());
+        nk_label(nk, std::format("{:4.0f}fps {:5.2f}ms", fps, input->timeDelta() * 1000.0).c_str(), NK_TEXT_ALIGN_RIGHT);
     }
     nk_end(nk);
     // drawMenu(this);
