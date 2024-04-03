@@ -41,6 +41,7 @@ GOTO DONE
 rmdir /Q /S "build\Debug\" 2>NUL
 rmdir /Q /S "build\PTVC_Project_GL.dir\" 2>NUL
 del /q "build\PTVC_Project_GL.*" 2>NUL
+del /q "build\CMakeCache.txt" 2>NUL
 cmake -H. -B %PROJECT_DIR% -A "x64" -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
 cmake --build %PROJECT_DIR% --config Debug --target ALL_BUILD
 GOTO DONE

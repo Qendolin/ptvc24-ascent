@@ -1,5 +1,5 @@
 OS := $(shell uname)
-PROJECT_DIR = _project
+PROJECT_DIR = build
 INSTALL_DIR = _bin
 
 all:
