@@ -3,7 +3,6 @@
 #include <chrono>
 
 #include "GL/StateManager.h"
-// #include "Menu.h"
 #include "UI/Screens/MainMenu.h"
 #include "UI/Skin.h"
 #include "Utils.h"
@@ -209,9 +208,9 @@ void Game::loop_() {
     tween.update(input->timeDelta());
 
     nk_context *nk = ui->context();
-    struct nk_style *s = &nk->style;
     // make window transparent
-    // window_style_transparent(nk);
+    nk->style.window.background = nk_rgba(0, 0, 0, 0);
+    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
     if (nk_begin(nk, "gui", nk_rect(0, 0, viewportSize.x, viewportSize.y), 0)) {
         nk_layout_row_dynamic(nk, 30, 2);
         std::chrono::duration<float> total_seconds(input->time());
