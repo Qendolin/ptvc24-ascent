@@ -23,7 +23,6 @@ typedef struct DrawElementsIndirectCommand {
 // https://www.khronos.org/opengl/wiki/Buffer_Object
 class Buffer : public GLObject {
    private:
-    GLuint id_ = 0;
     size_t size_ = 0;
     uint32_t flags_ = 0;
     bool immutable_ = false;
@@ -31,20 +30,16 @@ class Buffer : public GLObject {
     void allocate_(const void* data, size_t size, GLbitfield flags);
     void allocateMutable_(const void* data, size_t size, GLenum usage);
 
-    ~Buffer() {
-        checkDestroyed(GL_BUFFER);
-    }
-
    public:
     Buffer();
 
-    void destroy();
+    Buffer(Buffer&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
+
+    void setDebugLabel(const std::string& label) override;
 
     size_t size() const;
-
-    void setDebugLabel(const std::string& label);
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBuffer.xhtml)
     void bind(GLenum target) const;
@@ -94,22 +89,17 @@ class Buffer : public GLObject {
 // https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object
 class VertexArray : public GLObject {
    private:
-    GLuint id_ = 0;
     std::vector<std::pair<size_t, size_t>> bindingRanges_;
     std::vector<Buffer*> ownedBuffers_;
-
-    ~VertexArray() {
-        checkDestroyed(GL_VERTEX_ARRAY);
-    }
 
    public:
     VertexArray();
 
-    void destroy();
+    VertexArray(VertexArray&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
-    void setDebugLabel(const std::string& label);
+    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindVertexArray.xhtml)
     void bind() const;

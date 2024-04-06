@@ -9,13 +9,20 @@ namespace GL {
 
 class GLObject {
    protected:
-    void checkDestroyed(GLenum type) {
-        GLuint id = this->id();
-        if (id == 0) return;
+    GLenum type_ = GL_NONE;
+    GLuint id_ = 0;
+
+    /**
+     * @param type One of the namespaces in the table [here](https://www.khronos.org/opengl/wiki/OpenGL_Object#Object_names).
+     */
+    GLObject(GLenum type) : type_(type) {}
+
+    void checkDestroyed() {
+        if (id_ == 0) return;
 
         GLsizei len;
         char label[256];
-        glGetObjectLabel(type, id, sizeof(label), &len, &label[0]);
+        glGetObjectLabel(type_, id_, sizeof(label), &len, &label[0]);
 
         std::string labelString = "";
         if (len != 0) {
@@ -23,7 +30,7 @@ class GLObject {
         }
 
         const char* typeString;
-        switch (type) {
+        switch (type_) {
             case GL_BUFFER:
                 typeString = "Buffer";
                 break;
@@ -55,20 +62,29 @@ class GLObject {
                 typeString = "Unknwon";
                 break;
         }
-        std::cerr << "GL " << typeString << " Object id=" << std::to_string(id) << labelString << " not destroyed!" << std::endl;
+        std::cerr << "GL " << typeString << " Object id=" << std::to_string(id_) << labelString << " not destroyed!" << std::endl;
     }
-    ~GLObject() {}
+
+    ~GLObject() {
+        checkDestroyed();
+    }
 
    public:
-    virtual void destroy() = 0;
-    virtual GLuint id() const = 0;
-    virtual void setDebugLabel(const std::string& label) = 0;
-
     // prevent copy
     GLObject(GLObject const&) = delete;
     GLObject& operator=(GLObject const&) = delete;
 
-    GLObject() {}
+    // allow move
+    GLObject(GLObject&& other) noexcept : type_(other.type_), id_(std::exchange(other.id_, 0)) {
+        std::cout << "!!! Moved " << id_ << std::endl;
+    }
+
+    virtual void destroy() = 0;
+    virtual void setDebugLabel(const std::string& label) = 0;
+
+    GLuint id() const {
+        return id_;
+    };
 };
 
 }  // namespace GL

@@ -13,15 +13,10 @@ namespace GL {
 // https://www.khronos.org/opengl/wiki/GLSL_Object
 class ShaderProgram : public GLObject {
    private:
-    GLuint id_ = 0;
     std::map<std::string, int32_t> uniformLocations_;
     std::string sourceOriginal_ = "";
     std::string sourceModified_ = "";
     GLenum stage_ = 0;
-
-    ~ShaderProgram() {
-        checkDestroyed(GL_PROGRAM);
-    }
 
    public:
     // Load and compile the given source code.
@@ -31,11 +26,13 @@ class ShaderProgram : public GLObject {
     // See `compile` for details.
     ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions = {});
 
-    void destroy();
+    ShaderProgram(ShaderProgram&&) noexcept = default;
+
+    void destroy() override;
+
+    void setDebugLabel(const std::string& label) override;
 
     std::string source() const;
-
-    GLuint id() const;
 
     GLenum stage() const;
 
@@ -45,8 +42,6 @@ class ShaderProgram : public GLObject {
     // - https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateShaderProgram.xhtml
     // - https://registry.khronos.org/OpenGL-Refpages/gl4/html/glValidateProgram.xhtml
     void compile(std::map<std::string, std::string> substitutions = {});
-
-    void setDebugLabel(const std::string& label);
 
     // Get the uniform location index given its name. Uses caching.
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetUniformLocation.xhtml)
@@ -65,7 +60,6 @@ class ShaderProgram : public GLObject {
 // https://www.khronos.org/opengl/wiki/Shader_Compilation#Separate_programs
 class ShaderPipeline : public GLObject {
    private:
-    GLuint id_ = 0;
     ShaderProgram* vertStage_ = nullptr;
     ShaderProgram* tessCtrlStage_ = nullptr;
     ShaderProgram* tessEvalStage_ = nullptr;
@@ -73,14 +67,6 @@ class ShaderPipeline : public GLObject {
     ShaderProgram* fragStage_ = nullptr;
     ShaderProgram* compStage_ = nullptr;
     std::vector<ShaderProgram*> ownedPrograms_;
-
-    ~ShaderPipeline() {
-        checkDestroyed(GL_PROGRAM_PIPELINE);
-        for (auto&& p : ownedPrograms_) {
-            p->destroy();
-        }
-        ownedPrograms_ = {};
-    }
 
     ShaderProgram*& getRef_(GLenum stage);
 
@@ -90,11 +76,13 @@ class ShaderPipeline : public GLObject {
     // They will be automatically attached.
     ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs);
 
-    void destroy();
+    ShaderPipeline(ShaderPipeline&&) noexcept = default;
+
+    void destroy() override;
+
+    void setDebugLabel(const std::string& label) override;
 
     void bind() const;
-
-    GLuint id() const;
 
     // @returns the vertex shader
     ShaderProgram* vertexStage() const;
@@ -104,8 +92,6 @@ class ShaderPipeline : public GLObject {
 
     // @returns the shader for the given stage
     ShaderProgram* get(GLenum stage) const;
-
-    void setDebugLabel(const std::string& label);
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUseProgramStages.xhtml)
     void attach(const std::initializer_list<ShaderProgram*> programs);

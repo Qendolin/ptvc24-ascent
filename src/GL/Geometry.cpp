@@ -8,7 +8,7 @@ namespace GL {
 void warnAllocationSize(size_t size);
 bool warnAllocationSizeZero(size_t size);
 
-Buffer::Buffer() {
+Buffer::Buffer() : GLObject(GL_BUFFER) {
     glCreateBuffers(1, &id_);
 }
 
@@ -19,10 +19,6 @@ void Buffer::destroy() {
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Buffer::id() const {
-    return id_;
 }
 
 size_t Buffer::size() const {
@@ -149,7 +145,7 @@ bool warnAllocationSizeZero(size_t size) {
     return true;
 }
 
-VertexArray::VertexArray() : bindingRanges_(32, std::pair(0, 0)) {
+VertexArray::VertexArray() : GLObject(GL_VERTEX_ARRAY), bindingRanges_(32, std::pair(0, 0)) {
     glCreateVertexArrays(1, &id_);
 }
 
@@ -165,10 +161,6 @@ void VertexArray::destroy() {
     }
     ownedBuffers_ = {};
     delete this;
-}
-
-GLuint VertexArray::id() const {
-    return id_;
 }
 
 void VertexArray::setDebugLabel(const std::string& label) {

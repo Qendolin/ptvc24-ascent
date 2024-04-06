@@ -7,7 +7,7 @@
 
 namespace GL {
 
-Renderbuffer::Renderbuffer() {
+Renderbuffer::Renderbuffer() : GLObject(GL_RENDERBUFFER) {
     glCreateRenderbuffers(1, &id_);
 }
 
@@ -18,10 +18,6 @@ void Renderbuffer::destroy() {
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Renderbuffer::id() const {
-    return id_;
 }
 
 void Renderbuffer::setDebugLabel(const std::string& label) {
@@ -51,7 +47,7 @@ int Framebuffer::mapAttachmentIndex_(int attachment) const {
     return attachment + 2;
 }
 
-Framebuffer::Framebuffer() : textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
+Framebuffer::Framebuffer() : GLObject(GL_FRAMEBUFFER), textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
     glCreateFramebuffers(1, &id_);
 }
 
@@ -62,10 +58,6 @@ void Framebuffer::destroy() {
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Framebuffer::id() const {
-    return id_;
 }
 
 void Framebuffer::setDebugLabel(const std::string& label) {

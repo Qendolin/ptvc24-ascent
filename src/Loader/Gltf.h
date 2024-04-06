@@ -40,13 +40,8 @@ typedef struct Material {
     Material(Material const &) = delete;
     Material &operator=(Material const &) = delete;
     // allow move (required for use in vector, see https://stackoverflow.com/a/67537699/7448536)
-    Material(Material &&other) noexcept
-        : name(std::move(other.name)),
-          albedo(std::exchange(other.albedo, nullptr)),
-          occlusionMetallicRoughness(std::exchange(other.occlusionMetallicRoughness, nullptr)),
-          normal(std::exchange(other.normal, nullptr)),
-          albedoFactor(std::move(other.albedoFactor)),
-          metallicRoughnessFactor(std::move(other.metallicRoughnessFactor)) {}
+    Material(Material &&) noexcept = default;
+
     Material() = default;
 
     std::string name = "";
@@ -151,8 +146,8 @@ typedef struct MaterialBatch {
 // TODO: comment
 class Graphics {
    private:
-    GL::VertexArray *vao_ = nullptr;
-    GL::Buffer *drawCommands_ = nullptr;
+    std::unique_ptr<GL::VertexArray> vao_ = nullptr;
+    std::unique_ptr<GL::Buffer> drawCommands_ = nullptr;
 
    public:
     std::vector<Instance> instances;
@@ -163,12 +158,7 @@ class Graphics {
 
     Graphics(Graphics const &) = delete;
     Graphics &operator=(Graphics const &) = delete;
-    Graphics(Graphics &&other) noexcept : instances(std::move(other.instances)),
-                                          materials(std::move(other.materials)),
-                                          defaultMaterial(std::move(other.defaultMaterial)),
-                                          batches(std::move(other.batches)),
-                                          vao_(std::exchange(other.vao_, nullptr)),
-                                          drawCommands_(std::exchange(other.drawCommands_, nullptr)) {}
+    Graphics(Graphics &&) noexcept = default;
 
     Graphics(
         std::vector<Instance> &&instances,

@@ -7,7 +7,7 @@
 
 namespace GL {
 
-Texture::Texture(GLenum type) : type_(type) {
+Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     glCreateTextures(type_, 1, &id_);
     manager->intelTextureBindingSetTarget(id_, type_);
 }
@@ -22,10 +22,6 @@ void Texture::setDebugLabel(const std::string& label) {
 
 GLenum Texture::type() const {
     return type_;
-}
-
-GLuint Texture::id() const {
-    return id_;
 }
 
 uint32_t Texture::width() const {
@@ -160,7 +156,7 @@ void Texture::depthStencilTextureMode(GLenum mode) {
     glTextureParameteri(id_, GL_DEPTH_STENCIL_TEXTURE_MODE, mode);
 }
 
-Sampler::Sampler() {
+Sampler::Sampler() : GLObject(GL_SAMPLER) {
     glCreateSamplers(1, &id_);
 }
 
@@ -171,10 +167,6 @@ void Sampler::destroy() {
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Sampler::Sampler::id() const {
-    return id_;
 }
 
 void Sampler::setDebugLabel(const std::string& label) {

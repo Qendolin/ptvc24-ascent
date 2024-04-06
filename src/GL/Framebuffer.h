@@ -11,21 +11,14 @@ namespace GL {
 // References;
 // https://www.khronos.org/opengl/wiki/Renderbuffer_Object
 class Renderbuffer : public GLObject {
-   private:
-    GLuint id_ = 0;
-
-    ~Renderbuffer() {
-        checkDestroyed(GL_RENDERBUFFER);
-    }
-
    public:
     Renderbuffer();
 
-    void destroy();
+    Renderbuffer(Renderbuffer&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
-    void setDebugLabel(const std::string& label);
+    void setDebugLabel(const std::string& label) override;
 
     void bind() const;
 
@@ -39,25 +32,20 @@ class Renderbuffer : public GLObject {
 // https://www.khronos.org/opengl/wiki/Framebuffer_Object
 class Framebuffer : public GLObject {
    private:
-    GLuint id_ = 0;
     std::vector<const Texture*> textures_;
     std::vector<const Renderbuffer*> renderbuffers_;
 
     // maps an attachment to it's index in the vector
     int mapAttachmentIndex_(int attachment) const;
 
-    ~Framebuffer() {
-        checkDestroyed(GL_FRAMEBUFFER);
-    }
-
    public:
     Framebuffer();
 
-    void destroy();
+    Framebuffer(Framebuffer&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
-    void setDebugLabel(const std::string& label);
+    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawBuffers.xhtml)
     void bindTargets(const std::vector<int>& indices);
