@@ -1,9 +1,14 @@
 #pragma once
 
+#include <Jolt/Jolt.h>
+
 #include <glm/glm.hpp>
 
 #include "Camera.h"
 #include "Physics/Physics.h"
+
+// After Physics.h
+#include <Jolt/Physics/Character/Character.h>
 
 // Entity represents objects that need to process game logic
 class Entity {

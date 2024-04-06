@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "GL/StateManager.h"
+#include "Physics/Shapes.h"
 #include "UI/Screens/MainMenu.h"
 #include "UI/Skin.h"
 #include "Utils.h"
@@ -69,34 +70,6 @@ void Game::resize(int width, int height) {
         ui->setViewport(viewportSize);
 }
 
-// This is temporary
-void createPhysicsScene(PH::Physics *physics) {
-    JPH::BodyInterface &interface = physics->interface();
-    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0f, 5.0f, -4.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PH::Layers::MOVING);
-    // make it bouncy
-    sphere_settings.mRestitution = 0.9;
-    interface.CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-
-    JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(100.0f, 1.0f, 100.0f));
-    JPH::ShapeRefC floor_shape = floor_shape_settings.Create().Get();
-    JPH::BodyCreationSettings floor_settings(floor_shape, JPH::RVec3(0.0, -1.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PH::Layers::NON_MOVING);
-    interface.CreateAndAddBody(floor_settings, JPH::EActivation::DontActivate);
-
-    JPH::BoxShapeSettings sensor_test_shape_settings(JPH::Vec3(2.0f, 2.0f, 2.0f));
-    JPH::ShapeRefC sensor_test_shape = sensor_test_shape_settings.Create().Get();
-    JPH::BodyCreationSettings sensor_test_settings(sensor_test_shape, JPH::RVec3(5.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PH::Layers::SENSOR);
-    sensor_test_settings.mIsSensor = true;
-    JPH::BodyID sensor_test_id = interface.CreateAndAddBody(sensor_test_settings, JPH::EActivation::DontActivate);
-    physics->contactListener->RegisterCallback(sensor_test_id, [physics](PH::SensorContact contact) {
-        if (contact.persistent) return;
-        LOG("Sensor activated");
-        // JPH::BodyInterface &interface = physics->interface();
-        // interface.RemoveBody(contact.sensor);
-        // interface.DestroyBody(contact.sensor);
-        // physics->contactListener->UnrgisterCallback(contact.sensor);
-    });
-}
-
 void Game::setup() {
     quad = createQuad();
 
@@ -145,8 +118,9 @@ void Game::setup() {
         }
     });
 
-    scene = Loader::gltf("assets/models/test_course.glb");
-    createPhysicsScene(physics);
+    const tinygltf::Model &model = Loader::gltf("assets/models/test_course.glb");
+    scene = Loader::scene(model);
+    scene->physics.create(*physics);
 
     entities.push_back(new CharacterController(camera));
 }
@@ -197,6 +171,14 @@ void Game::processInput_() {
     if (input->isKeyPress(GLFW_KEY_P)) {
         LOG("Toggle phyics update");
         physics->setEnabled(!physics->enabled());
+    }
+
+    // Spawn shpere (Debugging)
+    if (input->isKeyPress(GLFW_KEY_L)) {
+        LOG("Spawn shere");
+        JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), PH::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PH::Layers::MOVING);
+        sphere_settings.mRestitution = 0.2;
+        physics->interface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
     }
 }
 
@@ -269,26 +251,26 @@ void Game::loop_() {
     pbrShader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
     pbrShader->fragmentStage()->setUniform("u_camera_pos", camera->position);
 
-    scene->vao->bind();
-    scene->drawCommandBuffer->bind(GL_DRAW_INDIRECT_BUFFER);
-    for (auto &&batch : scene->batches) {
-        auto material = batch.material;
-        pbrShader->fragmentStage()->setUniform("u_albedo_fac", material->albedoFactor);
-        pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material->metallicRoughnessFactor);
-        if (material->albedo == nullptr) {
-            scene->defaultMaterial->albedo->bind(0);
+    scene->graphics.bind();
+    for (auto &&batch : scene->graphics.batches) {
+        auto &material = scene->graphics.materials[batch.material];
+        auto &defaultMaterial = scene->graphics.defaultMaterial;
+        pbrShader->fragmentStage()->setUniform("u_albedo_fac", material.albedoFactor);
+        pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material.metallicRoughnessFactor);
+        if (material.albedo == nullptr) {
+            defaultMaterial.albedo->bind(0);
         } else {
-            material->albedo->bind(0);
+            material.albedo->bind(0);
         }
-        if (material->occlusionMetallicRoughness == nullptr) {
-            scene->defaultMaterial->occlusionMetallicRoughness->bind(1);
+        if (material.occlusionMetallicRoughness == nullptr) {
+            defaultMaterial.occlusionMetallicRoughness->bind(1);
         } else {
-            material->occlusionMetallicRoughness->bind(1);
+            material.occlusionMetallicRoughness->bind(1);
         }
-        if (material->normal == nullptr) {
-            scene->defaultMaterial->normal->bind(2);
+        if (material.normal == nullptr) {
+            defaultMaterial.normal->bind(2);
         } else {
-            material->normal->bind(2);
+            material.normal->bind(2);
         }
         glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, batch.commandOffset, batch.commandCount, 0);
     }

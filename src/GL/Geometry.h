@@ -95,7 +95,7 @@ class Buffer : public GLObject {
 class VertexArray : public GLObject {
    private:
     GLuint id_ = 0;
-    std::vector<std::pair<int, int>> bindingRanges_;
+    std::vector<std::pair<size_t, size_t>> bindingRanges_;
     std::vector<Buffer*> ownedBuffers_;
 
     ~VertexArray() {

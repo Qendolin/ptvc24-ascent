@@ -67,6 +67,7 @@ class GLObject {
     // prevent copy
     GLObject(GLObject const&) = delete;
     GLObject& operator=(GLObject const&) = delete;
+
     GLObject() {}
 };
 

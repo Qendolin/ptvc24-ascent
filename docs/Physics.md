@@ -15,7 +15,7 @@ Read a few comments that it's "bloated".
 Not quite FOSS.
 Probably annoying.
 
-### Jolt Physics
+### Jolt Physics (chosen)
 
 Supported by a AAA game studio. 
 Actively maintained. 

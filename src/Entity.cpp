@@ -5,6 +5,8 @@
 #include <glm/gtx/transform.hpp>
 
 #include "Game.h"
+#include "Physics/Physics.h"
+#include "Physics/Shapes.h"
 
 CharacterController::CharacterController(Camera* camera) : camera(camera) {
 }

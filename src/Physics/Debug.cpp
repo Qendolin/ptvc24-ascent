@@ -66,13 +66,11 @@ DebugRendererImpl::~DebugRendererImpl() {
 
 void DebugRendererImpl::DrawLine(JPH::RVec3Arg from, JPH::RVec3Arg to, JPH::ColorArg color) {
     // TODO: implement
-    return;
 }
 
 void DebugRendererImpl::DrawTriangle(JPH::RVec3Arg v1, JPH::RVec3Arg v2, JPH::RVec3Arg v3,
                                      JPH::ColorArg color, ECastShadow castShadow) {
     // TODO: implement
-    return;
 }
 
 JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Triangle *triangles, int triangle_count) {
@@ -81,7 +79,7 @@ JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Triangle 
     std::vector<uint32_t> indices;
     indices.reserve(triangle_count * 3);
 
-    for (size_t i = 0; i < triangle_count; i++) {
+    for (uint32_t i = 0; i < triangle_count; i++) {
         const Triangle &triangle = triangles[i];
         vertices.emplace_back(triangle.mV[0]);
         vertices.emplace_back(triangle.mV[1]);

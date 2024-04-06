@@ -10,6 +10,7 @@
 #include "Direct.h"
 #include "Entity.h"
 #include "Input.h"
+#include "Loader/Gltf.h"
 #include "Loader/Loader.h"
 #include "Physics/Physics.h"
 #include "UI/Screen.h"
@@ -84,9 +85,9 @@ class Game {
     GL::ShaderPipeline *pbrShader = nullptr;
 
     Screen *screen = nullptr;
-    // All visual instances that need to be rendered.
-    // Loaded from the gltf file.
-    std::shared_ptr<Asset::Scene> scene = nullptr;
+
+    // All the stuff loaded from the gltf file (graphics and physics objects).
+    Asset::Scene *scene = nullptr;
     // All entities that need to process game logic
     std::vector<Entity *> entities = {};
 

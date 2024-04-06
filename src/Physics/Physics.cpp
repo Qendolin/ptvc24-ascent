@@ -156,7 +156,7 @@ void Physics::update(float delta) {
     updateTimer_ = std::min(updateTimer_, 2 * UPDATE_INTERVAL);
 }
 
-bool Physics::isNextStepDue() {
+bool Physics::isNextStepDue() const {
     return updateTimer_ > UPDATE_INTERVAL;
 }
 
@@ -166,7 +166,7 @@ void Physics::step() {
     contactListener->DispatchCallbacks();
 }
 
-float Physics::partialTicks() {
+float Physics::partialTicks() const {
     return std::clamp(updateTimer_ / UPDATE_INTERVAL, 0.0f, 1.0f);
 }
 
