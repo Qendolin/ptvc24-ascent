@@ -128,9 +128,6 @@ Physics::Physics(PhysicsSetupConfig config) {
 
 Physics::~Physics() {
 #ifdef JPH_DEBUG_RENDERER
-    if (JPH::DebugRenderer::sInstance == debugRenderer_) {
-        JPH::DebugRenderer::sInstance = nullptr;
-    }
     delete debugRenderer_;
 #endif
 

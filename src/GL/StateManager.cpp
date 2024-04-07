@@ -31,6 +31,30 @@ Environment createEnvironment() {
         .features = features};
 }
 
+void StateManager::Tracker::add(GLenum type, GLuint id) {
+    if (id == 0) PANIC("Cannot track the default object (id=0)");
+    if (objects_.at(type).contains(id)) PANIC("Object with id=" + std::to_string(id) + " already tracked");
+    objects_.at(type).insert(id);
+}
+
+void StateManager::Tracker::remove(GLenum type, GLuint id) {
+    if (id == 0) PANIC("Cannot untrack the default object (id=0)");
+    auto& set = objects_.at(type);
+    auto pos = set.find(id);
+    if (pos == set.end()) PANIC("Object with id=" + std::to_string(id) + " is not being tracked");
+    set.erase(pos);
+}
+
+std::vector<std::pair<GLenum, GLuint>> StateManager::Tracker::tracked() {
+    std::vector<std::pair<GLenum, GLuint>> result;
+    for (const auto& [key, ids] : objects_) {
+        for (GLuint id : ids) {
+            result.emplace_back(key, id);
+        }
+    }
+    return result;
+}
+
 StateManager::StateManager(Environment env) : caps(),
                                               textureUnits(32, 0),
                                               samplerUnits(32, 0),

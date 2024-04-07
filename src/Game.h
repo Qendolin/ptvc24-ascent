@@ -62,6 +62,8 @@ class Game {
    public:
     inline static Game *instance = nullptr;
 
+    ~Game();
+
     GLFWwindow *window = nullptr;
     PH::Physics *physics = nullptr;
     UI::Backend *ui = nullptr;

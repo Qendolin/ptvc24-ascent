@@ -44,6 +44,7 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
 void ShaderProgram::destroy() {
     if (id_ != 0) {
         glDeleteProgram(id_);
+        untrack_();
         id_ = 0;
     }
 
@@ -91,6 +92,7 @@ void ShaderProgram::compile(std::map<std::string, std::string> substitutions) {
     }
 
     id_ = id;
+    track_();
     sourceModified_ = source;
     uniformLocations_.clear();
 }
@@ -193,11 +195,13 @@ GLenum shaderStageToBit(GLenum stage) {
 
 ShaderPipeline::ShaderPipeline() : GLObject(GL_PROGRAM_PIPELINE) {
     glCreateProgramPipelines(1, &id_);
+    track_();
     ownedPrograms_ = {};
 }
 
 ShaderPipeline::ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs) : GLObject(GL_PROGRAM_PIPELINE) {
     glCreateProgramPipelines(1, &id_);
+    track_();
     attach(owned_programs);
     ownedPrograms_ = owned_programs;
 }
@@ -206,6 +210,7 @@ void ShaderPipeline::destroy() {
     if (id_ != 0) {
         glDeleteProgramPipelines(1, &id_);
         manager->unbindProgramPipeline(id_);
+        untrack_();
         id_ = 0;
     }
 

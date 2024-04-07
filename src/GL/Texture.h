@@ -19,6 +19,7 @@ class Texture : public GLObject {
     Texture(GLenum type, GLuint id) : GLObject(GL_TEXTURE) {
         type_ = type;
         id_ = id;
+        track_();
     }
 
    public:

@@ -47,6 +47,7 @@ DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
 void DirectBuffer::destroy() {
     vao_->destroy();
     vbo_->destroy();
+    shader_->destroy();
     delete this;
 }
 

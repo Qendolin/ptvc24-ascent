@@ -9,12 +9,14 @@ namespace GL {
 
 Renderbuffer::Renderbuffer() : GLObject(GL_RENDERBUFFER) {
     glCreateRenderbuffers(1, &id_);
+    track_();
 }
 
 void Renderbuffer::destroy() {
     if (id_ != 0) {
         glDeleteRenderbuffers(1, &id_);
         manager->unbindRenderbuffer(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
@@ -49,12 +51,14 @@ int Framebuffer::mapAttachmentIndex_(int attachment) const {
 
 Framebuffer::Framebuffer() : GLObject(GL_FRAMEBUFFER), textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
     glCreateFramebuffers(1, &id_);
+    track_();
 }
 
 void Framebuffer::destroy() {
     if (id_ != 0) {
         glDeleteFramebuffers(1, &id_);
         manager->unbindFramebuffer(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;

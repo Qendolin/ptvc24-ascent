@@ -9,6 +9,7 @@ namespace GL {
 
 Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     glCreateTextures(type_, 1, &id_);
+    track_();
     manager->intelTextureBindingSetTarget(id_, type_);
 }
 
@@ -44,6 +45,7 @@ void Texture::destroy() {
     if (id_ != 0) {
         glDeleteTextures(1, &id_);
         manager->unbindTexture(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
@@ -158,12 +160,14 @@ void Texture::depthStencilTextureMode(GLenum mode) {
 
 Sampler::Sampler() : GLObject(GL_SAMPLER) {
     glCreateSamplers(1, &id_);
+    track_();
 }
 
 void Sampler::destroy() {
     if (id_ != 0) {
         glDeleteSamplers(1, &id_);
         manager->unbindSampler(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;

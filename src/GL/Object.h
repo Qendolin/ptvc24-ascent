@@ -17,57 +17,15 @@ class GLObject {
      */
     GLObject(GLenum type) : type_(type) {}
 
-    void checkDestroyed() {
-        if (id_ == 0) return;
+    void checkDestroyed();
 
-        GLsizei len;
-        char label[256];
-        glGetObjectLabel(type_, id_, sizeof(label), &len, &label[0]);
-
-        std::string labelString = "";
-        if (len != 0) {
-            labelString = " label='" + std::string(label, label + len) + "'";
-        }
-
-        const char* typeString;
-        switch (type_) {
-            case GL_BUFFER:
-                typeString = "Buffer";
-                break;
-            case GL_SHADER:
-                typeString = "Shader";
-                break;
-            case GL_PROGRAM:
-                typeString = "Shader Program";
-                break;
-            case GL_VERTEX_ARRAY:
-                typeString = "Vertex Array";
-                break;
-            case GL_PROGRAM_PIPELINE:
-                typeString = "Program Pipeline";
-                break;
-            case GL_SAMPLER:
-                typeString = "Sampler";
-                break;
-            case GL_TEXTURE:
-                typeString = "Texture";
-                break;
-            case GL_RENDERBUFFER:
-                typeString = "Renderbuffer";
-                break;
-            case GL_FRAMEBUFFER:
-                typeString = "Framebuffer";
-                break;
-            default:
-                typeString = "Unknwon";
-                break;
-        }
-        std::cerr << "GL " << typeString << " Object id=" << std::to_string(id_) << labelString << " not destroyed!" << std::endl;
-    }
-
-    ~GLObject() {
+    virtual ~GLObject() {
         checkDestroyed();
     }
+
+    void track_();
+
+    void untrack_();
 
    public:
     // prevent copy
@@ -75,9 +33,7 @@ class GLObject {
     GLObject& operator=(GLObject const&) = delete;
 
     // allow move
-    GLObject(GLObject&& other) noexcept : type_(other.type_), id_(std::exchange(other.id_, 0)) {
-        std::cout << "!!! Moved " << id_ << std::endl;
-    }
+    GLObject(GLObject&& other) noexcept : type_(other.type_), id_(std::exchange(other.id_, 0)) {}
 
     virtual void destroy() = 0;
     virtual void setDebugLabel(const std::string& label) = 0;

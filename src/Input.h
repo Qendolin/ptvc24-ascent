@@ -86,7 +86,9 @@ class Input {
     inline static Input *instance = nullptr;
 
     Input(GLFWwindow *window);
-    ~Input();
+    ~Input() {
+        window_ = nullptr;
+    };
 
     /**
      * @return the mouse position

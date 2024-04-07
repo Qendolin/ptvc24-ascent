@@ -50,8 +50,8 @@ void MainMenuScreen::draw() {
             nk_layout_row_dynamic(nk, 60_dp, 1);
             nk_style_set_font(nk, &game->ui->fonts()->get("menu_md")->handle);
             if (nk_button_label(nk, "Play")) {
-                game->screen = nullptr;
                 game->input->captureMouse();
+                close();
             }
             if (nk_button_label(nk, "Settings")) {
                 LOG("Settings pressed");

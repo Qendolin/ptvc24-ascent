@@ -184,11 +184,14 @@ class Graphics {
 
     ~Graphics() {
         if (vao_ != nullptr) {
-            vao_->destroy();
+            // I admit, this is shit
+            auto tmp = vao_.release();
+            tmp->destroy();
             vao_ = nullptr;
         }
         if (drawCommands_ != nullptr) {
-            drawCommands_->destroy();
+            auto tmp = drawCommands_.release();
+            tmp->destroy();
             drawCommands_ = nullptr;
         }
     }

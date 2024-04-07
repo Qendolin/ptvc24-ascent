@@ -56,6 +56,39 @@ Game::Game(GLFWwindow *window) {
     physics = new PH::Physics({});
 }
 
+Game::~Game() {
+    window = nullptr;
+    quad->destroy();
+    quad = nullptr;
+
+    dd->destroy();
+    dd = nullptr;
+
+    skyShader->destroy();
+    skyShader = nullptr;
+    pbrShader->destroy();
+    pbrShader = nullptr;
+
+    // delete entities before deleting the physics
+    for (auto &&e : entities) delete e;
+    entities = {};
+
+    if (scene != nullptr) delete scene;
+    scene = nullptr;
+
+    if (screen != nullptr) delete screen;
+    screen = nullptr;
+
+    delete physics;
+    physics = nullptr;
+    delete ui;
+    ui = nullptr;
+    delete input;
+    input = nullptr;
+    delete camera;
+    camera = nullptr;
+}
+
 void Game::resize(int width, int height) {
     viewportSize = glm::ivec2(width, height);
 
@@ -296,6 +329,11 @@ void Game::loop_() {
 
     // Draw UI
     ui->render();
+
+    if (screen != nullptr && screen->isClosed()) {
+        delete screen;
+        screen = nullptr;
+    }
 
     // Finish the frame
     glfwSwapBuffers(window);
