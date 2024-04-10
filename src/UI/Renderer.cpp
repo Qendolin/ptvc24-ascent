@@ -107,11 +107,11 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
         gl::manager->bindTextureUnit(0, cmd->texture.id);
         shader_->fragmentStage()->setUniform("u_use_texture", static_cast<int>(cmd->texture.id != 0));
         gl::manager->setScissor(
-            cmd->clip_rect.x,
+            static_cast<int>(cmd->clip_rect.x),
             // flip y
-            viewport.y - (cmd->clip_rect.y + cmd->clip_rect.h),
-            cmd->clip_rect.w,
-            cmd->clip_rect.h);
+            viewport.y - static_cast<int>(cmd->clip_rect.y + cmd->clip_rect.h),
+            static_cast<int>(cmd->clip_rect.w),
+            static_cast<int>(cmd->clip_rect.h));
         glDrawElements(GL_TRIANGLES, cmd->elem_count, GL_UNSIGNED_SHORT, offset);
         offset += cmd->elem_count;
     }

@@ -80,9 +80,9 @@ int Texture::dimensions() const {
 Texture* Texture::createView(GLenum type, GLenum internal_format, int min_level, int max_level, int min_layer, int max_layer) {
     GLuint viewId;
     glGenTextures(1, &viewId);
-    glTextureView(viewId, type_, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
-    manager->intelTextureBindingSetTarget(id_, type_);
-    return new Texture(type_, viewId);
+    glTextureView(viewId, type, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
+    manager->intelTextureBindingSetTarget(id_, type);
+    return new Texture(type, viewId);
 }
 
 void Texture::allocate(GLint levels, GLenum internal_format, uint32_t width, uint32_t height, uint32_t depth) {

@@ -104,12 +104,7 @@ class Scene {
 
     Scene(const loader::Scene& scene, NodeEntityFactory& factory);
 
-    ~Scene() {
-        for (auto&& e : entities) {
-            delete e;
-        }
-        entities = {};
-    }
+    ~Scene();
 
     void callEntityInit();
 

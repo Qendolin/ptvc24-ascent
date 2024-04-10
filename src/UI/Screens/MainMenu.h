@@ -8,7 +8,7 @@
 class MainMenuScreen : public Screen {
    private:
     gl::Texture* titleImage = nullptr;
-    inline static auto titleOpacity = tweeny::from(0.0).to(0.0).during(300).to(1.0).during(1000).via(tweeny::easing::cubicIn);
+    inline static auto titleOpacity = tweeny::from(0.0f).to(0.0f).during(300).to(1.0f).during(1000).via(tweeny::easing::cubicIn);
 
    public:
     MainMenuScreen();

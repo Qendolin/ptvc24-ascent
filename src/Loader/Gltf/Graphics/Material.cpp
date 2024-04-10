@@ -28,6 +28,8 @@ gl::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInf
         format = GL_RGB;
     } else if (image.component == 4) {
         format = GL_RGBA;
+    } else {
+        PANIC("Invalid image components")
     }
 
     gl::Texture *result = new gl::Texture(GL_TEXTURE_2D);

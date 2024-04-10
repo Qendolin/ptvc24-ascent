@@ -48,8 +48,8 @@ void Input::update() {
         pollCurrentState_();
     }
 
-    float time = glfwGetTime();
-    timeDelta_ = time - timeRead_;
+    double time = glfwGetTime();
+    timeDelta_ = static_cast<float>(time - timeRead_);
     timeRead_ = time;
 
     mouseDelta_ = mousePosWrite_ - mousePosRead_;
@@ -88,8 +88,8 @@ void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void Input::onCursorPos(GLFWwindow *window, double x, double y) {
-    mousePosWrite_.x = x;
-    mousePosWrite_.y = y;
+    mousePosWrite_.x = static_cast<float>(x);
+    mousePosWrite_.y = static_cast<float>(y);
 }
 
 void Input::onMouseButton(GLFWwindow *window, int button, int action, int mods) {
@@ -107,6 +107,6 @@ void Input::onMouseButton(GLFWwindow *window, int button, int action, int mods) 
 }
 
 void Input::onScroll(GLFWwindow *window, double dx, double dy) {
-    scrollDeltaWrite_.x += dx;
-    scrollDeltaWrite_.y += dy;
+    scrollDeltaWrite_.x += static_cast<float>(dx);
+    scrollDeltaWrite_.y += static_cast<float>(dy);
 }

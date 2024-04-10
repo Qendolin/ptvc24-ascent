@@ -17,6 +17,13 @@ Scene::Scene(const loader::Scene& scene, NodeEntityFactory& factory) {
     convertNodes_(scene, factory, scene.root(), -1);
 }
 
+Scene::~Scene() {
+    for (auto&& e : entities) {
+        delete e;
+    }
+    entities = {};
+}
+
 int32_t Scene::convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
     int32_t index = nodes.size();
     Node& result = nodes.emplace_back();

@@ -16,7 +16,7 @@ Camera::Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 p
 
 void Camera::updateProjectionMatrix_() {
     float a = viewportSize_.x / viewportSize_.y;
-    float f = 1.0 / std::tan(fov_ / 2.0);
+    float f = 1.0f / std::tan(fov_ / 2.0f);
     // This is a reversed projection matrix with an infite far plane.
     projectionMatrix_ = glm::mat4(
         f / a, 0.0f, 0.0f, 0.0f,

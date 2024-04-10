@@ -38,7 +38,7 @@ void MainMenuScreen::draw() {
         auto used = nk_widget_position(nk);
         auto avail = nk_window_get_content_region_size(nk);
         nk_layout_row_begin(nk, NK_STATIC, avail.y - used.y, 2);
-        nk_layout_row_push(nk, (40_vw - 240_dp) / 2.0);
+        nk_layout_row_push(nk, (40_vw - 240_dp) / 2.0f);
         nk_spacer(nk);
         nk_layout_row_push(nk, 240_dp);
 

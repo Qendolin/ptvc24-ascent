@@ -21,17 +21,17 @@ typedef struct inset {
 struct nk_nine_slice nine_slice(gl::Texture* texture, int tile_size, rect region, inset inset) {
     return nk_sub9slice_id(
         texture->id(),
-        texture->width(),
-        texture->height(),
-        nk_rect(
+        static_cast<uint16_t>(texture->width()),
+        static_cast<uint16_t>(texture->height()),
+        nk_recti(
             region.x * tile_size,
             region.y * tile_size,
             region.w * tile_size,
             region.h * tile_size),
-        inset.l * tile_size,
-        inset.t * tile_size,
-        inset.r * tile_size,
-        inset.b * tile_size);
+        static_cast<uint16_t>(inset.l * tile_size),
+        static_cast<uint16_t>(inset.t * tile_size),
+        static_cast<uint16_t>(inset.r * tile_size),
+        static_cast<uint16_t>(inset.b * tile_size));
 }
 
 struct nk_color rgb(int r, int g, int b) {

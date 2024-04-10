@@ -527,7 +527,7 @@ void StateManager::bindVertexArray(GLuint array) {
 }
 
 void StateManager::unbindTexture(GLuint texture) {
-    for (size_t unit = 0; unit < textureUnits.size(); unit++) {
+    for (uint32_t unit = 0; unit < textureUnits.size(); unit++) {
         if (textureUnits[unit] == texture) {
             textureUnits[unit] = 0;
             glBindTextureUnit(unit, 0);
@@ -540,7 +540,7 @@ void StateManager::unbindTexture(GLuint texture) {
 }
 
 void StateManager::unbindSampler(GLuint sampler) {
-    for (size_t unit = 0; unit < samplerUnits.size(); unit++) {
+    for (uint32_t unit = 0; unit < samplerUnits.size(); unit++) {
         if (samplerUnits[unit] == sampler) {
             samplerUnits[unit] = 0;
             glBindSampler(unit, 0);

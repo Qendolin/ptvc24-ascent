@@ -140,7 +140,7 @@ void loadMaterials(GraphicsLoadingContext &context) {
     context.materials.reserve(context.model.materials.size() + 1);
 
     for (const gltf::Material &gltf_material : context.model.materials) {
-        Material &material = loadMaterial(context, gltf_material);
+        loadMaterial(context, gltf_material);
     }
 
     // Default / fallback material
@@ -156,7 +156,7 @@ void loadMeshes(GraphicsLoadingContext &context) {
             continue;
         }
 
-        Mesh &mesh = loadMesh(context, gltf_mesh);
+        loadMesh(context, gltf_mesh);
         context.addMeshIndex(context.meshes.size() - 1);
     }
 }

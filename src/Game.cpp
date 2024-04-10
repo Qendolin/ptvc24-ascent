@@ -225,7 +225,7 @@ void Game::processInput_() {
     if (input->isKeyPress(GLFW_KEY_L)) {
         LOG("Spawn shere");
         JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), ph::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, ph::Layers::MOVING);
-        sphere_settings.mRestitution = 0.2;
+        sphere_settings.mRestitution = 0.2f;
         physics->interface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
     }
 }
@@ -241,7 +241,7 @@ void Game::loop_() {
     // make window transparent
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-    if (nk_begin(nk, "gui", nk_rect(0, 0, viewportSize.x, viewportSize.y), 0)) {
+    if (nk_begin(nk, "gui", nk_recti(0, 0, viewportSize.x, viewportSize.y), 0)) {
         nk_layout_row_dynamic(nk, 30, 2);
         std::chrono::duration<float> total_seconds(input->time());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
@@ -250,7 +250,7 @@ void Game::loop_() {
         std::string time = std::format("Time: {:02}:{:02}", round(minutes.count()), round(seconds.count()));
         nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
 
-        float fps = floor(1.0 / input->timeDelta());
+        float fps = floor(1.0f / input->timeDelta());
         nk_label(nk, std::format("{:4.0f}fps {:5.2f}ms", fps, input->timeDelta() * 1000.0).c_str(), NK_TEXT_ALIGN_RIGHT);
     }
     nk_end(nk);

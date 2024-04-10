@@ -60,7 +60,7 @@ class Input {
     }
 
     GLFWwindow *window_ = nullptr;
-    float timeRead_ = 0;
+    double timeRead_ = 0;
     float timeDelta_ = 0;
     bool mouseCaptured_ = false;
     glm::vec2 mousePosRead_ = {};
@@ -109,7 +109,7 @@ class Input {
     /**
      * @return the time since GLFW was initialized, in seconds
      */
-    const float time() { return timeRead_; }
+    const double time() { return timeRead_; }
 
     /**
      * @return `true` if the mouse is captured (aka. grabbed).

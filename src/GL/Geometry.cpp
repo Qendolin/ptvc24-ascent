@@ -90,8 +90,8 @@ bool Buffer::grow(size_t size) {
     if (size < this->size_) {
         return false;
     }
-    int new_size = this->size_;
-    int double_size = new_size + new_size;
+    size_t new_size = this->size_;
+    size_t double_size = new_size + new_size;
     // try to be smart about growing the buffer
     if (size > double_size) {
         new_size = size;

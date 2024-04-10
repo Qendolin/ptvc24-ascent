@@ -99,7 +99,7 @@ struct PhysicsSetupConfig {
 
 class Physics {
    private:
-    inline static const float UPDATE_INTERVAL = 1.0 / 60.0;
+    inline static const float UPDATE_INTERVAL = 1.0f / 60.0f;
 
     float updateTimer_ = 0;
     bool updateEnabled_ = true;

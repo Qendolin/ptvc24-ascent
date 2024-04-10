@@ -79,14 +79,15 @@ JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Triangle 
     std::vector<uint32_t> indices;
     indices.reserve(triangle_count * 3);
 
-    for (uint32_t i = 0; i < triangle_count; i++) {
+    for (int i = 0; i < triangle_count; i++) {
         const Triangle &triangle = triangles[i];
         vertices.emplace_back(triangle.mV[0]);
         vertices.emplace_back(triangle.mV[1]);
         vertices.emplace_back(triangle.mV[2]);
-        indices.emplace_back(i * 3 + 0);
-        indices.emplace_back(i * 3 + 1);
-        indices.emplace_back(i * 3 + 2);
+        uint32_t index = static_cast<uint32_t>(i);
+        indices.emplace_back(index * 3 + 0);
+        indices.emplace_back(index * 3 + 1);
+        indices.emplace_back(index * 3 + 2);
     }
 
     return CreateTriangleBatch(vertices.data(), vertices.size(), indices.data(), indices.size());

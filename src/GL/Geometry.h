@@ -88,13 +88,13 @@ class Buffer : public GLObject {
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
     template <typename T>
     T* mapRange(GLbitfield flags) {
-        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, 0, size_, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, 0, size_, flags));
     }
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
     template <typename T>
     T* mapRange(size_t offset, size_t length, GLbitfield flags) {
-        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, offset, length, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, offset, length, flags));
     }
 };
 

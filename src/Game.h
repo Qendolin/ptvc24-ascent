@@ -38,7 +38,7 @@ class TweenSystem {
     ~TweenSystem(){};
 
     void update(float time_delta) {
-        carry_ += time_delta * 1000.0;
+        carry_ += time_delta * 1000.0f;
         step_ = (int)floor(carry_);
         carry_ -= step_;
     }

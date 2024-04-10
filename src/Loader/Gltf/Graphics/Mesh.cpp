@@ -7,7 +7,7 @@ namespace loader {
 Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     const gltf::Model &model = context.model;
     // used at the end
-    int first_chunk_index = context.chunks.size();
+    int32_t first_chunk_index = context.chunks.size();
 
     Mesh &result = context.newMesh();
     result.name = mesh.name;
