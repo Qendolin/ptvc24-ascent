@@ -2,14 +2,14 @@
 
 #include "../Game.h"
 
-namespace Scene {
+namespace scene {
 
 Game& Entity::game() {
     return *Game::instance;
 }
 
-PH::Physics& Entity::physics() {
+ph::Physics& Entity::physics() {
     return *Game::instance->physics;
 }
 
-}  // namespace Scene
+}  // namespace scene

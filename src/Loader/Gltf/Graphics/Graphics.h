@@ -2,7 +2,7 @@
 
 #include "../../Gltf.h"
 
-namespace Loader {
+namespace loader {
 
 /**
  * A chunk is a part of mesh with the same material.
@@ -51,7 +51,7 @@ typedef struct Chunk {
 class GraphicsLoadingContext {
    public:
     const gltf::Model &model;
-    std::map<std::string, Loader::Node> &nodes;
+    std::map<std::string, loader::Node> &nodes;
 
     // all of the loaded materials
     std::vector<Material> materials;
@@ -87,21 +87,21 @@ class GraphicsLoadingContext {
     std::vector<MaterialBatch> batches;
 
     // the vao that references all graphics mesh data for rendering
-    GL::VertexArray *vao = nullptr;
+    gl::VertexArray *vao = nullptr;
     // the vertex position buffer owen by the vao
-    GL::Buffer *position = nullptr;
+    gl::Buffer *position = nullptr;
     // the vertex normal buffer owen by the vao
-    GL::Buffer *normal = nullptr;
+    gl::Buffer *normal = nullptr;
     // the vertex uv texture coordinate buffer owen by the vao
-    GL::Buffer *uv = nullptr;
+    gl::Buffer *uv = nullptr;
     // the element index buffer owen by the vao
-    GL::Buffer *element = nullptr;
+    gl::Buffer *element = nullptr;
     // the per instance attributes buffer owen by the vao
-    GL::Buffer *instanceAttributes = nullptr;
+    gl::Buffer *instanceAttributes = nullptr;
     // the buffer containing the commands for indirect rendering
-    GL::Buffer *drawCommands = nullptr;
+    gl::Buffer *drawCommands = nullptr;
 
-    GraphicsLoadingContext(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) : model(model), nodes(nodes) {
+    GraphicsLoadingContext(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) : model(model), nodes(nodes) {
     }
 
     // returns a newly allocated mesh
@@ -161,4 +161,4 @@ Material &loadDefaultMaterial(GraphicsLoadingContext &context);
  */
 Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh);
 
-}  // namespace Loader
+}  // namespace loader

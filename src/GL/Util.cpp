@@ -1,6 +1,6 @@
 #include "Util.h"
 
-namespace GL {
+namespace gl {
 
 std::string getObjectNamespaceString(GLenum type) {
     switch (type) {
@@ -34,4 +34,4 @@ std::string getObjectLabel(GLenum type, GLuint id) {
     return std::string(label, label + len);
 }
 
-}  // namespace GL
+}  // namespace gl

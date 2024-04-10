@@ -4,17 +4,17 @@
 
 #include "../Entity.h"
 
-class TestObstacleEntity : public Scene::NodeEntity {
+class TestObstacleEntity : public scene::NodeEntity {
    private:
-    Scene::NodeRef from;
-    Scene::NodeRef to;
+    scene::NodeRef from;
+    scene::NodeRef to;
     tweeny::tween<float, float, float> tween;
 
-    Scene::NodeRef collider;
-    Scene::NodeRef mesh;
+    scene::NodeRef collider;
+    scene::NodeRef mesh;
 
    public:
-    TestObstacleEntity(Scene::SceneRef scene, Scene::NodeRef node) : Scene::NodeEntity(scene, node) {
+    TestObstacleEntity(scene::SceneRef scene, scene::NodeRef node) : scene::NodeEntity(scene, node) {
     }
 
     void init() override;

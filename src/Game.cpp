@@ -12,13 +12,13 @@
 #include "UI/Skin.h"
 #include "Utils.h"
 
-GL::VertexArray *createQuad() {
-    GL::Buffer *vbo = new GL::Buffer();
+gl::VertexArray *createQuad() {
+    gl::Buffer *vbo = new gl::Buffer();
     vbo->setDebugLabel("generic_quad/vbo");
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
 
-    GL::VertexArray *quad = new GL::VertexArray();
+    gl::VertexArray *quad = new gl::VertexArray();
     quad->setDebugLabel("generic_quad/vao");
     quad->layout(0, 0, 2, GL_FLOAT, false, 0);
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
@@ -57,7 +57,7 @@ Game::Game(GLFWwindow *window) {
     glfwGetFramebufferSize(window, &vp_width, &vp_height);
     Game::resize(vp_width, vp_height);
 
-    physics = new PH::Physics({});
+    physics = new ph::Physics({});
     physics->setDebugDrawEnabled(true);
 }
 
@@ -102,7 +102,7 @@ void Game::resize(int width, int height) {
 
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
-    UI::set_scale(width, height, x_scale);
+    ui::set_scale(width, height, x_scale);
 
     if (ui != nullptr)
         ui->setViewport(viewportSize);
@@ -115,25 +115,25 @@ void Game::setup() {
 
     // defer loading assets
     onLoad.push_back([this]() {
-        skyShader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/sky.vert"),
-             new GL::ShaderProgram("assets/shaders/sky.frag")});
+        skyShader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/sky.vert"),
+             new gl::ShaderProgram("assets/shaders/sky.frag")});
         skyShader->setDebugLabel("sky_shader");
-        pbrShader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/test.vert"),
-             new GL::ShaderProgram("assets/shaders/test.frag")});
+        pbrShader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/test.vert"),
+             new gl::ShaderProgram("assets/shaders/test.frag")});
         pbrShader->setDebugLabel("pbr_shader");
-        auto dd_shader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/direct.vert"),
-             new GL::ShaderProgram("assets/shaders/direct.frag")});
+        auto dd_shader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/direct.vert"),
+             new gl::ShaderProgram("assets/shaders/direct.frag")});
         dd_shader->setDebugLabel("direct_buffer/shader");
         dd = new DirectBuffer(dd_shader);
 
-        auto fonts = new UI::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
+        auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                          {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
                                        "menu_md");
-        auto skin = UI::loadSkin();
-        ui = new UI::Backend(fonts, skin, new UI::Renderer());
+        auto skin = ui::loadSkin();
+        ui = new ui::Backend(fonts, skin, new ui::Renderer());
         ui->setViewport(viewportSize);
     });
 
@@ -156,14 +156,14 @@ void Game::setup() {
         }
     });
 
-    const tinygltf::Model &model = Loader::gltf("assets/models/test_course.glb");
-    scene = Loader::scene(model);
+    const tinygltf::Model &model = loader::gltf("assets/models/test_course.glb");
+    scene = loader::scene(model);
     scene->physics.create(*physics);
 
-    Scene::NodeEntityFactory factory;
+    scene::NodeEntityFactory factory;
     factory.registerEntity<CheckpointEntity>("CheckpointEntity");
     factory.registerEntity<TestObstacleEntity>("TestObstacleEntity");
-    entityScene = new Scene::Scene(*scene, factory);
+    entityScene = new scene::Scene(*scene, factory);
 
     entityScene->entities.push_back(new CharacterController(camera));
 }
@@ -224,7 +224,7 @@ void Game::processInput_() {
     // Spawn shpere (Debugging)
     if (input->isKeyPress(GLFW_KEY_L)) {
         LOG("Spawn shere");
-        JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), PH::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PH::Layers::MOVING);
+        JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), ph::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, ph::Layers::MOVING);
         sphere_settings.mRestitution = 0.2;
         physics->interface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
     }
@@ -272,20 +272,20 @@ void Game::loop_() {
     }
 
     // Render scene
-    GL::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
-    GL::manager->disable(GL::Capability::ScissorTest);
-    GL::manager->disable(GL::Capability::StencilTest);
+    gl::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
+    gl::manager->disable(gl::Capability::ScissorTest);
+    gl::manager->disable(gl::Capability::StencilTest);
 
     glClearDepth(0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw the loaded instances of the GLTF scene
     // See docs/Rendering.md for a rough explanation
-    GL::pushDebugGroup("Game::DrawStatic");
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::CullFace});
-    GL::manager->depthMask(true);
-    GL::manager->cullBack();
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
+    gl::pushDebugGroup("Game::DrawStatic");
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
+    gl::manager->depthMask(true);
+    gl::manager->cullBack();
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 
     pbrShader->bind();
     pbrShader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
@@ -314,7 +314,7 @@ void Game::loop_() {
         }
         glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, batch.commandOffset, batch.commandCount, 0);
     }
-    GL::popDebugGroup();
+    gl::popDebugGroup();
 
     // Draw physics debugging shapes
     physics->debugDraw(camera->viewProjectionMatrix());
@@ -322,8 +322,8 @@ void Game::loop_() {
     // Draw debug
     dd->draw(camera->viewProjectionMatrix(), camera->position);
 
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::DepthClamp});
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     // Draw sky
     quad->bind();
     skyShader->bind();

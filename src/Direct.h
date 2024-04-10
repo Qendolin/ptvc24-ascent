@@ -20,9 +20,9 @@ typedef struct MatrixStackEntry {
  */
 class DirectBuffer {
    private:
-    GL::ShaderPipeline* shader_;
-    GL::VertexArray* vao_;
-    GL::Buffer* vbo_;
+    gl::ShaderPipeline* shader_;
+    gl::VertexArray* vao_;
+    gl::Buffer* vbo_;
     std::vector<float> data_;
     std::vector<MatrixStackEntry> stack_ = {{glm::mat4(1.0), glm::mat3(1.0)}};
     glm::vec3 color_ = glm::vec3(1, 1, 1);
@@ -34,7 +34,7 @@ class DirectBuffer {
     ~DirectBuffer(){};
 
    public:
-    DirectBuffer(GL::ShaderPipeline* shader);
+    DirectBuffer(gl::ShaderPipeline* shader);
 
     void destroy();
 

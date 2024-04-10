@@ -2,7 +2,7 @@
 
 #include "../../Game.h"
 
-using namespace Scene;
+using namespace scene;
 
 void TestObstacleEntity::init() {
     from = base.find("*.MoveFrom");
@@ -39,7 +39,7 @@ void TestObstacleEntity::prePhysicsUpdate() {
     auto position = tween.peek();
 
     JPH::BodyID body = collider.physics().body();
-    PH::Physics& physics = *Game::instance->physics;
+    ph::Physics& physics = *Game::instance->physics;
     // TODO: May want to use MoveKinematic
     physics.interface().SetPosition(body, {position[0], position[1], position[2]}, JPH::EActivation::Activate);
 }

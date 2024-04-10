@@ -5,7 +5,7 @@
 
 #include "Object.h"
 
-namespace GL {
+namespace gl {
 
 // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElementsIndirect.xhtml#:~:text=packed%20into%20a%20structure)
 typedef struct DrawElementsIndirectCommand {
@@ -166,4 +166,4 @@ class VertexArray : public GLObject {
     void own(Buffer* buffer);
 };
 
-}  // namespace GL
+}  // namespace gl

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-namespace GL {
+namespace gl {
 
 class GLObject {
    protected:
@@ -43,4 +43,4 @@ class GLObject {
     };
 };
 
-}  // namespace GL
+}  // namespace gl

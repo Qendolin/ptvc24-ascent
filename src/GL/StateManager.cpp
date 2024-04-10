@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace GL {
+namespace gl {
 
 Environment createEnvironment() {
     std::string vendor = std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
@@ -651,4 +651,4 @@ void StateManager::setClearColor(float r, float g, float b, float a) {
     clearColorRgba = {r, g, b, a};
 }
 
-}  // namespace GL
+}  // namespace gl

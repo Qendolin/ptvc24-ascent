@@ -8,7 +8,7 @@ class Character;
 
 // The character controller handles movement and mouse look.
 // It links the character physics body to the camera.
-class CharacterController : public Scene::Entity {
+class CharacterController : public scene::Entity {
    private:
     // Walking speed in m/s
     inline static const float SPEED = 2.5f;

@@ -172,7 +172,7 @@ void initializeOpenGL(bool enableDebug) {
 
     LOG("Using GPU: " << glGetString(GL_RENDERER));
 
-    GL::manager = std::make_unique<GL::StateManager>(GL::createEnvironment());
+    gl::manager = std::make_unique<gl::StateManager>(gl::createEnvironment());
 
     // set these without using the manager
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);

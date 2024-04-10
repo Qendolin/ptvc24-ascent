@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-namespace PH {
+namespace ph {
 
 void SensorContactListener::OnContactAdded(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) {
     if (body_a.GetObjectLayer() == Layers::SENSOR) {
@@ -176,4 +176,4 @@ void Physics::debugDraw(glm::mat4 view_projection_matrix) {
 #endif
 }
 
-}  // namespace PH
+}  // namespace ph

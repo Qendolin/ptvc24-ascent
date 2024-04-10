@@ -4,7 +4,7 @@
 #include "../../Loader/Loader.h"
 
 MainMenuScreen::MainMenuScreen() {
-    titleImage = Loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
 }
 
 MainMenuScreen::~MainMenuScreen() {
@@ -15,7 +15,7 @@ MainMenuScreen::~MainMenuScreen() {
 }
 
 void MainMenuScreen::draw() {
-    using namespace UI::literals;
+    using namespace ui::literals;
 
     Game* game = Game::instance;
     nk_context* nk = game->ui->context();

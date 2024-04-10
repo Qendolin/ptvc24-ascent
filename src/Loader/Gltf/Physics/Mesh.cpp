@@ -2,7 +2,7 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
 JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, const gltf::Mesh &mesh) {
     const gltf::Model &model = context.model;
@@ -101,4 +101,4 @@ JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, c
     return result;
 }
 
-}  // namespace Loader
+}  // namespace loader

@@ -66,8 +66,8 @@ class Game {
     ~Game();
 
     GLFWwindow *window = nullptr;
-    PH::Physics *physics = nullptr;
-    UI::Backend *ui = nullptr;
+    ph::Physics *physics = nullptr;
+    ui::Backend *ui = nullptr;
     Input *input = nullptr;
     TweenSystem tween = TweenSystem();
 
@@ -81,18 +81,18 @@ class Game {
     Camera *camera = nullptr;
 
     // A quad with dimensions (-1,-1) to (1,1)
-    GL::VertexArray *quad = nullptr;
+    gl::VertexArray *quad = nullptr;
     DirectBuffer *dd = nullptr;
 
-    GL::ShaderPipeline *skyShader = nullptr;
-    GL::ShaderPipeline *pbrShader = nullptr;
+    gl::ShaderPipeline *skyShader = nullptr;
+    gl::ShaderPipeline *pbrShader = nullptr;
 
     Screen *screen = nullptr;
 
     // All the stuff loaded from the gltf file (graphics and physics objects).
-    Loader::Scene *scene = nullptr;
+    loader::Scene *scene = nullptr;
 
-    Scene::Scene *entityScene = nullptr;
+    scene::Scene *entityScene = nullptr;
 
     // Initializes the games subsystems like input handling and physics
     Game(GLFWwindow *window);

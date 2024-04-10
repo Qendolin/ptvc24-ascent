@@ -4,7 +4,7 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 std::string readProgramInfoLog(GLuint id) {
     GLint logLength;
@@ -36,7 +36,7 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
         PANIC("Invalid file extension ." + ext);
     }
 
-    sourceOriginal_ = Loader::text(filename);
+    sourceOriginal_ = loader::text(filename);
     sourceModified_ = sourceOriginal_;
     compile(substitutions);
 }
@@ -320,4 +320,4 @@ ShaderProgram*& ShaderPipeline::getRef_(GLenum stage) {
     }
 }
 
-}  // namespace GL
+}  // namespace gl

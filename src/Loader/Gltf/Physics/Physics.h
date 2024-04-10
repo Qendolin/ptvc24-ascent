@@ -4,7 +4,7 @@
 #include "../../../Physics/Shapes.h"
 #include "../../Gltf.h"
 
-namespace Loader {
+namespace loader {
 
 enum class PhysicsShape {
     None,
@@ -31,7 +31,7 @@ struct PhysicsBodyParameters {
 class PhysicsLoadingContext {
    public:
     const gltf::Model &model;
-    std::map<std::string, Loader::Node> &nodes;
+    std::map<std::string, loader::Node> &nodes;
 
     std::vector<JPH::RefConst<JPH::MeshShapeSettings>> meshes;
     /**
@@ -46,7 +46,7 @@ class PhysicsLoadingContext {
     // all of the graphics instances
     std::vector<PhysicsInstance> instances;
 
-    PhysicsLoadingContext(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) : model(model), nodes(nodes) {
+    PhysicsLoadingContext(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) : model(model), nodes(nodes) {
     }
 
     // returns a newly allocated physics instance
@@ -76,4 +76,4 @@ class PhysicsLoadingContext {
  */
 JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, const gltf::Mesh &mesh);
 
-}  // namespace Loader
+}  // namespace loader

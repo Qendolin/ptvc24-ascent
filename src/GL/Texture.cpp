@@ -5,7 +5,7 @@
 
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     glCreateTextures(type_, 1, &id_);
@@ -221,4 +221,4 @@ void Sampler::lodBias(float bias) {
     glSamplerParameterf(id_, GL_TEXTURE_LOD_BIAS, bias);
 }
 
-}  // namespace GL
+}  // namespace gl

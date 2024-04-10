@@ -5,7 +5,7 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 Renderbuffer::Renderbuffer() : GLObject(GL_RENDERBUFFER) {
     glCreateRenderbuffers(1, &id_);
@@ -157,4 +157,4 @@ const Renderbuffer* Framebuffer::getRenderbuffer(int index) const {
     return renderbuffers_[mapAttachmentIndex_(index)];
 }
 
-}  // namespace GL
+}  // namespace gl

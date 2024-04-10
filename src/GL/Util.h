@@ -5,10 +5,10 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 
-namespace GL {
+namespace gl {
 
 std::string getObjectNamespaceString(GLenum type);
 
 std::string getObjectLabel(GLenum type, GLuint id);
 
-}  // namespace GL
+}  // namespace gl

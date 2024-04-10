@@ -12,7 +12,7 @@
 
 #include "../Game.h"
 
-using namespace Scene;
+using namespace scene;
 
 CharacterController::CharacterController(Camera* camera) : camera(camera) {
 }
@@ -28,16 +28,16 @@ CharacterController::~CharacterController() {
 void CharacterController::init() {
     JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
     settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
-    settings->mLayer = PH::Layers::MOVING;
+    settings->mLayer = ph::Layers::MOVING;
     settings->mShape = new JPH::SphereShape(0.5f);
     settings->mFriction = 0.0f;
     settings->mGravityFactor = 0.0f;
 
-    PH::Physics* physics = Game::instance->physics;
+    ph::Physics* physics = Game::instance->physics;
 
     body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics->system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
-    cameraLerpStart_ = cameraLerpEnd_ = PH::convert(body_->GetPosition());
+    cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }
 
 void CharacterController::update() {
@@ -76,10 +76,10 @@ void CharacterController::update() {
 }
 
 void CharacterController::prePhysicsUpdate() {
-    cameraLerpStart_ = PH::convert(body_->GetPosition());
-    body_->SetLinearVelocity(PH::convert(velocity_));
+    cameraLerpStart_ = ph::convert(body_->GetPosition());
+    body_->SetLinearVelocity(ph::convert(velocity_));
 }
 
 void CharacterController::postPhysicsUpdate() {
-    cameraLerpEnd_ = PH::convert(body_->GetPosition());
+    cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }

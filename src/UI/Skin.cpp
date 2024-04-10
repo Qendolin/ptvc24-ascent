@@ -18,7 +18,7 @@ typedef struct inset {
  * @param region specifies a subregion within the texture `(x, y, width, height)`
  * @param inset specifies the insets for the 9-slicing `(left, top, right, bottom)`
  */
-struct nk_nine_slice nine_slice(GL::Texture* texture, int tile_size, rect region, inset inset) {
+struct nk_nine_slice nine_slice(gl::Texture* texture, int tile_size, rect region, inset inset) {
     return nk_sub9slice_id(
         texture->id(),
         texture->width(),
@@ -38,7 +38,7 @@ struct nk_color rgb(int r, int g, int b) {
     return nk_rgb(r, g, b);
 }
 
-namespace UI {
+namespace ui {
 
 Skin::~Skin() {
     for (auto&& resource : resources) {
@@ -57,7 +57,7 @@ void Skin::apply(nk_context* nk) {
 
 Skin* loadSkin() {
     Skin* skin = new Skin();
-    auto widgets = Loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
+    auto widgets = loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
     skin->resources.push_back(widgets);
 
     // clang-format off
@@ -72,4 +72,4 @@ Skin* loadSkin() {
     return skin;
 }
 
-}  // namespace UI
+}  // namespace ui

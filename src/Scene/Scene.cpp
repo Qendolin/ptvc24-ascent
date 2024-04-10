@@ -4,11 +4,11 @@
 #include "../Physics/Physics.h"
 #include "Entity.h"
 
-namespace Scene {
+namespace scene {
 
-using GraphicsInstanceAttributes = Loader::InstanceAttributes;
+using GraphicsInstanceAttributes = loader::InstanceAttributes;
 
-Scene::Scene(const Loader::Scene& scene, NodeEntityFactory& factory) {
+Scene::Scene(const loader::Scene& scene, NodeEntityFactory& factory) {
     transforms.reserve(scene.count());
     nodes.reserve(scene.count());
     // this will allocate more than needed
@@ -17,7 +17,7 @@ Scene::Scene(const Loader::Scene& scene, NodeEntityFactory& factory) {
     convertNodes_(scene, factory, scene.root(), -1);
 }
 
-int32_t Scene::convertNodes_(const Loader::Scene& scene, const NodeEntityFactory& factory, const Loader::Node& node, int32_t parent) {
+int32_t Scene::convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
     int32_t index = nodes.size();
     Node& result = nodes.emplace_back();
     result = {
@@ -56,7 +56,7 @@ int32_t Scene::convertNodes_(const Loader::Scene& scene, const NodeEntityFactory
         result.physics = -1;
     } else {
         result.physics = physics.size();
-        Loader::PhysicsInstance instance = scene.physics.instances[node.physics];
+        loader::PhysicsInstance instance = scene.physics.instances[node.physics];
         physics.emplace_back() = Physics{
             .body = instance.id,
             .trigger = {.enabled = instance.isTrigger, .action = instance.trigger.action, .argument = instance.trigger.argument},
@@ -169,4 +169,4 @@ void GraphicsRef::setTransform(const glm::mat4& matrix) {
     scene_->graphics[index_].attributes->transform = matrix;
 }
 
-}  // namespace Scene
+}  // namespace scene

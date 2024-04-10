@@ -4,7 +4,7 @@
 #include "../../Game.h"
 
 void DebugMenuScreen::draw() {
-    using namespace UI::literals;
+    using namespace ui::literals;
 
     Game& game = *Game::instance;
     nk_context* nk = game.ui->context();

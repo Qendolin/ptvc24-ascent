@@ -6,7 +6,7 @@
 #include "Object.h"
 #include "Texture.h"
 
-namespace GL {
+namespace gl {
 
 // References;
 // https://www.khronos.org/opengl/wiki/Renderbuffer_Object
@@ -76,4 +76,4 @@ class Framebuffer : public GLObject {
     const Renderbuffer* getRenderbuffer(int index) const;
 };
 
-}  // namespace GL
+}  // namespace gl

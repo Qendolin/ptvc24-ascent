@@ -5,14 +5,14 @@
 #include "Utils.h"
 
 void printNotDeletedOpenGLObjects() {
-    std::vector<std::pair<GLenum, GLuint>> tracked = GL::manager->tracked();
+    std::vector<std::pair<GLenum, GLuint>> tracked = gl::manager->tracked();
     if (tracked.empty()) return;
 
     std::cerr << "Some OpenGL Object were not deleted!" << std::endl;
     for (const auto& [type, id] : tracked) {
-        std::cerr << " - " << GL::getObjectNamespaceString(type) << " with id=" << id;
+        std::cerr << " - " << gl::getObjectNamespaceString(type) << " with id=" << id;
 
-        std::string label = GL::getObjectLabel(type, id);
+        std::string label = gl::getObjectLabel(type, id);
         if (!label.empty()) {
             std::cerr << ", label='" << label << "'";
         }

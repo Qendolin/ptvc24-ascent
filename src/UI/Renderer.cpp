@@ -3,28 +3,28 @@
 #include "../GL/StateManager.h"
 #include "../Utils.h"
 
-namespace UI {
+namespace ui {
 
 Renderer::Renderer(int max_vertices, int max_indices) {
-    shader_ = new GL::ShaderPipeline({
-        new GL::ShaderProgram("assets/shaders/nuklear.vert"),
-        new GL::ShaderProgram("assets/shaders/nuklear.frag"),
+    shader_ = new gl::ShaderPipeline({
+        new gl::ShaderProgram("assets/shaders/nuklear.vert"),
+        new gl::ShaderProgram("assets/shaders/nuklear.frag"),
     });
     shader_->setDebugLabel("nk/shader");
 
-    sampler_ = new GL::Sampler();
+    sampler_ = new gl::Sampler();
     sampler_->setDebugLabel("nk/sampler");
     sampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
     sampler_->filterMode(GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR);
 
-    vao_ = new GL::VertexArray();
+    vao_ = new gl::VertexArray();
     vao_->setDebugLabel("nk/vao");
     vao_->layout(0, 0, 2, GL_FLOAT, false, offsetof(struct Vertex, position));
     vao_->layout(0, 1, 2, GL_FLOAT, false, offsetof(struct Vertex, uv));
     vao_->layout(0, 2, 4, GL_UNSIGNED_BYTE, true, offsetof(struct Vertex, color));
 
     GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-    vbo_ = new GL::Buffer();
+    vbo_ = new gl::Buffer();
     vbo_->setDebugLabel("nk/vbo");
     size_t vbo_size = sizeof(Vertex) * max_vertices;
     vbo_->allocateEmpty(vbo_size, flags);
@@ -32,7 +32,7 @@ Renderer::Renderer(int max_vertices, int max_indices) {
     Vertex *mapped_vbo = reinterpret_cast<Vertex *>(glMapNamedBufferRange(vbo_->id(), 0, vbo_size, flags));
     vertices_ = {mapped_vbo, vbo_size};
 
-    ebo_ = new GL::Buffer();
+    ebo_ = new gl::Buffer();
     ebo_->setDebugLabel("nk/ebo");
     size_t ebo_size = sizeof(uint16_t) * max_indices;
     ebo_->allocateEmpty(ebo_size, flags);
@@ -82,16 +82,16 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
         PANIC("UI renderer viewport not set");
     }
 
-    GL::pushDebugGroup("Nuklear::Draw");
+    gl::pushDebugGroup("Nuklear::Draw");
 
     struct nk_buffer vertex_buffer = {}, element_buffer = {};
     nk_buffer_init_fixed(&vertex_buffer, vertices_.data(), vertices_.size_bytes());
     nk_buffer_init_fixed(&element_buffer, indices_.data(), indices_.size_bytes());
     nk_convert(context, commands, &vertex_buffer, &element_buffer, &convertConfig_);
 
-    GL::manager->setEnabled({GL::Capability::Blend, GL::Capability::ScissorTest});
-    GL::manager->blendEquation(GL::BlendEquation::FuncAdd);
-    GL::manager->blendFunc(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
+    gl::manager->setEnabled({gl::Capability::Blend, gl::Capability::ScissorTest});
+    gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
+    gl::manager->blendFunc(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
 
     vao_->bind();
     shader_->bind();
@@ -104,9 +104,9 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
     nk_draw_foreach(cmd, context, commands) {
         if (!cmd->elem_count) continue;
 
-        GL::manager->bindTextureUnit(0, cmd->texture.id);
+        gl::manager->bindTextureUnit(0, cmd->texture.id);
         shader_->fragmentStage()->setUniform("u_use_texture", static_cast<int>(cmd->texture.id != 0));
-        GL::manager->setScissor(
+        gl::manager->setScissor(
             cmd->clip_rect.x,
             // flip y
             viewport.y - (cmd->clip_rect.y + cmd->clip_rect.h),
@@ -116,11 +116,11 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
         offset += cmd->elem_count;
     }
 
-    GL::manager->bindSampler(0, 0);
+    gl::manager->bindSampler(0, 0);
 
     nk_clear(context);
     nk_buffer_clear(commands);
-    GL::popDebugGroup();
+    gl::popDebugGroup();
 }
 
-}  // namespace UI
+}  // namespace ui

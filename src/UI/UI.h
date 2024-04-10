@@ -24,7 +24,7 @@
 // https://github.com/Immediate-Mode-UI/Nuklear/wiki
 // https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 
-namespace UI {
+namespace ui {
 
 void set_scale(int width, int height, float dpi_scale);
 
@@ -68,7 +68,7 @@ class FontAtlas {
    private:
     struct nk_font_atlas baker_ = {};
     std::map<std::string, struct nk_font*> fonts_ = {};
-    GL::Texture* texture_ = nullptr;
+    gl::Texture* texture_ = nullptr;
     std::string defaultFont_ = "";
 
    public:
@@ -120,4 +120,4 @@ class Backend {
     }
 };
 
-}  // namespace UI
+}  // namespace ui

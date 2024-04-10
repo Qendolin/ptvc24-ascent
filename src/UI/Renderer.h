@@ -13,7 +13,7 @@
 #include "../GL/Texture.h"
 #include "../Input.h"
 
-namespace UI {
+namespace ui {
 
 // Executes the nuklear draw commands
 // References:
@@ -29,13 +29,13 @@ class Renderer {
     } Vertex;
 
    private:
-    GL::ShaderPipeline* shader_ = nullptr;
-    GL::Sampler* sampler_ = nullptr;
-    GL::VertexArray* vao_ = nullptr;
-    GL::Buffer* vbo_ = nullptr;
+    gl::ShaderPipeline* shader_ = nullptr;
+    gl::Sampler* sampler_ = nullptr;
+    gl::VertexArray* vao_ = nullptr;
+    gl::Buffer* vbo_ = nullptr;
     // points into the vbo using glMapNamedBufferRange
     std::span<Vertex> vertices_ = {};
-    GL::Buffer* ebo_ = nullptr;
+    gl::Buffer* ebo_ = nullptr;
     // points into the ebo using glMapNamedBufferRange
     std::span<uint16_t> indices_ = {};
 
@@ -73,4 +73,4 @@ class Renderer {
     void render(struct nk_context* context, struct nk_buffer* commands);
 };
 
-}  // namespace UI
+}  // namespace ui

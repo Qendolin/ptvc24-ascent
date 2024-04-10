@@ -30,7 +30,7 @@
 // https://github.com/jrouwe/JoltPhysics/tree/master/Samples
 // https://jrouwe.github.io/JoltPhysics/index.html
 
-namespace PH {
+namespace ph {
 
 inline JPH::Vec3 convert(glm::vec3 v) {
     return {v.x, v.y, v.z};
@@ -161,4 +161,4 @@ class Physics {
     }
 };
 
-}  // namespace PH
+}  // namespace ph

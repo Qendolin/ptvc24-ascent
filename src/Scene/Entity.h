@@ -4,18 +4,18 @@
 
 // forward declarations
 class Game;
-namespace PH {
+namespace ph {
 class Physics;
 }
 
-namespace Scene {
+namespace scene {
 
 // Entity represents objects that need to process game logic
 class Entity {
    protected:
     Game& game();
 
-    PH::Physics& physics();
+    ph::Physics& physics();
 
    public:
     virtual ~Entity() {}
@@ -62,4 +62,4 @@ class NodeEntityFactory {
     }
 };
 
-}  // namespace Scene
+}  // namespace scene

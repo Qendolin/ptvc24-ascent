@@ -8,7 +8,7 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
 // loads the node's transformation information into a single glm::mat4
 glm::mat4 loadNodeTransform(const gltf::Node &node) {
@@ -108,7 +108,7 @@ void decomposeTransform(const glm::mat4 &transform, glm::vec3 *translation, glm:
     *rotation = glm::quat_cast(rotation_mat);
 }
 
-std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model) {
+std::map<std::string, loader::Node> loadNodeTree(const gltf::Model &model) {
     std::map<std::string, Node> nodes;
     auto &scene = model.scenes[model.defaultScene];
 
@@ -138,10 +138,10 @@ std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model) {
             }
         }
 
-        bool kinematic = Util::getJsonValue<bool>(node.extras, "kinematic");
+        bool kinematic = util::getJsonValue<bool>(node.extras, "kinematic");
 
         std::vector<std::string> tags;
-        std::string tags_string = Util::getJsonValue<std::string>(node.extras, "tags");
+        std::string tags_string = util::getJsonValue<std::string>(node.extras, "tags");
         if (!tags_string.empty()) {
             tags = parseTagsString(tags_string);
         }
@@ -158,7 +158,7 @@ std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model) {
             .initialPosition = translation,
             .initialScale = scale,
             .initialOrientation = rotation,
-            .entityClass = Util::getJsonValue<std::string>(node.extras, "entity"),
+            .entityClass = util::getJsonValue<std::string>(node.extras, "entity"),
             .properties = std::move(properties),
             .tags = std::move(tags),
             .isKinematic = kinematic,
@@ -170,4 +170,4 @@ std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model) {
     return nodes;
 }
 
-}  // namespace Loader
+}  // namespace loader

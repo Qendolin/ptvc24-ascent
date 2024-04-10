@@ -1,13 +1,13 @@
 #include "Physics.h"
 
-namespace Loader {
+namespace loader {
 
 // Create a Jolt Physics shape given it's type and size. For mesh shapes the mesh shape is also passed.
 JPH::ShapeRefC createShape(PhysicsShape shape, glm::vec3 size, JPH::RefConst<JPH::MeshShapeSettings> mesh_shape) {
     JPH::ShapeSettings::ShapeResult shape_result;
     switch (shape) {
         case PhysicsShape::Box:
-            shape_result = JPH::BoxShapeSettings(PH::convert(size)).Create();
+            shape_result = JPH::BoxShapeSettings(ph::convert(size)).Create();
             break;
         case PhysicsShape::Cylinder:
             shape_result = JPH::CylinderShapeSettings(size.y, glm::max(size.x, size.z)).Create();
@@ -16,7 +16,7 @@ JPH::ShapeRefC createShape(PhysicsShape shape, glm::vec3 size, JPH::RefConst<JPH
             shape_result = JPH::SphereShapeSettings(glm::max(size.x, glm::max(size.y, size.z))).Create();
             break;
         case PhysicsShape::Mesh: {
-            shape_result = JPH::ScaledShapeSettings(mesh_shape, PH::convert(size)).Create();
+            shape_result = JPH::ScaledShapeSettings(mesh_shape, ph::convert(size)).Create();
             break;
         }
         default:
@@ -35,15 +35,15 @@ JPH::BodyCreationSettings createBodySettings(const PhysicsLoadingContext &contex
     auto shape = createShape(params.shape, node.initialScale, mesh_shape);
 
     JPH::EMotionType motion_type = JPH::EMotionType::Static;
-    JPH::ObjectLayer object_layer = PH::Layers::NON_MOVING;
+    JPH::ObjectLayer object_layer = ph::Layers::NON_MOVING;
     if (node.isKinematic) {
         motion_type = JPH::EMotionType::Kinematic;
-        object_layer = PH::Layers::MOVING;
+        object_layer = ph::Layers::MOVING;
     }
     if (instance.isTrigger) {
-        object_layer = PH::Layers::SENSOR;
+        object_layer = ph::Layers::SENSOR;
     }
-    JPH::BodyCreationSettings settings(shape, PH::convert(node.initialPosition), PH::convert(node.initialOrientation), motion_type, object_layer);
+    JPH::BodyCreationSettings settings(shape, ph::convert(node.initialPosition), ph::convert(node.initialOrientation), motion_type, object_layer);
     settings.mIsSensor = instance.isTrigger;
     return settings;
 }
@@ -62,7 +62,7 @@ PhysicsInstance &loadPhysicsInstance(PhysicsLoadingContext &context, const gltf:
     PhysicsInstance &result = context.newInstance();
     result.name = node.name;
 
-    std::string trigger_string = Util::getJsonValue<std::string>(node.extras, "trigger");
+    std::string trigger_string = util::getJsonValue<std::string>(node.extras, "trigger");
     if (!trigger_string.empty()) {
         std::pair<std::string, std::string> action_and_arg = parseTriggerString(trigger_string);
         result.trigger.action = action_and_arg.first;
@@ -119,7 +119,7 @@ void loadInstances(PhysicsLoadingContext &context, const gltf::Scene &scene) {
     });
 }
 
-Physics loadPhysics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) {
+Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     PhysicsLoadingContext context(model, nodes);
 
     loadMeshes(context);
@@ -133,4 +133,4 @@ Physics loadPhysics(const gltf::Model &model, std::map<std::string, Loader::Node
     return result;
 }
 
-}  // namespace Loader
+}  // namespace loader

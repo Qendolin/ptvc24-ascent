@@ -11,7 +11,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Texture.h"
 
-namespace Loader {
+namespace loader {
 
 typedef struct Image {
     int width = 0;
@@ -26,7 +26,7 @@ std::ifstream stream(std::string filename);
 
 std::vector<uint8_t> binary(std::string filename);
 
-Loader::Image image(std::string filename);
+loader::Image image(std::string filename);
 
 struct TextureParameters {
     bool mipmap = true;
@@ -36,6 +36,6 @@ struct TextureParameters {
     GLenum dataType = GL_UNSIGNED_BYTE;
 };
 
-GL::Texture *texture(std::string filename, TextureParameters params = {});
+gl::Texture *texture(std::string filename, TextureParameters params = {});
 
-}  // namespace Loader
+}  // namespace loader

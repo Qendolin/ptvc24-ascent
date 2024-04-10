@@ -13,7 +13,7 @@
 
 #pragma once
 
-namespace GL {
+namespace gl {
 
 // Features that can be enabled.
 // These are not all that are available.
@@ -374,4 +374,4 @@ inline void popDebugGroup() {
     glPopDebugGroup();
 }
 
-}  // namespace GL
+}  // namespace gl

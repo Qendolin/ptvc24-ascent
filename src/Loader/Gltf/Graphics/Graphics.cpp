@@ -3,7 +3,7 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
 void createVertexBuffers(GraphicsLoadingContext &context) {
     // For performance all mesh sections are concatenated into a single, large, immutable buffer
@@ -12,7 +12,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
     uint32_t element_count = context.totalElementCount;
 
     // positions
-    auto position_buffer = new GL::Buffer();
+    auto position_buffer = new gl::Buffer();
     context.position = position_buffer;
     position_buffer->setDebugLabel("gltf/vbo/position");
     position_buffer->allocateEmpty(vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
@@ -22,7 +22,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
     context.vao->own(position_buffer);
 
     // normals
-    auto normal_buffer = new GL::Buffer();
+    auto normal_buffer = new gl::Buffer();
     context.normal = normal_buffer;
     normal_buffer->setDebugLabel("gltf/vbo/normal");
     normal_buffer->allocateEmpty(vertex_count * sizeof(glm::vec3), GL_DYNAMIC_STORAGE_BIT);
@@ -32,7 +32,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
     context.vao->own(normal_buffer);
 
     // uvs
-    auto uv_buffer = new GL::Buffer();
+    auto uv_buffer = new gl::Buffer();
     context.uv = uv_buffer;
     uv_buffer->setDebugLabel("gltf/vbo/uv");
     uv_buffer->allocateEmpty(vertex_count * sizeof(glm::vec2), GL_DYNAMIC_STORAGE_BIT);
@@ -42,7 +42,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
     context.vao->own(uv_buffer);
 
     // element indices
-    auto element_buffer = new GL::Buffer();
+    auto element_buffer = new gl::Buffer();
     context.element = element_buffer;
     element_buffer->setDebugLabel("gltf/ebo");
     element_buffer->allocateEmpty(element_count * sizeof(uint16_t), GL_DYNAMIC_STORAGE_BIT);
@@ -52,7 +52,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
 }
 
 void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
-    context.instanceAttributes = new GL::Buffer();
+    context.instanceAttributes = new gl::Buffer();
     context.instanceAttributes->setDebugLabel("gltf/vbo/instance_attributes");
     context.instanceAttributes->allocate(context.attributes.data(), context.attributes.size() * sizeof(InstanceAttributes), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
@@ -77,7 +77,7 @@ void createBatches(GraphicsLoadingContext &context) {
     int32_t base_vertex = 0;
     uint32_t base_index = 0;
     int32_t batch_material_index = std::numeric_limits<int32_t>::max();  // just some value to mark the start
-    std::vector<GL::DrawElementsIndirectCommand> draw_commands;
+    std::vector<gl::DrawElementsIndirectCommand> draw_commands;
     MaterialBatch batch = {};
     for (auto &&chunk : context.chunks) {
         context.position->write(base_vertex * sizeof(glm::vec3), chunk.positionPtr, chunk.positionLength);
@@ -100,7 +100,7 @@ void createBatches(GraphicsLoadingContext &context) {
                 context.batches.push_back(batch);
 
             // convert the index into a byte offset, becaue opengl requires it
-            auto command_offset = reinterpret_cast<GL::DrawElementsIndirectCommand *>(draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand));
+            auto command_offset = reinterpret_cast<gl::DrawElementsIndirectCommand *>(draw_commands.size() * sizeof(gl::DrawElementsIndirectCommand));
             batch = {
                 .material = chunk.material,
                 .commandOffset = command_offset,
@@ -113,7 +113,7 @@ void createBatches(GraphicsLoadingContext &context) {
         if (instance_count > 0) {
             Instance first_instance = context.instances[mesh.instances[0]];
             uint32_t base_instance = first_instance.attributes;
-            GL::DrawElementsIndirectCommand cmd = {
+            gl::DrawElementsIndirectCommand cmd = {
                 .count = chunk.elementCount,
                 .instanceCount = instance_count,
                 .firstIndex = base_index,
@@ -131,9 +131,9 @@ void createBatches(GraphicsLoadingContext &context) {
     if (batch.commandCount != 0)
         context.batches.emplace_back(batch);
 
-    context.drawCommands = new GL::Buffer();
+    context.drawCommands = new gl::Buffer();
     context.drawCommands->setDebugLabel("gltf/command_buffer");
-    context.drawCommands->allocate(draw_commands.data(), draw_commands.size() * sizeof(GL::DrawElementsIndirectCommand), 0);
+    context.drawCommands->allocate(draw_commands.data(), draw_commands.size() * sizeof(gl::DrawElementsIndirectCommand), 0);
 }
 
 void loadMaterials(GraphicsLoadingContext &context) {
@@ -184,7 +184,7 @@ void loadInstances(GraphicsLoadingContext &context, const gltf::Scene &scene) {
     });
 }
 
-Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) {
+Graphics loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     GraphicsLoadingContext context(model, nodes);
 
     loadMaterials(context);
@@ -193,7 +193,7 @@ Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::No
     const gltf::Scene &scene = context.model.scenes[context.model.defaultScene];
     loadInstances(context, scene);
 
-    context.vao = new GL::VertexArray();
+    context.vao = new gl::VertexArray();
     context.vao->setDebugLabel("gltf/vao");
     createVertexBuffers(context);
     createInstanceAttributesBuffer(context);
@@ -212,4 +212,4 @@ Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::No
     return result;
 }
 
-}  // namespace Loader
+}  // namespace loader

@@ -2,7 +2,7 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
 Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     const gltf::Model &model = context.model;
@@ -152,4 +152,4 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     return result;
 }
 
-}  // namespace Loader
+}  // namespace loader

@@ -2,9 +2,9 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
-GL::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInfo &texture_info, GLenum internalFormat) {
+gl::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInfo &texture_info, GLenum internalFormat) {
     if (texture_info.index < 0) {
         return nullptr;
     }
@@ -30,7 +30,7 @@ GL::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInf
         format = GL_RGBA;
     }
 
-    GL::Texture *result = new GL::Texture(GL_TEXTURE_2D);
+    gl::Texture *result = new gl::Texture(GL_TEXTURE_2D);
     result->allocate(0, internalFormat, image.width, image.height, 1);
     result->load(0, image.width, image.height, 1, format, GL_UNSIGNED_BYTE, image.image.data());
     result->generateMipmap();
@@ -64,11 +64,11 @@ Material &loadDefaultMaterial(GraphicsLoadingContext &context) {
     result.name = "Default";
     result.albedoFactor = glm::vec4(1.0);
     result.metallicRoughnessFactor = glm::vec2(0.0, 1.0);
-    result.albedo = Loader::texture("assets/textures/default_albedo.png", {.srgb = true});
+    result.albedo = loader::texture("assets/textures/default_albedo.png", {.srgb = true});
     result.albedo->setDebugLabel("gltf/texture/default_albedo");
-    result.occlusionMetallicRoughness = Loader::texture("assets/textures/default_orm.png");
+    result.occlusionMetallicRoughness = loader::texture("assets/textures/default_orm.png");
     result.occlusionMetallicRoughness->setDebugLabel("gltf/texture/default_orm");
-    result.normal = Loader::texture("assets/textures/default_normal.png");
+    result.normal = loader::texture("assets/textures/default_normal.png");
     result.normal->setDebugLabel("gltf/texture/default_normal");
 
     context.defaultMaterial = context.materials.size() - 1;
@@ -76,4 +76,4 @@ Material &loadDefaultMaterial(GraphicsLoadingContext &context) {
     return result;
 }
 
-}  // namespace Loader
+}  // namespace loader

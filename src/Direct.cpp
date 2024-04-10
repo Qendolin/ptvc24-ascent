@@ -31,13 +31,13 @@ glm::vec3 perpendicular(glm::vec3 v) {
     return glm::cross(v, e);
 }
 
-DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
-    vao_ = new GL::VertexArray();
+DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
+    vao_ = new gl::VertexArray();
     vao_->setDebugLabel("direct_buffer/vao");
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
     vao_->layout(0, 1, 3, GL_FLOAT, false, 3 * 4);
     vao_->layout(0, 2, 3, GL_FLOAT, false, 6 * 4);
-    vbo_ = new GL::Buffer();
+    vbo_ = new gl::Buffer();
     vbo_->setDebugLabel("direct_buffer/vbo");
     vbo_->allocateEmpty(1e6, GL_DYNAMIC_STORAGE_BIT);
     // 3 floats position + 3 floats color + 3 float normal
@@ -283,10 +283,10 @@ void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     shader_->bind();
     shader_->vertexStage()->setUniform("u_view_projection_mat", view_proj_mat);
     shader_->fragmentStage()->setUniform("u_camera_position", camera_pos);
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::PolygonOffsetFill});
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
-    GL::manager->depthMask(true);
-    GL::manager->polygonOffset(-1, -1);
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::PolygonOffsetFill});
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->depthMask(true);
+    gl::manager->polygonOffset(-1, -1);
     glDrawArrays(GL_TRIANGLES, 0, data_.size() / 9);
 
     clear();

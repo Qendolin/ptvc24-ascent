@@ -9,7 +9,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 
-namespace PH {
+namespace ph {
 
 // Callback for traces
 void traceCallback(const char *fmt, ...);
@@ -59,10 +59,10 @@ struct DrawCommand {
 
 class DebugRendererImpl final : public JPH::DebugRenderer {
    private:
-    GL::ShaderPipeline *shader_;
-    GL::VertexArray *vao_;
-    GL::Buffer *vbo_;
-    GL::Buffer *ebo_;
+    gl::ShaderPipeline *shader_;
+    gl::VertexArray *vao_;
+    gl::Buffer *vbo_;
+    gl::Buffer *ebo_;
     size_t vboWriteOffset_ = 0;
     size_t eboWriteOffset_ = 0;
     std::vector<struct DrawCommand> drawQueue_ = {};
@@ -93,4 +93,4 @@ class DebugRendererImpl final : public JPH::DebugRenderer {
 };
 #endif  // JPH_DEBUG_RENDERER
 
-}  // namespace PH
+}  // namespace ph

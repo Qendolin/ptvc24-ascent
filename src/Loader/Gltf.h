@@ -27,7 +27,7 @@ namespace gltf = tinygltf;
 // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 // https://www.khronos.org/files/gltf20-reference-guide.pdf
 
-namespace Loader {
+namespace loader {
 
 /**
  * A material determines how an object looks by defining PBR parameters
@@ -46,11 +46,11 @@ typedef struct Material {
 
     std::string name = "";
     // the albedo / diffuse / color texture owned by the material
-    GL::Texture *albedo = nullptr;
+    gl::Texture *albedo = nullptr;
     // a combined texture. R=Occlusion, G=Metallness, B=Roughness owned by the material. Note: occlusion is not implemented
-    GL::Texture *occlusionMetallicRoughness = nullptr;
+    gl::Texture *occlusionMetallicRoughness = nullptr;
     // the normal texture (R=X, G=Y, B=Z) owned by the material
-    GL::Texture *normal = nullptr;
+    gl::Texture *normal = nullptr;
     // a multipicative factor for the albedo color
     glm::vec3 albedoFactor = {1, 1, 1};
     // a multipicative factor for metallness and roughness
@@ -141,7 +141,7 @@ typedef struct MaterialBatch {
     int32_t material = -1;
     // Actually an offset into the draw command buffer. OpenGL needs it as a pointer.
     // The range of commands given by the offset and count all use the same material
-    GL::DrawElementsIndirectCommand *commandOffset;
+    gl::DrawElementsIndirectCommand *commandOffset;
     // The number of commands in this batch. Should be one per section that uses this material.
     uint32_t commandCount;
 } MaterialBatch;
@@ -151,8 +151,8 @@ typedef struct MaterialBatch {
  */
 class Graphics {
    private:
-    std::unique_ptr<GL::VertexArray> vao_ = nullptr;
-    std::unique_ptr<GL::Buffer> drawCommands_ = nullptr;
+    std::unique_ptr<gl::VertexArray> vao_ = nullptr;
+    std::unique_ptr<gl::Buffer> drawCommands_ = nullptr;
 
     /**
      * Pointer into the persistently mapped, instance attributes buffer.
@@ -177,9 +177,9 @@ class Graphics {
         int32_t default_material,
         std::vector<Mesh> &&meshes,
         std::vector<MaterialBatch> &&batches,
-        GL::VertexArray *vao,
-        GL::Buffer *instance_attributes,
-        GL::Buffer *draw_commands);
+        gl::VertexArray *vao,
+        gl::Buffer *instance_attributes,
+        gl::Buffer *draw_commands);
 
     ~Graphics();
 
@@ -222,7 +222,7 @@ class Physics {
     Physics(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
 
     // TODO: this is temporary
-    void create(PH::Physics &physics) {
+    void create(ph::Physics &physics) {
         for (size_t i = 0; i < instances.size(); i++) {
             PhysicsInstance &instance = instances[i];
             JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
@@ -278,27 +278,27 @@ struct Node {
  */
 class Scene {
    private:
-    std::map<std::string, Loader::Node> nodes_;
-    const Loader::Node &root_;
+    std::map<std::string, loader::Node> nodes_;
+    const loader::Node &root_;
 
    public:
     std::string name = "";
 
-    Loader::Graphics graphics;
-    Loader::Physics physics;
+    loader::Graphics graphics;
+    loader::Physics physics;
 
     Scene(Scene const &) = delete;
     Scene &operator=(Scene const &) = delete;
 
-    Scene(std::string name, Loader::Graphics &&graphics, Loader::Physics &&physics, std::map<std::string, Loader::Node> &&nodes);
+    Scene(std::string name, loader::Graphics &&graphics, loader::Physics &&physics, std::map<std::string, loader::Node> &&nodes);
 
     // @return the root node
-    const Loader::Node &root() const {
+    const loader::Node &root() const {
         return root_;
     }
 
     // @return the node given it's name
-    const Loader::Node &get(std::string name) const {
+    const loader::Node &get(std::string name) const {
         return nodes_.at(name);
     }
 
@@ -336,24 +336,24 @@ const gltf::Model gltf(const std::string filename);
  * @param model the gltf model
  * @param nodes the loaded node hierarchy
  */
-Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes);
+Graphics loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
 
 /**
  * Load physics instances from the gltf model.
  * @param model the gltf model
  * @param nodes the loaded node hierarchy
  */
-Physics loadPhysics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes);
+Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
 
-std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model);
+std::map<std::string, loader::Node> loadNodeTree(const gltf::Model &model);
 
 Scene *scene(const gltf::Model &model);
 
-namespace Util {
+namespace util {
 
 template <typename T>
 T getJsonValue(const gltf::Value &object, const std::string &key);
 
-}  // namespace Util
+}  // namespace util
 
-}  // namespace Loader
+}  // namespace loader

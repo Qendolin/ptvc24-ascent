@@ -5,7 +5,7 @@
 
 namespace gltf = tinygltf;
 
-namespace Loader {
+namespace loader {
 
 const gltf::Model gltf(const std::string filename) {
     gltf::TinyGLTF loader;
@@ -45,9 +45,9 @@ Graphics::Graphics(
     int32_t default_material,
     std::vector<Mesh> &&meshes,
     std::vector<MaterialBatch> &&batches,
-    GL::VertexArray *vao,
-    GL::Buffer *instance_attributes,
-    GL::Buffer *draw_commands)
+    gl::VertexArray *vao,
+    gl::Buffer *instance_attributes,
+    gl::Buffer *draw_commands)
     : instances(std::move(instances)),
       materials(std::move(materials)),
       defaultMaterial(this->materials[default_material]),
@@ -82,14 +82,14 @@ InstanceAttributes *Graphics::attributes(int32_t index) const {
 }
 
 Scene *scene(const gltf::Model &model) {
-    std::map<std::string, Loader::Node> nodes = loadNodeTree(model);
+    std::map<std::string, loader::Node> nodes = loadNodeTree(model);
     Graphics g = loadGraphics(model, nodes);
     Physics ph = loadPhysics(model, nodes);
     std::string name = model.scenes[model.defaultScene].name;
     return new Scene(name, std::move(g), std::move(ph), std::move(nodes));
 }
 
-namespace Util {
+namespace util {
 
 template <>
 std::string getJsonValue<std::string>(const gltf::Value &object, const std::string &key) {
@@ -107,9 +107,9 @@ bool getJsonValue<bool>(const gltf::Value &object, const std::string &key) {
     return element.Get<bool>();
 }
 
-}  // namespace Util
+}  // namespace util
 
-Scene::Scene(std::string name, Loader::Graphics &&graphics, Loader::Physics &&physics, std::map<std::string, Loader::Node> &&nodes)
+Scene::Scene(std::string name, loader::Graphics &&graphics, loader::Physics &&physics, std::map<std::string, loader::Node> &&nodes)
     : name(name),
       graphics(std::move(graphics)),
       physics(std::move(physics)),
@@ -117,4 +117,4 @@ Scene::Scene(std::string name, Loader::Graphics &&graphics, Loader::Physics &&ph
       root_(nodes_.at("#root")) {
 }
 
-}  // namespace Loader
+}  // namespace loader

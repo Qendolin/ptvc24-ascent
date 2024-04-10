@@ -2,12 +2,12 @@
 
 #include "../Entity.h"
 
-class CheckpointEntity : public Scene::NodeEntity {
+class CheckpointEntity : public scene::NodeEntity {
    private:
-    Scene::NodeRef sensor;
+    scene::NodeRef sensor;
 
    public:
-    CheckpointEntity(Scene::SceneRef scene, Scene::NodeRef base) : Scene::NodeEntity(scene, base) {
+    CheckpointEntity(scene::SceneRef scene, scene::NodeRef base) : scene::NodeEntity(scene, base) {
     }
 
     void init() override;

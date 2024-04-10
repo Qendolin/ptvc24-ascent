@@ -5,7 +5,7 @@
 
 #include "Object.h"
 
-namespace GL {
+namespace gl {
 
 // References:
 // https://www.khronos.org/opengl/wiki/Texture
@@ -207,4 +207,4 @@ class Sampler : public GLObject {
     void lodBias(float bias);
 };
 
-}  // namespace GL
+}  // namespace gl

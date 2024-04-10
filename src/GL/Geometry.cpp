@@ -3,7 +3,7 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 void warnAllocationSize(size_t size);
 bool warnAllocationSizeZero(size_t size);
@@ -217,4 +217,4 @@ void VertexArray::own(Buffer* buffer) {
     ownedBuffers_.push_back(buffer);
 }
 
-}  // namespace GL
+}  // namespace gl

@@ -14,15 +14,15 @@
 #include "../Utils.h"
 
 // forward declarations
-namespace Loader {
+namespace loader {
 class Scene;
 struct Node;
 struct InstanceAttributes;
-}  // namespace Loader
+}  // namespace loader
 
-namespace Scene {
+namespace scene {
 
-using GraphicsInstanceAttributes = Loader::InstanceAttributes;
+using GraphicsInstanceAttributes = loader::InstanceAttributes;
 
 struct Properties {
    private:
@@ -93,7 +93,7 @@ class Entity;
 
 class Scene {
    private:
-    int32_t convertNodes_(const Loader::Scene& scene, const NodeEntityFactory& factory, const Loader::Node& node, int32_t parent);
+    int32_t convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
 
    public:
     std::vector<Node> nodes;
@@ -102,7 +102,7 @@ class Scene {
     std::vector<Transform> transforms;
     std::vector<Entity*> entities;
 
-    Scene(const Loader::Scene& scene, NodeEntityFactory& factory);
+    Scene(const loader::Scene& scene, NodeEntityFactory& factory);
 
     ~Scene() {
         for (auto&& e : entities) {
@@ -327,4 +327,4 @@ class SceneRef {
     }
 };
 
-}  // namespace Scene
+}  // namespace scene

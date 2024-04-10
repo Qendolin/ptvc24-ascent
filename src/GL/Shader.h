@@ -6,7 +6,7 @@
 
 #include "Object.h"
 
-namespace GL {
+namespace gl {
 
 // References:
 // https://www.khronos.org/opengl/wiki/Shader
@@ -110,4 +110,4 @@ class ShaderPipeline : public GLObject {
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUseProgramStages.xhtml)
     void detach(GLenum stage);
 };
-}  // namespace GL
+}  // namespace gl

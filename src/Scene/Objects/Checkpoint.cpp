@@ -2,12 +2,12 @@
 
 #include "../../Game.h"
 
-using namespace Scene;
+using namespace scene;
 
 void CheckpointEntity::init() {
     sensor = base.find("*.*.Sensor");
 
-    physics().contactListener->RegisterCallback(sensor.physics().body(), [this](PH::SensorContact contact) {
+    physics().contactListener->RegisterCallback(sensor.physics().body(), [this](ph::SensorContact contact) {
         if (contact.persistent) return;
         this->onTriggerActivated();
     });
