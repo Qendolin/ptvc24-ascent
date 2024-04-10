@@ -11,7 +11,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Texture.h"
 
-namespace Asset {
+namespace Loader {
 
 typedef struct Image {
     int width = 0;
@@ -20,17 +20,13 @@ typedef struct Image {
     std::shared_ptr<uint8_t> data;
 } Image;
 
-}  // namespace Asset
-
-namespace Loader {
-
 std::string text(std::string filename);
 
 std::ifstream stream(std::string filename);
 
 std::vector<uint8_t> binary(std::string filename);
 
-Asset::Image image(std::string filename);
+Loader::Image image(std::string filename);
 
 struct TextureParameters {
     bool mipmap = true;

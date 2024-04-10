@@ -3,8 +3,6 @@
 
 namespace gltf = tinygltf;
 
-using namespace Asset;
-
 namespace Loader {
 
 void createVertexBuffers(GraphicsLoadingContext &context) {
@@ -56,7 +54,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
 void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
     context.instanceAttributes = new GL::Buffer();
     context.instanceAttributes->setDebugLabel("gltf/vbo/instance_attributes");
-    context.instanceAttributes->allocate(context.attributes.data(), context.attributes.size() * sizeof(InstanceAttributes), 0);
+    context.instanceAttributes->allocate(context.attributes.data(), context.attributes.size() * sizeof(InstanceAttributes), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
     // instance attribute layout
     // 4 attributes for the 4 columns of the transformation matrix
@@ -181,11 +179,13 @@ void loadInstances(GraphicsLoadingContext &context, const gltf::Scene &scene) {
 
         Mesh &mesh = context.meshes[instance.mesh];
         mesh.instances.push_back(context.instances.size() - 1);
+
+        context.nodes[node.name].graphics = context.instances.size() - 1;
     });
 }
 
-Graphics graphics(const gltf::Model &model) {
-    GraphicsLoadingContext context(model);
+Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) {
+    GraphicsLoadingContext context(model, nodes);
 
     loadMaterials(context);
     loadMeshes(context);
@@ -207,6 +207,7 @@ Graphics graphics(const gltf::Model &model) {
         std::move(context.meshes),
         std::move(context.batches),
         context.vao,
+        context.instanceAttributes,
         context.drawCommands);
     return result;
 }

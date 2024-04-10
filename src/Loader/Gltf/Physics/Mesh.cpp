@@ -2,8 +2,6 @@
 
 namespace gltf = tinygltf;
 
-using namespace Asset;
-
 namespace Loader {
 
 JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, const gltf::Mesh &mesh) {

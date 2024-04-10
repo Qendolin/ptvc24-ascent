@@ -1,18 +1,23 @@
-#include "Entity.h"
+
+#include "Character.h"
+
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+// include after ObjectLayer
+#include <Jolt/Physics/Character/Character.h>
 
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include "Game.h"
-#include "Physics/Physics.h"
-#include "Physics/Shapes.h"
+#include "../Game.h"
+
+using namespace Scene;
 
 CharacterController::CharacterController(Camera* camera) : camera(camera) {
 }
 
 CharacterController::~CharacterController() {
-    PH::Physics* physics = Game::instance->physics;
     if (body_ != nullptr) {
         body_->RemoveFromPhysicsSystem();
         delete body_;

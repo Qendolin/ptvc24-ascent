@@ -2,8 +2,6 @@
 
 namespace gltf = tinygltf;
 
-using namespace Asset;
-
 namespace Loader {
 
 GL::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInfo &texture_info, GLenum internalFormat) {

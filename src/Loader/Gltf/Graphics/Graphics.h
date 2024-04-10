@@ -2,8 +2,6 @@
 
 #include "../../Gltf.h"
 
-using namespace Asset;
-
 namespace Loader {
 
 /**
@@ -53,6 +51,7 @@ typedef struct Chunk {
 class GraphicsLoadingContext {
    public:
     const gltf::Model &model;
+    std::map<std::string, Loader::Node> &nodes;
 
     // all of the loaded materials
     std::vector<Material> materials;
@@ -102,7 +101,7 @@ class GraphicsLoadingContext {
     // the buffer containing the commands for indirect rendering
     GL::Buffer *drawCommands = nullptr;
 
-    GraphicsLoadingContext(const gltf::Model &m) : model(m) {
+    GraphicsLoadingContext(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) : model(model), nodes(nodes) {
     }
 
     // returns a newly allocated mesh

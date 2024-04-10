@@ -26,12 +26,12 @@ class DirectBuffer {
     std::vector<float> data_;
     std::vector<MatrixStackEntry> stack_ = {{glm::mat4(1.0), glm::mat3(1.0)}};
     glm::vec3 color_ = glm::vec3(1, 1, 1);
-    float stroke_ = 0.05;
+    float stroke_ = 0.05f;
     bool shaded_ = false;
     bool autoShade_ = false;
     glm::vec3 normal_ = {0, 0, 0};
 
-    ~DirectBuffer() {};
+    ~DirectBuffer(){};
 
    public:
     DirectBuffer(GL::ShaderPipeline* shader);

@@ -4,6 +4,7 @@
 #include <tiny_gltf.h>
 
 #include <algorithm>
+#include <any>
 #include <fstream>
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,6 +12,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <limits>
+#include <ranges>
 
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
@@ -18,8 +20,6 @@
 #include "Loader.h"
 
 namespace gltf = tinygltf;
-
-using namespace Asset;
 
 // References:
 // https://kcoley.github.io/glTF/specification/2.0/figures/gltfOverview-2.0.0a.png
@@ -111,15 +111,18 @@ typedef struct Mesh {
 } Mesh;
 
 /**
- * Per (mesh) instance attributes.
+ * Per graphics instance attributes.
  * Currently only the mesh's transform.
+ * Accessible by the vertex shader.
  */
 typedef struct InstanceAttributes {
+    // the object to world transformation matrix
     glm::mat4 transform = glm::mat4(1);
 } InstanceAttributes;
 
 /**
- * A mesh instance.
+ * A graphics instance.
+ * Represents a node in the gltf file which has a mesh that can be rendered.
  */
 typedef struct Instance {
     std::string name = "";
@@ -143,11 +146,19 @@ typedef struct MaterialBatch {
     uint32_t commandCount;
 } MaterialBatch;
 
-// TODO: comment
+/**
+ * Contains all the graphics instances and their related data.
+ */
 class Graphics {
    private:
     std::unique_ptr<GL::VertexArray> vao_ = nullptr;
     std::unique_ptr<GL::Buffer> drawCommands_ = nullptr;
+
+    /**
+     * Pointer into the persistently mapped, instance attributes buffer.
+     * Can only be written to, not read.
+     */
+    InstanceAttributes *instanceAttributesData_ = nullptr;
 
    public:
     std::vector<Instance> instances;
@@ -167,34 +178,15 @@ class Graphics {
         std::vector<Mesh> &&meshes,
         std::vector<MaterialBatch> &&batches,
         GL::VertexArray *vao,
-        GL::Buffer *draw_commands)
-        : instances(std::move(instances)),
-          materials(std::move(materials)),
-          defaultMaterial(this->materials[default_material]),
-          meshes(std::move(meshes)),
-          batches(std::move(batches)),
-          vao_(vao),
-          drawCommands_(draw_commands) {
-    }
+        GL::Buffer *instance_attributes,
+        GL::Buffer *draw_commands);
 
-    void bind() const {
-        vao_->bind();
-        drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);
-    }
+    ~Graphics();
 
-    ~Graphics() {
-        if (vao_ != nullptr) {
-            // I admit, this is shit
-            auto tmp = vao_.release();
-            tmp->destroy();
-            vao_ = nullptr;
-        }
-        if (drawCommands_ != nullptr) {
-            auto tmp = drawCommands_.release();
-            tmp->destroy();
-            drawCommands_ = nullptr;
-        }
-    }
+    // bind the vao and draw commands
+    void bind() const;
+
+    InstanceAttributes *attributes(int32_t index) const;
 };
 
 // Definition of physics trigger (sensor) action.
@@ -203,18 +195,22 @@ typedef struct Trigger {
     std::string argument = "";
 } Trigger;
 
-// TODO: comment
+/**
+ * A physics instance.
+ * Represents a node in the gltf file which has a physics body.
+ */
 typedef struct PhysicsInstance {
     std::string name = "";
-    std::vector<std::string> tags = {};
     bool isTrigger = false;
     Trigger trigger = {};
-    bool isKinematic = false;
 
+    JPH::BodyID id = JPH::BodyID();
     JPH::BodyCreationSettings settings;
 } PhysicsInstance;
 
-// TODO: comment
+/**
+ * Contains all the physics instances.
+ */
 class Physics {
    public:
     std::vector<PhysicsInstance> instances;
@@ -228,27 +224,63 @@ class Physics {
     // TODO: this is temporary
     void create(PH::Physics &physics) {
         for (size_t i = 0; i < instances.size(); i++) {
-            const PhysicsInstance &instance = instances[i];
+            PhysicsInstance &instance = instances[i];
             JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
-
-            if (instance.isTrigger) {
-                physics.contactListener->RegisterCallback(id, [&](PH::SensorContact contact) {
-                    if (contact.persistent) return;
-                    size_t index = physics.interface().GetUserData(contact.sensor);
-                    const Trigger &trigger = instances[index].trigger;
-                    LOG("Triggered: " + trigger.action + "(" + trigger.argument + ")");
-                });
-            }
+            if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
+            instance.id = id;
         }
     }
 };
 
-}  // namespace Loader
+/**
+ * A node in gltf file.
+ * It is part of a node tree hierarchy.
+ * It has at least name and a transformation.
+ * It may have an associated graphics or physics instance.
+ */
+struct Node {
+    // names are unique
+    std::string name = "";
+    // index of the graphics instance or -1
+    int32_t graphics = -1;
+    // index of the physics instance or -1
+    int32_t physics = -1;
+    // names of the child nodes
+    std::vector<std::string> children;
+    // name of the parent node
+    std::string parent = "";
 
-namespace Asset {
+    // transform of the node when it was loaded (world space)
+    glm::mat4 initialTransform = glm::mat4(1.0);
+    // position of the node when it was loaded (world space)
+    glm::vec3 initialPosition = glm::vec3(0.0);
+    // scale of the node when it was loaded (world space)
+    glm::vec3 initialScale = glm::vec3(0.0);
+    // orientation / rotation of the node when it was loaded (world space)
+    glm::quat initialOrientation = glm::quat();
 
-// TODO: comment
+    // identifier of the entity class
+    std::string entityClass = "";
+    // custom properties, contains arbitrary key value pairs
+    std::map<std::string, std::any> properties;
+    // custom tags, contains arbitrary strings
+    std::vector<std::string> tags = {};
+
+    // if the node is kinematic (moveable) or static
+    bool isKinematic = false;
+
+    bool isRoot() { return name == "#root"; }
+};
+
+/**
+ * Represents a scene loaded from a gltf file.
+ * It contains a hierarchy of nodes and the associated physics and graphics.
+ */
 class Scene {
+   private:
+    std::map<std::string, Loader::Node> nodes_;
+    const Loader::Node &root_;
+
    public:
     std::string name = "";
 
@@ -258,16 +290,28 @@ class Scene {
     Scene(Scene const &) = delete;
     Scene &operator=(Scene const &) = delete;
 
-    Scene(std::string name, Loader::Graphics &&graphics, Loader::Physics &&physics)
-        : name(name),
-          graphics(std::move(graphics)),
-          physics(std::move(physics)) {
+    Scene(std::string name, Loader::Graphics &&graphics, Loader::Physics &&physics, std::map<std::string, Loader::Node> &&nodes);
+
+    // @return the root node
+    const Loader::Node &root() const {
+        return root_;
+    }
+
+    // @return the node given it's name
+    const Loader::Node &get(std::string name) const {
+        return nodes_.at(name);
+    }
+
+    // @return all nodes
+    const auto all() const {
+        return std::views::values(nodes_);
+    }
+
+    // @return number of all nodes
+    size_t count() const {
+        return nodes_.size();
     }
 };
-
-}  // namespace Asset
-
-namespace Loader {
 
 /**
  * @param node the node
@@ -287,10 +331,29 @@ void loadNodes(const gltf::Model &model, const gltf::Scene &scene, NodeConsumer 
 // Load a gltf file. Note: gltf::Model refers to the entire file structure, not a single 3D model.
 const gltf::Model gltf(const std::string filename);
 
-Graphics graphics(const gltf::Model &model);
+/**
+ * Load graphics instances from the gltf model.
+ * @param model the gltf model
+ * @param nodes the loaded node hierarchy
+ */
+Graphics loadGraphics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes);
 
-Physics physics(const gltf::Model &model);
+/**
+ * Load physics instances from the gltf model.
+ * @param model the gltf model
+ * @param nodes the loaded node hierarchy
+ */
+Physics loadPhysics(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes);
+
+std::map<std::string, Loader::Node> loadNodeTree(const gltf::Model &model);
 
 Scene *scene(const gltf::Model &model);
+
+namespace Util {
+
+template <typename T>
+T getJsonValue(const gltf::Value &object, const std::string &key);
+
+}  // namespace Util
 
 }  // namespace Loader

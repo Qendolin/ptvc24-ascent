@@ -14,5 +14,5 @@ class MainMenuScreen : public Screen {
     MainMenuScreen();
     ~MainMenuScreen();
 
-    virtual void draw() override;
+    void draw() override;
 };

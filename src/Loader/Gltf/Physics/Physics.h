@@ -4,8 +4,6 @@
 #include "../../../Physics/Shapes.h"
 #include "../../Gltf.h"
 
-using namespace Asset;
-
 namespace Loader {
 
 enum class PhysicsShape {
@@ -20,13 +18,6 @@ struct PhysicsBodyParameters {
     PhysicsShape shape = PhysicsShape::None;
     // if the shape is a mesh shape this will be the index of the mesh
     int32_t mesh = -1;
-
-    // position of the body
-    glm::vec3 position = glm::vec3(0.0);
-    // orientation (rotation) of the body
-    glm::quat orientation = glm::quat();
-    // size (scale) of the shape
-    glm::vec3 size = glm::vec3(1.0);
 };
 
 /**
@@ -40,6 +31,7 @@ struct PhysicsBodyParameters {
 class PhysicsLoadingContext {
    public:
     const gltf::Model &model;
+    std::map<std::string, Loader::Node> &nodes;
 
     std::vector<JPH::RefConst<JPH::MeshShapeSettings>> meshes;
     /**
@@ -54,7 +46,7 @@ class PhysicsLoadingContext {
     // all of the graphics instances
     std::vector<PhysicsInstance> instances;
 
-    PhysicsLoadingContext(const gltf::Model &m) : model(m) {
+    PhysicsLoadingContext(const gltf::Model &model, std::map<std::string, Loader::Node> &nodes) : model(model), nodes(nodes) {
     }
 
     // returns a newly allocated physics instance

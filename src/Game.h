@@ -8,11 +8,12 @@
 
 #include "Camera.h"
 #include "Direct.h"
-#include "Entity.h"
 #include "Input.h"
 #include "Loader/Gltf.h"
 #include "Loader/Loader.h"
 #include "Physics/Physics.h"
+#include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "UI/Screen.h"
 #include "UI/UI.h"
 
@@ -89,9 +90,9 @@ class Game {
     Screen *screen = nullptr;
 
     // All the stuff loaded from the gltf file (graphics and physics objects).
-    Asset::Scene *scene = nullptr;
-    // All entities that need to process game logic
-    std::vector<Entity *> entities = {};
+    Loader::Scene *scene = nullptr;
+
+    Scene::Scene *entityScene = nullptr;
 
     // Initializes the games subsystems like input handling and physics
     Game(GLFWwindow *window);

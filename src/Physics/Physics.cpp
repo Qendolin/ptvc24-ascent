@@ -168,6 +168,8 @@ float Physics::partialTicks() const {
 }
 
 void Physics::debugDraw(glm::mat4 view_projection_matrix) {
+    if (!debugDrawEnabled_) return;
+
 #ifdef JPH_DEBUG_RENDERER
     system->DrawBodies({}, debugRenderer_);
     debugRenderer_->Draw(view_projection_matrix);

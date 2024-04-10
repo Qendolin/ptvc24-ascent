@@ -80,7 +80,8 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
 
     int atlas_width = 0, atlas_height = 0;
     const void *atlas_data = nullptr;
-    // TODO: figure out the difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
+    // The difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
+    // is that ALPHA8 uses less memory but doesn't support colors (for icons & emojis)
     atlas_data = nk_font_atlas_bake(&baker_, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
     texture_ = new GL::Texture(GL_TEXTURE_2D);
     texture_->setDebugLabel("nk/font");

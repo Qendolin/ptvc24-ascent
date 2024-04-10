@@ -39,6 +39,7 @@ class Buffer : public GLObject {
 
     void setDebugLabel(const std::string& label) override;
 
+    // @returns allocated buffer size in bytes
     size_t size() const;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBuffer.xhtml)
@@ -82,6 +83,18 @@ class Buffer : public GLObject {
     void writeIndex(int index, const T data) {
         size_t size = sizeof(data);
         glNamedBufferSubData(id_, index * size, size, data);
+    }
+
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
+    template <typename T>
+    T* mapRange(GLbitfield flags) {
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, 0, size_, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
+    }
+
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
+    template <typename T>
+    T* mapRange(size_t offset, size_t length, GLbitfield flags) {
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, offset, length, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT));
     }
 };
 

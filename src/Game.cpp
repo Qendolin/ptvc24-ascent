@@ -4,6 +4,10 @@
 
 #include "GL/StateManager.h"
 #include "Physics/Shapes.h"
+#include "Scene/Character.h"
+#include "Scene/Objects/Checkpoint.h"
+#include "Scene/Objects/TestObstacle.h"
+#include "UI/Screens/DebugMenu.h"
 #include "UI/Screens/MainMenu.h"
 #include "UI/Skin.h"
 #include "Utils.h"
@@ -43,7 +47,7 @@ Game::Game(GLFWwindow *window) {
     });
 
     // Create camera with a 90° vertical FOV
-    camera = new Camera(glm::radians(90.), viewportSize, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = new Camera(glm::radians(90.0f), viewportSize, 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
@@ -54,6 +58,7 @@ Game::Game(GLFWwindow *window) {
     Game::resize(vp_width, vp_height);
 
     physics = new PH::Physics({});
+    physics->setDebugDrawEnabled(true);
 }
 
 Game::~Game() {
@@ -70,8 +75,8 @@ Game::~Game() {
     pbrShader = nullptr;
 
     // delete entities before deleting the physics
-    for (auto &&e : entities) delete e;
-    entities = {};
+    if (entityScene != nullptr) delete entityScene;
+    entityScene = nullptr;
 
     if (scene != nullptr) delete scene;
     scene = nullptr;
@@ -155,7 +160,12 @@ void Game::setup() {
     scene = Loader::scene(model);
     scene->physics.create(*physics);
 
-    entities.push_back(new CharacterController(camera));
+    Scene::NodeEntityFactory factory;
+    factory.registerEntity<CheckpointEntity>("CheckpointEntity");
+    factory.registerEntity<TestObstacleEntity>("TestObstacleEntity");
+    entityScene = new Scene::Scene(*scene, factory);
+
+    entityScene->entities.push_back(new CharacterController(camera));
 }
 
 void Game::run() {
@@ -164,9 +174,7 @@ void Game::run() {
         callback();
     }
 
-    for (auto &&ent : entities) {
-        ent->init();
-    }
+    entityScene->callEntityInit();
 
     physics->system->OptimizeBroadPhase();
 
@@ -200,10 +208,17 @@ void Game::processInput_() {
             callback();
         }
     }
+
     // Pause / Unpause physics
     if (input->isKeyPress(GLFW_KEY_P)) {
         LOG("Toggle phyics update");
         physics->setEnabled(!physics->enabled());
+    }
+
+    // Open Debug Menu
+    if (input->isKeyPress(GLFW_KEY_F3)) {
+        LOG("Open Debug Menu");
+        screen = new DebugMenuScreen();
     }
 
     // Spawn shpere (Debugging)
@@ -244,21 +259,13 @@ void Game::loop_() {
     // Update and step physics
     physics->update(input->timeDelta());
     if (physics->isNextStepDue()) {
-        for (auto &&ent : entities) {
-            ent->prePhysicsUpdate();
-        }
-
+        entityScene->callEntityPrePhysicsUpdate();
         physics->step();
-
-        for (auto &&ent : entities) {
-            ent->postPhysicsUpdate();
-        }
+        entityScene->callEntityPostPhysicsUpdate();
     }
 
     // Update entities
-    for (auto &&ent : entities) {
-        ent->update();
-    }
+    entityScene->callEntityUpdate();
 
     if (screen != nullptr) {
         screen->draw();

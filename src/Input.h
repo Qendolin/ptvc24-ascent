@@ -91,7 +91,7 @@ class Input {
     };
 
     /**
-     * @return the mouse position
+     * @return the mouse position measured from top-left corner of the viewport
      */
     const glm::vec2 mousePos() { return mousePosRead_; }
     /**
@@ -103,11 +103,11 @@ class Input {
      */
     const glm::vec2 scrollDelta() { return scrollDeltaRead_; }
     /**
-     * @return the time difference since the last frame
+     * @return the time difference since the last frame, in seconds
      */
     const float timeDelta() { return timeDelta_; }
     /**
-     * @return the time since GLFW was initialized
+     * @return the time since GLFW was initialized, in seconds
      */
     const float time() { return timeRead_; }
 
@@ -124,7 +124,7 @@ class Input {
     }
 
     /**
-     * Opposite of isMouseCaptured
+     * @return `true` if the mouse is **not** captured (aka. grabbed).
      */
     bool isMouseReleased() {
         return !mouseCaptured_;

@@ -13,7 +13,7 @@
 
 namespace Loader {
 
-Asset::Image image(std::string filename) {
+Loader::Image image(std::string filename) {
     std::vector<uint8_t> data = binary(filename);
 
     int w, h, n;
@@ -22,7 +22,7 @@ Asset::Image image(std::string filename) {
         PANIC("Error loading image: " + filename + ", reason: " + stbi_failure_reason());
     }
 
-    return Asset::Image{
+    return Loader::Image{
         .width = w,
         .height = h,
         .channels = 4,
@@ -31,7 +31,7 @@ Asset::Image image(std::string filename) {
 }
 
 GL::Texture *texture(std::string filename, TextureParameters params) {
-    Asset::Image img = image(filename);
+    Loader::Image img = image(filename);
     GL::Texture *texture = new GL::Texture(GL_TEXTURE_2D);
     GLenum internal_format = params.internalFormat;
     if (params.srgb) {

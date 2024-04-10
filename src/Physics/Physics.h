@@ -104,6 +104,8 @@ class Physics {
     float updateTimer_ = 0;
     bool updateEnabled_ = true;
 
+    bool debugDrawEnabled_ = false;
+
     JPH::Factory *factory_ = nullptr;
     JPH::TempAllocator *tempAllocator_ = nullptr;
     JPH::JobSystem *jobSystem_ = nullptr;
@@ -142,6 +144,16 @@ class Physics {
 
     void setEnabled(bool enabled) {
         updateEnabled_ = enabled;
+    }
+
+    void setDebugDrawEnabled(bool enabled) {
+#ifdef JPH_DEBUG_RENDERER
+        debugDrawEnabled_ = enabled;
+#endif
+    }
+
+    bool debugDrawEnabled() {
+        return debugDrawEnabled_;
     }
 
     JPH::BodyInterface &interface() const {

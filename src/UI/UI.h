@@ -90,7 +90,7 @@ class Backend {
     struct nk_context context_ = {};
     struct nk_buffer commands_ = {};
     // used for drawing shapes.
-    // TODO:
+    // TODO: implement the null texture. Or not and remove it.
     struct nk_draw_null_texture nullTexture_ = {};
 
     Renderer* renderer_ = nullptr;

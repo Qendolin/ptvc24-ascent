@@ -2,8 +2,6 @@
 
 namespace gltf = tinygltf;
 
-using namespace Asset;
-
 namespace Loader {
 
 Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
