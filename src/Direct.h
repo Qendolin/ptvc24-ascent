@@ -8,10 +8,10 @@
 #include "GL/Shader.h"
 #include "Utils.h"
 
-typedef struct MatrixStackEntry {
+struct MatrixStackEntry {
     glm::mat4 positionMatrix;
     glm::mat3 normalMatrix;
-} MatrixStackEntry;
+};
 
 /**
  * A utility for debug drawing.

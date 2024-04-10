@@ -3,13 +3,13 @@
 #include "../Loader/Loader.h"
 #include "../Utils.h"
 
-typedef struct rect {
+struct rect {
     int x, y, w, h;
-} rect;
+};
 
-typedef struct inset {
+struct inset {
     int l, t, r, b;
-} inset;
+};
 
 /**
  * [Read more](https://en.wikipedia.org/wiki/9-slice_scaling)

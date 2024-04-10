@@ -21,12 +21,12 @@ namespace ui {
 //   https://github.com/Immediate-Mode-UI/Nuklear/blob/055a0aad0ff10921d638a9b93b0fe87f3a86d777/demo/glfw_opengl4/nuklear_glfw_gl4.h#L361
 class Renderer {
    public:
-    typedef struct Vertex {
+    struct Vertex {
         glm::vec2 position;
         glm::vec2 uv;
         // packed rgba color
         uint32_t color;
-    } Vertex;
+    };
 
    private:
     gl::ShaderPipeline* shader_ = nullptr;

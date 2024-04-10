@@ -9,7 +9,7 @@ namespace loader {
  * It contains pointers and ranges into the gltf data,
  * which will be used when loading it into the opengl buffers.
  */
-typedef struct Chunk {
+struct Chunk {
     // pointer into the gltf data (vector of three floats)
     const void *positionPtr = nullptr;
     // the length of the position data in bytes
@@ -38,7 +38,7 @@ typedef struct Chunk {
     int32_t mesh = -1;
     // the associated section of this chunk (1:1 relationship)
     int32_t section = -1;
-} Chunk;
+};
 
 /**
  * A utility class that contains all the data used during loading.

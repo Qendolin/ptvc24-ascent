@@ -13,12 +13,12 @@
 
 namespace loader {
 
-typedef struct Image {
+struct Image {
     int width = 0;
     int height = 0;
     int channels = 4;
     std::shared_ptr<uint8_t> data;
-} Image;
+};
 
 std::string text(std::string filename);
 

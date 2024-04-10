@@ -35,7 +35,7 @@ namespace loader {
  *
  * A material cannot be copied, only moved, because it owns it's associated textures.
  */
-typedef struct Material {
+struct Material {
     // prevent copy
     Material(Material const &) = delete;
     Material &operator=(Material const &) = delete;
@@ -70,14 +70,14 @@ typedef struct Material {
             normal = nullptr;
         }
     }
-} Material;
+};
 
 /**
  * Part of a graphics mesh that has the same material.
  * Does not actually contain any mesh data.
  * See "Chunk" for details.
  */
-typedef struct Section {
+struct Section {
     // offset of the first element index
     uint32_t baseIndex = 0;
     // offset of the first vertex (vertex_index = element_index + offset)
@@ -91,13 +91,13 @@ typedef struct Section {
     int32_t mesh = -1;
     // index of the material
     int32_t material = -1;
-} Section;
+};
 
 /**
  * A graphics mesh, made up of `Sections`.
  * Does not actually contain any mesh data.
  */
-typedef struct Mesh {
+struct Mesh {
     std::string name = "";
     // A mesh consits of one or multiple sections (called "primitives" by gltf).
     // Each section has only one material. If mesh has multiple materials, it will have a section for each.
@@ -108,35 +108,35 @@ typedef struct Mesh {
     uint32_t totalElementCount = 0;
     // the sum of all section vertex counts
     uint32_t totalVertexCount = 0;
-} Mesh;
+};
 
 /**
  * Per graphics instance attributes.
  * Currently only the mesh's transform.
  * Accessible by the vertex shader.
  */
-typedef struct InstanceAttributes {
+struct InstanceAttributes {
     // the object to world transformation matrix
     glm::mat4 transform = glm::mat4(1);
-} InstanceAttributes;
+};
 
 /**
  * A graphics instance.
  * Represents a node in the gltf file which has a mesh that can be rendered.
  */
-typedef struct Instance {
+struct Instance {
     std::string name = "";
     // index of the per instance attributes
     int32_t attributes = -1;
     // index of the mesh
     int32_t mesh = -1;
-} Instance;
+};
 
 /**
  * A range draw commands that all use the same material.
  * Used for indirect drawing.
  */
-typedef struct MaterialBatch {
+struct MaterialBatch {
     // reference to the material
     int32_t material = -1;
     // Actually an offset into the draw command buffer. OpenGL needs it as a pointer.
@@ -144,7 +144,7 @@ typedef struct MaterialBatch {
     gl::DrawElementsIndirectCommand *commandOffset;
     // The number of commands in this batch. Should be one per section that uses this material.
     uint32_t commandCount;
-} MaterialBatch;
+};
 
 /**
  * Contains all the graphics instances and their related data.
@@ -190,23 +190,23 @@ class Graphics {
 };
 
 // Definition of physics trigger (sensor) action.
-typedef struct Trigger {
+struct Trigger {
     std::string action = "";
     std::string argument = "";
-} Trigger;
+};
 
 /**
  * A physics instance.
  * Represents a node in the gltf file which has a physics body.
  */
-typedef struct PhysicsInstance {
+struct PhysicsInstance {
     std::string name = "";
     bool isTrigger = false;
     Trigger trigger = {};
 
     JPH::BodyID id = JPH::BodyID();
     JPH::BodyCreationSettings settings;
-} PhysicsInstance;
+};
 
 /**
  * Contains all the physics instances.

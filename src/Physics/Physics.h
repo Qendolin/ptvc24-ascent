@@ -56,11 +56,11 @@ inline glm::quat convert(JPH::Quat q) {
     return {q.GetX(), q.GetY(), q.GetZ(), q.GetW()};
 }
 
-typedef struct SensorContact {
+struct SensorContact {
     JPH::BodyID sensor;
     JPH::BodyID other;
     bool persistent;
-} SensorContact;
+};
 
 // The contact listener records all sensor contacts
 // It also provides a way to register sensor contact callbacks

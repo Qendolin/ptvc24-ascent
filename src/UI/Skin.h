@@ -9,7 +9,7 @@
 #include "../GL/Object.h"
 
 namespace ui {
-typedef struct Skin {
+struct Skin {
     ~Skin();
 
     // all opengl resources that need to be destroyed when the skin is deleted
@@ -23,7 +23,7 @@ typedef struct Skin {
     struct nk_color buttonActiveText;
 
     void apply(nk_context* nk);
-} Skin;
+};
 
 Skin* loadSkin();
 

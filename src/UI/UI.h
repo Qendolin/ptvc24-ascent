@@ -54,7 +54,7 @@ float operator"" _vh(unsigned long long value);
 
 }  // namespace literals
 
-typedef struct FontEntry {
+struct FontEntry {
     struct FontSize {
         std::string name = "";
         float size = 0;
@@ -62,7 +62,7 @@ typedef struct FontEntry {
 
     std::string filename = "";
     std::vector<FontSize> sizes = {};
-} FontEntry;
+};
 
 class FontAtlas {
    private:
