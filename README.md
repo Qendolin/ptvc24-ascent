@@ -10,6 +10,15 @@ Click to focus the window. Escape to release the focus.
 WASD to fly horizontally. Space & Ctrl to fly vertically. Shift to speed up.  
 Use mouse to look.  
 
+| Key                | Action               |
+| ------------------ | -------------------- |
+| `W`, `A`, `S`, `D` | Move horizontally    |
+| `Space`, `Ctrl`    | Move vertically      |
+| `Shift`            | Move faster          |
+| `F3`               | Toggle debug menu    |
+| `F5`               | Reload assets        |
+| `ESC`              | Release mouse cursor |
+
 ## Arguments
 - `--enable-compatibility-profile`  
 Enables the OpenGL compatability profile
@@ -52,3 +61,15 @@ https://web.archive.org/web/20220916052250/http://dev.theomader.com/depth-precis
 https://developer.nvidia.com/content/depth-precision-visualized  
 https://www.danielecarbone.com/reverse-depth-buffer-in-opengl/  
 https://www.terathon.com/gdc07_lengyel.pdf
+
+## Other Features
+
+### Nuklear UI
+https://github.com/Immediate-Mode-UI/Nuklear
+
+Used for menus and ui
+
+### Dear ImGui
+https://github.com/ocornut/imgui
+
+Used for debug ui
