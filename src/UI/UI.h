@@ -24,7 +24,7 @@
 // https://github.com/Immediate-Mode-UI/Nuklear/wiki
 // https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 
-namespace UI {
+namespace ui {
 
 void set_scale(int width, int height, float dpi_scale);
 
@@ -54,7 +54,7 @@ float operator"" _vh(unsigned long long value);
 
 }  // namespace literals
 
-typedef struct FontEntry {
+struct FontEntry {
     struct FontSize {
         std::string name = "";
         float size = 0;
@@ -62,13 +62,13 @@ typedef struct FontEntry {
 
     std::string filename = "";
     std::vector<FontSize> sizes = {};
-} FontEntry;
+};
 
 class FontAtlas {
    private:
     struct nk_font_atlas baker_ = {};
     std::map<std::string, struct nk_font*> fonts_ = {};
-    GL::Texture* texture_ = nullptr;
+    gl::Texture* texture_ = nullptr;
     std::string defaultFont_ = "";
 
    public:
@@ -90,7 +90,7 @@ class Backend {
     struct nk_context context_ = {};
     struct nk_buffer commands_ = {};
     // used for drawing shapes.
-    // TODO:
+    // TODO: implement the null texture. Or not and remove it.
     struct nk_draw_null_texture nullTexture_ = {};
 
     Renderer* renderer_ = nullptr;
@@ -120,4 +120,4 @@ class Backend {
     }
 };
 
-}  // namespace UI
+}  // namespace ui

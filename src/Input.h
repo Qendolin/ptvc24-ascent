@@ -60,7 +60,7 @@ class Input {
     }
 
     GLFWwindow *window_ = nullptr;
-    float timeRead_ = 0;
+    double timeRead_ = 0;
     float timeDelta_ = 0;
     bool mouseCaptured_ = false;
     glm::vec2 mousePosRead_ = {};
@@ -86,10 +86,12 @@ class Input {
     inline static Input *instance = nullptr;
 
     Input(GLFWwindow *window);
-    ~Input();
+    ~Input() {
+        window_ = nullptr;
+    };
 
     /**
-     * @return the mouse position
+     * @return the mouse position measured from top-left corner of the viewport
      */
     const glm::vec2 mousePos() { return mousePosRead_; }
     /**
@@ -101,13 +103,13 @@ class Input {
      */
     const glm::vec2 scrollDelta() { return scrollDeltaRead_; }
     /**
-     * @return the time difference since the last frame
+     * @return the time difference since the last frame, in seconds
      */
     const float timeDelta() { return timeDelta_; }
     /**
-     * @return the time since GLFW was initialized
+     * @return the time since GLFW was initialized, in seconds
      */
-    const float time() { return timeRead_; }
+    const double time() { return timeRead_; }
 
     /**
      * @return `true` if the mouse is captured (aka. grabbed).
@@ -122,7 +124,7 @@ class Input {
     }
 
     /**
-     * Opposite of isMouseCaptured
+     * @return `true` if the mouse is **not** captured (aka. grabbed).
      */
     bool isMouseReleased() {
         return !mouseCaptured_;

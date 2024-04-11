@@ -8,10 +8,10 @@
 #include "GL/Shader.h"
 #include "Utils.h"
 
-typedef struct MatrixStackEntry {
+struct MatrixStackEntry {
     glm::mat4 positionMatrix;
     glm::mat3 normalMatrix;
-} MatrixStackEntry;
+};
 
 /**
  * A utility for debug drawing.
@@ -20,21 +20,21 @@ typedef struct MatrixStackEntry {
  */
 class DirectBuffer {
    private:
-    GL::ShaderPipeline* shader_;
-    GL::VertexArray* vao_;
-    GL::Buffer* vbo_;
+    gl::ShaderPipeline* shader_;
+    gl::VertexArray* vao_;
+    gl::Buffer* vbo_;
     std::vector<float> data_;
     std::vector<MatrixStackEntry> stack_ = {{glm::mat4(1.0), glm::mat3(1.0)}};
     glm::vec3 color_ = glm::vec3(1, 1, 1);
-    float stroke_ = 0.05;
+    float stroke_ = 0.05f;
     bool shaded_ = false;
     bool autoShade_ = false;
     glm::vec3 normal_ = {0, 0, 0};
 
-    ~DirectBuffer() {};
+    ~DirectBuffer(){};
 
    public:
-    DirectBuffer(GL::ShaderPipeline* shader);
+    DirectBuffer(gl::ShaderPipeline* shader);
 
     void destroy();
 

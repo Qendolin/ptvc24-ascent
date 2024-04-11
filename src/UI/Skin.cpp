@@ -3,13 +3,13 @@
 #include "../Loader/Loader.h"
 #include "../Utils.h"
 
-typedef struct rect {
+struct rect {
     int x, y, w, h;
-} rect;
+};
 
-typedef struct inset {
+struct inset {
     int l, t, r, b;
-} inset;
+};
 
 /**
  * [Read more](https://en.wikipedia.org/wiki/9-slice_scaling)
@@ -18,27 +18,27 @@ typedef struct inset {
  * @param region specifies a subregion within the texture `(x, y, width, height)`
  * @param inset specifies the insets for the 9-slicing `(left, top, right, bottom)`
  */
-struct nk_nine_slice nine_slice(GL::Texture* texture, int tile_size, rect region, inset inset) {
+struct nk_nine_slice nine_slice(gl::Texture* texture, int tile_size, rect region, inset inset) {
     return nk_sub9slice_id(
         texture->id(),
-        texture->width(),
-        texture->height(),
-        nk_rect(
+        static_cast<uint16_t>(texture->width()),
+        static_cast<uint16_t>(texture->height()),
+        nk_recti(
             region.x * tile_size,
             region.y * tile_size,
             region.w * tile_size,
             region.h * tile_size),
-        inset.l * tile_size,
-        inset.t * tile_size,
-        inset.r * tile_size,
-        inset.b * tile_size);
+        static_cast<uint16_t>(inset.l * tile_size),
+        static_cast<uint16_t>(inset.t * tile_size),
+        static_cast<uint16_t>(inset.r * tile_size),
+        static_cast<uint16_t>(inset.b * tile_size));
 }
 
 struct nk_color rgb(int r, int g, int b) {
     return nk_rgb(r, g, b);
 }
 
-namespace UI {
+namespace ui {
 
 Skin::~Skin() {
     for (auto&& resource : resources) {
@@ -57,7 +57,7 @@ void Skin::apply(nk_context* nk) {
 
 Skin* loadSkin() {
     Skin* skin = new Skin();
-    auto widgets = Loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
+    auto widgets = loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
     skin->resources.push_back(widgets);
 
     // clang-format off
@@ -72,4 +72,4 @@ Skin* loadSkin() {
     return skin;
 }
 
-}  // namespace UI
+}  // namespace ui

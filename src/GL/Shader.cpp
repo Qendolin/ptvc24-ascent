@@ -4,7 +4,7 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 std::string readProgramInfoLog(GLuint id) {
     GLint logLength;
@@ -16,7 +16,8 @@ std::string readProgramInfoLog(GLuint id) {
 }
 
 ShaderProgram::ShaderProgram(std::string source, GLenum stage, std::map<std::string, std::string> substitutions)
-    : sourceOriginal_(source),
+    : GLObject(GL_PROGRAM),
+      sourceOriginal_(source),
       sourceModified_(source),
       uniformLocations_(),
       stage_(stage) {
@@ -24,7 +25,8 @@ ShaderProgram::ShaderProgram(std::string source, GLenum stage, std::map<std::str
 }
 
 ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions)
-    : uniformLocations_() {
+    : GLObject(GL_PROGRAM),
+      uniformLocations_() {
     std::string ext = filename.substr(filename.find_last_of(".") + 1);
     if (ext == "vert") {
         stage_ = GL_VERTEX_SHADER;
@@ -34,7 +36,7 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
         PANIC("Invalid file extension ." + ext);
     }
 
-    sourceOriginal_ = Loader::text(filename);
+    sourceOriginal_ = loader::text(filename);
     sourceModified_ = sourceOriginal_;
     compile(substitutions);
 }
@@ -42,17 +44,15 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
 void ShaderProgram::destroy() {
     if (id_ != 0) {
         glDeleteProgram(id_);
+        untrack_();
         id_ = 0;
     }
+
     delete this;
 }
 
 std::string ShaderProgram::source() const {
     return sourceModified_;
-}
-
-GLuint ShaderProgram::id() const {
-    return id_;
 }
 
 void ShaderProgram::setDebugLabel(const std::string& label) {
@@ -92,6 +92,7 @@ void ShaderProgram::compile(std::map<std::string, std::string> substitutions) {
     }
 
     id_ = id;
+    track_();
     sourceModified_ = source;
     uniformLocations_.clear();
 }
@@ -192,13 +193,15 @@ GLenum shaderStageToBit(GLenum stage) {
     }
 }
 
-ShaderPipeline::ShaderPipeline() {
+ShaderPipeline::ShaderPipeline() : GLObject(GL_PROGRAM_PIPELINE) {
     glCreateProgramPipelines(1, &id_);
+    track_();
     ownedPrograms_ = {};
 }
 
-ShaderPipeline::ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs) {
+ShaderPipeline::ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs) : GLObject(GL_PROGRAM_PIPELINE) {
     glCreateProgramPipelines(1, &id_);
+    track_();
     attach(owned_programs);
     ownedPrograms_ = owned_programs;
 }
@@ -207,6 +210,7 @@ void ShaderPipeline::destroy() {
     if (id_ != 0) {
         glDeleteProgramPipelines(1, &id_);
         manager->unbindProgramPipeline(id_);
+        untrack_();
         id_ = 0;
     }
 
@@ -220,10 +224,6 @@ void ShaderPipeline::destroy() {
 
 void ShaderPipeline::bind() const {
     manager->bindProgramPipeline(id_);
-}
-
-GLuint ShaderPipeline::id() const {
-    return id_;
 }
 
 ShaderProgram* ShaderPipeline::vertexStage() const {
@@ -320,4 +320,4 @@ ShaderProgram*& ShaderPipeline::getRef_(GLenum stage) {
     }
 }
 
-}  // namespace GL
+}  // namespace gl

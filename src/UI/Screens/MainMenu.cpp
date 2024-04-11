@@ -4,7 +4,7 @@
 #include "../../Loader/Loader.h"
 
 MainMenuScreen::MainMenuScreen() {
-    titleImage = Loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
 }
 
 MainMenuScreen::~MainMenuScreen() {
@@ -15,7 +15,7 @@ MainMenuScreen::~MainMenuScreen() {
 }
 
 void MainMenuScreen::draw() {
-    using namespace UI::literals;
+    using namespace ui::literals;
 
     Game* game = Game::instance;
     nk_context* nk = game->ui->context();
@@ -38,7 +38,7 @@ void MainMenuScreen::draw() {
         auto used = nk_widget_position(nk);
         auto avail = nk_window_get_content_region_size(nk);
         nk_layout_row_begin(nk, NK_STATIC, avail.y - used.y, 2);
-        nk_layout_row_push(nk, (40_vw - 240_dp) / 2.0);
+        nk_layout_row_push(nk, (40_vw - 240_dp) / 2.0f);
         nk_spacer(nk);
         nk_layout_row_push(nk, 240_dp);
 
@@ -50,8 +50,8 @@ void MainMenuScreen::draw() {
             nk_layout_row_dynamic(nk, 60_dp, 1);
             nk_style_set_font(nk, &game->ui->fonts()->get("menu_md")->handle);
             if (nk_button_label(nk, "Play")) {
-                game->screen = nullptr;
                 game->input->captureMouse();
+                close();
             }
             if (nk_button_label(nk, "Settings")) {
                 LOG("Settings pressed");

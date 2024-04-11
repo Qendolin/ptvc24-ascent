@@ -90,5 +90,12 @@
 		"*.tcc": "cpp",
 		"variant": "cpp"
 	},
-	"git.detectSubmodules": false
+	"git.detectSubmodules": false,
+	"git.ignoreSubmodules": true,
+	"C_Cpp.default.cppStandard": "c++23",
+	"C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+	"search.exclude": {
+		"build": true,
+		"include": true
+	}
 }

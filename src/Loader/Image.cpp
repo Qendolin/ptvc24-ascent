@@ -11,9 +11,9 @@
 
 #include "../Utils.h"
 
-namespace Loader {
+namespace loader {
 
-Asset::Image image(std::string filename) {
+loader::Image image(std::string filename) {
     std::vector<uint8_t> data = binary(filename);
 
     int w, h, n;
@@ -22,7 +22,7 @@ Asset::Image image(std::string filename) {
         PANIC("Error loading image: " + filename + ", reason: " + stbi_failure_reason());
     }
 
-    return Asset::Image{
+    return loader::Image{
         .width = w,
         .height = h,
         .channels = 4,
@@ -30,9 +30,9 @@ Asset::Image image(std::string filename) {
     };
 }
 
-GL::Texture *texture(std::string filename, TextureParameters params) {
-    Asset::Image img = image(filename);
-    GL::Texture *texture = new GL::Texture(GL_TEXTURE_2D);
+gl::Texture *texture(std::string filename, TextureParameters params) {
+    loader::Image img = image(filename);
+    gl::Texture *texture = new gl::Texture(GL_TEXTURE_2D);
     GLenum internal_format = params.internalFormat;
     if (params.srgb) {
         if (params.internalFormat == GL_RGB8 || params.internalFormat == GL_SRGB8)
@@ -49,4 +49,4 @@ GL::Texture *texture(std::string filename, TextureParameters params) {
     return texture;
 }
 
-}  // namespace Loader
+}  // namespace loader

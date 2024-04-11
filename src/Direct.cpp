@@ -31,15 +31,15 @@ glm::vec3 perpendicular(glm::vec3 v) {
     return glm::cross(v, e);
 }
 
-DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
-    vao_ = new GL::VertexArray();
+DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
+    vao_ = new gl::VertexArray();
     vao_->setDebugLabel("direct_buffer/vao");
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
     vao_->layout(0, 1, 3, GL_FLOAT, false, 3 * 4);
     vao_->layout(0, 2, 3, GL_FLOAT, false, 6 * 4);
-    vbo_ = new GL::Buffer();
+    vbo_ = new gl::Buffer();
     vbo_->setDebugLabel("direct_buffer/vbo");
-    vbo_->allocateEmpty(1e6, GL_DYNAMIC_STORAGE_BIT);
+    vbo_->allocateEmpty((size_t)1e6, GL_DYNAMIC_STORAGE_BIT);
     // 3 floats position + 3 floats color + 3 float normal
     vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * 4);
 }
@@ -47,6 +47,7 @@ DirectBuffer::DirectBuffer(GL::ShaderPipeline* shader) : shader_(shader) {
 void DirectBuffer::destroy() {
     vao_->destroy();
     vbo_->destroy();
+    shader_->destroy();
     delete this;
 }
 
@@ -102,7 +103,7 @@ void DirectBuffer::vert(glm::vec3 pos) {
     glm::vec3 normal;
     MatrixStackEntry& head = stack_.back();
     if (shaded_) {
-        normal_ = head.normalMatrix * normal_;
+        normal = head.normalMatrix * normal_;
     }
 
     pos = head.positionMatrix * glm::vec4(pos, 1.0);
@@ -112,9 +113,9 @@ void DirectBuffer::vert(glm::vec3 pos) {
     data_.push_back(color_[0]);
     data_.push_back(color_[1]);
     data_.push_back(color_[2]);
-    data_.push_back(normal_[0]);
-    data_.push_back(normal_[1]);
-    data_.push_back(normal_[2]);
+    data_.push_back(normal[0]);
+    data_.push_back(normal[1]);
+    data_.push_back(normal[2]);
 }
 
 void DirectBuffer::tri(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
@@ -232,9 +233,9 @@ void DirectBuffer::uvSphere(glm::vec3 c, float r) {
         for (int segment = 0; segment < segments; segment++) {
             double phi = 2 * segment * dPhi;
 
-            float x = r * glm::sin(theta) * glm::cos(phi);
-            float y = r * glm::cos(theta);
-            float z = r * glm::sin(theta) * glm::sin(phi);
+            float x = r * static_cast<float>(glm::sin(theta) * glm::cos(phi));
+            float y = r * static_cast<float>(glm::cos(theta));
+            float z = r * static_cast<float>(glm::sin(theta) * glm::sin(phi));
             glm::vec3 v = c + glm::vec3(x, y, z);
 
             currRing[segment] = v;
@@ -272,20 +273,20 @@ void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
         return;
     }
 
-    int bufferSize = data_.size() * sizeof(float);
-    if (vbo_->grow(bufferSize)) {
+    size_t buffer_size = data_.size() * sizeof(float);
+    if (vbo_->grow(buffer_size)) {
         vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * sizeof(float));
     }
-    vbo_->write(0, data_.data(), bufferSize);
+    vbo_->write(0, data_.data(), buffer_size);
 
     vao_->bind();
     shader_->bind();
     shader_->vertexStage()->setUniform("u_view_projection_mat", view_proj_mat);
     shader_->fragmentStage()->setUniform("u_camera_position", camera_pos);
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::PolygonOffsetFill});
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
-    GL::manager->depthMask(true);
-    GL::manager->polygonOffset(-1, -1);
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::PolygonOffsetFill});
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->depthMask(true);
+    gl::manager->polygonOffset(-1, -1);
     glDrawArrays(GL_TRIANGLES, 0, data_.size() / 9);
 
     clear();

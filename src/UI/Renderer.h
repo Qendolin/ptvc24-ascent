@@ -13,7 +13,7 @@
 #include "../GL/Texture.h"
 #include "../Input.h"
 
-namespace UI {
+namespace ui {
 
 // Executes the nuklear draw commands
 // References:
@@ -21,21 +21,21 @@ namespace UI {
 //   https://github.com/Immediate-Mode-UI/Nuklear/blob/055a0aad0ff10921d638a9b93b0fe87f3a86d777/demo/glfw_opengl4/nuklear_glfw_gl4.h#L361
 class Renderer {
    public:
-    typedef struct Vertex {
+    struct Vertex {
         glm::vec2 position;
         glm::vec2 uv;
         // packed rgba color
         uint32_t color;
-    } Vertex;
+    };
 
    private:
-    GL::ShaderPipeline* shader_ = nullptr;
-    GL::Sampler* sampler_ = nullptr;
-    GL::VertexArray* vao_ = nullptr;
-    GL::Buffer* vbo_ = nullptr;
+    gl::ShaderPipeline* shader_ = nullptr;
+    gl::Sampler* sampler_ = nullptr;
+    gl::VertexArray* vao_ = nullptr;
+    gl::Buffer* vbo_ = nullptr;
     // points into the vbo using glMapNamedBufferRange
     std::span<Vertex> vertices_ = {};
-    GL::Buffer* ebo_ = nullptr;
+    gl::Buffer* ebo_ = nullptr;
     // points into the ebo using glMapNamedBufferRange
     std::span<uint16_t> indices_ = {};
 
@@ -73,4 +73,4 @@ class Renderer {
     void render(struct nk_context* context, struct nk_buffer* commands);
 };
 
-}  // namespace UI
+}  // namespace ui

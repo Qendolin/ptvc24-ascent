@@ -7,7 +7,7 @@
 #include "Jolt/ObjectLayerPairFilterTable.h"
 #include "Jolt/ObjectVsBroadPhaseLayerFilterTable.h"
 
-namespace PH {
+namespace ph {
 
 // Layer that objects can be in, determines which other objects it can collide with
 // Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
@@ -31,4 +31,4 @@ static constexpr JPH::BroadPhaseLayer MOVING(1);
 static constexpr uint32_t NUM_LAYERS(2);
 };  // namespace BroadPhaseLayers
 
-}  // namespace PH
+}  // namespace ph

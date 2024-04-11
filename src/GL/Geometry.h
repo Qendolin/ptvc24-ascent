@@ -5,10 +5,10 @@
 
 #include "Object.h"
 
-namespace GL {
+namespace gl {
 
 // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElementsIndirect.xhtml#:~:text=packed%20into%20a%20structure)
-typedef struct DrawElementsIndirectCommand {
+struct DrawElementsIndirectCommand {
     // The element count
     uint32_t count;
     uint32_t instanceCount;
@@ -17,13 +17,12 @@ typedef struct DrawElementsIndirectCommand {
     // The offset for the first vertex of the mesh in the vbo
     int32_t baseVertex;
     uint32_t baseInstance;
-} DrawElementsIndirectCommand;
+};
 
 // References:
 // https://www.khronos.org/opengl/wiki/Buffer_Object
 class Buffer : public GLObject {
    private:
-    GLuint id_ = 0;
     size_t size_ = 0;
     uint32_t flags_ = 0;
     bool immutable_ = false;
@@ -31,20 +30,17 @@ class Buffer : public GLObject {
     void allocate_(const void* data, size_t size, GLbitfield flags);
     void allocateMutable_(const void* data, size_t size, GLenum usage);
 
-    ~Buffer() {
-        checkDestroyed(GL_BUFFER);
-    }
-
    public:
     Buffer();
 
-    void destroy();
+    Buffer(Buffer&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
+    void setDebugLabel(const std::string& label) override;
+
+    // @returns allocated buffer size in bytes
     size_t size() const;
-
-    void setDebugLabel(const std::string& label);
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBuffer.xhtml)
     void bind(GLenum target) const;
@@ -88,28 +84,35 @@ class Buffer : public GLObject {
         size_t size = sizeof(data);
         glNamedBufferSubData(id_, index * size, size, data);
     }
+
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
+    template <typename T>
+    T* mapRange(GLbitfield flags) {
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, 0, size_, flags));
+    }
+
+    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
+    template <typename T>
+    T* mapRange(size_t offset, size_t length, GLbitfield flags) {
+        return reinterpret_cast<T*>(glMapNamedBufferRange(id_, offset, length, flags));
+    }
 };
 
 // References:
 // https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_Array_Object
 class VertexArray : public GLObject {
    private:
-    GLuint id_ = 0;
-    std::vector<std::pair<int, int>> bindingRanges_;
+    std::vector<std::pair<size_t, size_t>> bindingRanges_;
     std::vector<Buffer*> ownedBuffers_;
-
-    ~VertexArray() {
-        checkDestroyed(GL_VERTEX_ARRAY);
-    }
 
    public:
     VertexArray();
 
-    void destroy();
+    VertexArray(VertexArray&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
-    void setDebugLabel(const std::string& label);
+    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindVertexArray.xhtml)
     void bind() const;
@@ -163,4 +166,4 @@ class VertexArray : public GLObject {
     void own(Buffer* buffer);
 };
 
-}  // namespace GL
+}  // namespace gl

@@ -1,16 +1,24 @@
-#include "Entity.h"
+
+#include "Character.h"
+
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+// include after ObjectLayer
+#include <Jolt/Physics/Character/Character.h>
 
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include "Game.h"
+#include "../Game.h"
+#include "../Physics/Physics.h"
+
+using namespace scene;
 
 CharacterController::CharacterController(Camera* camera) : camera(camera) {
 }
 
 CharacterController::~CharacterController() {
-    PH::Physics* physics = Game::instance->physics;
     if (body_ != nullptr) {
         body_->RemoveFromPhysicsSystem();
         delete body_;
@@ -21,16 +29,16 @@ CharacterController::~CharacterController() {
 void CharacterController::init() {
     JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
     settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
-    settings->mLayer = PH::Layers::MOVING;
+    settings->mLayer = ph::Layers::MOVING;
     settings->mShape = new JPH::SphereShape(0.5f);
     settings->mFriction = 0.0f;
     settings->mGravityFactor = 0.0f;
 
-    PH::Physics* physics = Game::instance->physics;
+    ph::Physics* physics = Game::instance->physics;
 
     body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics->system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
-    cameraLerpStart_ = cameraLerpEnd_ = PH::convert(body_->GetPosition());
+    cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }
 
 void CharacterController::update() {
@@ -84,10 +92,10 @@ void CharacterController::update() {
 }
 
 void CharacterController::prePhysicsUpdate() {
-    cameraLerpStart_ = PH::convert(body_->GetPosition());
-    body_->SetLinearVelocity(PH::convert(velocity_));
+    cameraLerpStart_ = ph::convert(body_->GetPosition());
+    body_->SetLinearVelocity(ph::convert(velocity_));
 }
 
 void CharacterController::postPhysicsUpdate() {
-    cameraLerpEnd_ = PH::convert(body_->GetPosition());
+    cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }

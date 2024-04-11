@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-namespace PH {
+namespace ph {
 
 void SensorContactListener::OnContactAdded(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) {
     if (body_a.GetObjectLayer() == Layers::SENSOR) {
@@ -128,9 +128,6 @@ Physics::Physics(PhysicsSetupConfig config) {
 
 Physics::~Physics() {
 #ifdef JPH_DEBUG_RENDERER
-    if (JPH::DebugRenderer::sInstance == debugRenderer_) {
-        JPH::DebugRenderer::sInstance = nullptr;
-    }
     delete debugRenderer_;
 #endif
 
@@ -156,7 +153,7 @@ void Physics::update(float delta) {
     updateTimer_ = std::min(updateTimer_, 2 * UPDATE_INTERVAL);
 }
 
-bool Physics::isNextStepDue() {
+bool Physics::isNextStepDue() const {
     return updateTimer_ > UPDATE_INTERVAL;
 }
 
@@ -166,15 +163,17 @@ void Physics::step() {
     contactListener->DispatchCallbacks();
 }
 
-float Physics::partialTicks() {
+float Physics::partialTicks() const {
     return std::clamp(updateTimer_ / UPDATE_INTERVAL, 0.0f, 1.0f);
 }
 
 void Physics::debugDraw(glm::mat4 view_projection_matrix) {
+    if (!debugDrawEnabled_) return;
+
 #ifdef JPH_DEBUG_RENDERER
     system->DrawBodies({}, debugRenderer_);
     debugRenderer_->Draw(view_projection_matrix);
 #endif
 }
 
-}  // namespace PH
+}  // namespace ph

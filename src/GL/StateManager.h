@@ -4,13 +4,16 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "../Utils.h"
+
 #pragma once
 
-namespace GL {
+namespace gl {
 
 // Features that can be enabled.
 // These are not all that are available.
@@ -123,9 +126,48 @@ Environment createEnvironment();
 // Additionally, when using setEnabled, it is explicit which capabilities should be enabled and need to be configured.
 // This avoids the easy mistake of forgetting to disable a capability in one part of the code.
 class StateManager {
+#ifndef NDEBUG
+    // Tracks created / deleted gl objects
+    class Tracker {
+        std::map<GLenum, std::set<GLuint>> objects_ = {{GL_BUFFER, {}}, {GL_SHADER, {}}, {GL_PROGRAM, {}}, {GL_VERTEX_ARRAY, {}}, {GL_PROGRAM_PIPELINE, {}}, {GL_SAMPLER, {}}, {GL_TEXTURE, {}}, {GL_RENDERBUFFER, {}}, {GL_FRAMEBUFFER, {}}};
+
+       public:
+        void add(GLenum type, GLuint id);
+
+        void remove(GLenum type, GLuint id);
+
+        // returns all the tracked objects
+        std::vector<std::pair<GLenum, GLuint>> tracked();
+    };
+
+    Tracker tracker_;
+#endif  // NDEBUG
+
    public:
     StateManager(Environment env);
     ~StateManager();
+
+    // Keep track of a gl object
+    void track(GLenum type, GLuint id) {
+#ifndef NDEBUG
+        tracker_.add(type, id);
+#endif
+    }
+
+    // inverse of `track(type, id)`
+    void untrack(GLenum type, GLuint id) {
+#ifndef NDEBUG
+        tracker_.remove(type, id);
+#endif
+    }
+
+    std::vector<std::pair<GLenum, GLuint>> tracked() {
+#ifndef NDEBUG
+        return tracker_.tracked();
+#else
+        return {};
+#endif
+    }
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml)
     void enable(Capability cap);
@@ -332,4 +374,4 @@ inline void popDebugGroup() {
     glPopDebugGroup();
 }
 
-}  // namespace GL
+}  // namespace gl

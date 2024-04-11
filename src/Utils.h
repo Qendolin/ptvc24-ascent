@@ -2,7 +2,6 @@
 
 #include <exception>
 #include <iostream>
-#include <sstream>
 #include <stacktrace>
 #include <string>
 

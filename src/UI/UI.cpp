@@ -18,7 +18,7 @@
 #include "../Loader/Loader.h"
 #include "../Utils.h"
 
-namespace UI {
+namespace ui {
 
 static const float REFERENCE_WIDTH = 1600.0f;
 static const float REFERENCE_HEIGHT = 900.0f;
@@ -71,7 +71,7 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     struct nk_font_config config = nk_font_config(default_height);
 
     for (auto &entry : entries) {
-        std::vector<uint8_t> data = Loader::binary(entry.filename);
+        std::vector<uint8_t> data = loader::binary(entry.filename);
         for (auto &size : entry.sizes) {
             struct nk_font *font = nk_font_atlas_add_from_memory(&baker_, data.data(), data.size(), size.size, &config);
             fonts_[size.name] = font;
@@ -80,9 +80,10 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
 
     int atlas_width = 0, atlas_height = 0;
     const void *atlas_data = nullptr;
-    // TODO: figure out the difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
+    // The difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
+    // is that ALPHA8 uses less memory but doesn't support colors (for icons & emojis)
     atlas_data = nk_font_atlas_bake(&baker_, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
-    texture_ = new GL::Texture(GL_TEXTURE_2D);
+    texture_ = new gl::Texture(GL_TEXTURE_2D);
     texture_->setDebugLabel("nk/font");
     texture_->allocate(1, GL_RGBA8, atlas_width, atlas_height, 1);
     texture_->load(0, atlas_width, atlas_height, 1, GL_RGBA, GL_UNSIGNED_BYTE, atlas_data);
@@ -191,4 +192,4 @@ void Backend::update(Input *input) {
     nk_input_end(&context_);
 }
 
-}  // namespace UI
+}  // namespace ui

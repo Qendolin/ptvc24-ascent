@@ -5,10 +5,11 @@
 
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
-Texture::Texture(GLenum type) : type_(type) {
+Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     glCreateTextures(type_, 1, &id_);
+    track_();
     manager->intelTextureBindingSetTarget(id_, type_);
 }
 
@@ -22,10 +23,6 @@ void Texture::setDebugLabel(const std::string& label) {
 
 GLenum Texture::type() const {
     return type_;
-}
-
-GLuint Texture::id() const {
-    return id_;
 }
 
 uint32_t Texture::width() const {
@@ -48,6 +45,7 @@ void Texture::destroy() {
     if (id_ != 0) {
         glDeleteTextures(1, &id_);
         manager->unbindTexture(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
@@ -82,9 +80,9 @@ int Texture::dimensions() const {
 Texture* Texture::createView(GLenum type, GLenum internal_format, int min_level, int max_level, int min_layer, int max_layer) {
     GLuint viewId;
     glGenTextures(1, &viewId);
-    glTextureView(viewId, type_, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
-    manager->intelTextureBindingSetTarget(id_, type_);
-    return new Texture(type_, viewId);
+    glTextureView(viewId, type, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
+    manager->intelTextureBindingSetTarget(id_, type);
+    return new Texture(type, viewId);
 }
 
 void Texture::allocate(GLint levels, GLenum internal_format, uint32_t width, uint32_t height, uint32_t depth) {
@@ -160,21 +158,19 @@ void Texture::depthStencilTextureMode(GLenum mode) {
     glTextureParameteri(id_, GL_DEPTH_STENCIL_TEXTURE_MODE, mode);
 }
 
-Sampler::Sampler() {
+Sampler::Sampler() : GLObject(GL_SAMPLER) {
     glCreateSamplers(1, &id_);
+    track_();
 }
 
 void Sampler::destroy() {
     if (id_ != 0) {
         glDeleteSamplers(1, &id_);
         manager->unbindSampler(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Sampler::Sampler::id() const {
-    return id_;
 }
 
 void Sampler::setDebugLabel(const std::string& label) {
@@ -225,4 +221,4 @@ void Sampler::lodBias(float bias) {
     glSamplerParameterf(id_, GL_TEXTURE_LOD_BIAS, bias);
 }
 
-}  // namespace GL
+}  // namespace gl

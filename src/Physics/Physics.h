@@ -10,9 +10,6 @@
 #include <Jolt/Geometry/Triangle.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Physics/Character/Character.h>
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
@@ -21,6 +18,7 @@
 #include <cstdarg>
 #include <functional>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <iostream>
 #include <thread>
 
@@ -32,7 +30,7 @@
 // https://github.com/jrouwe/JoltPhysics/tree/master/Samples
 // https://jrouwe.github.io/JoltPhysics/index.html
 
-namespace PH {
+namespace ph {
 
 inline JPH::Vec3 convert(glm::vec3 v) {
     return {v.x, v.y, v.z};
@@ -50,11 +48,19 @@ inline glm::vec4 convert(JPH::Vec4 v) {
     return {v.GetX(), v.GetY(), v.GetZ(), v.GetW()};
 }
 
-typedef struct SensorContact {
+inline JPH::Quat convert(glm::quat q) {
+    return {q.x, q.y, q.z, q.w};
+}
+
+inline glm::quat convert(JPH::Quat q) {
+    return {q.GetX(), q.GetY(), q.GetZ(), q.GetW()};
+}
+
+struct SensorContact {
     JPH::BodyID sensor;
     JPH::BodyID other;
     bool persistent;
-} SensorContact;
+};
 
 // The contact listener records all sensor contacts
 // It also provides a way to register sensor contact callbacks
@@ -93,10 +99,12 @@ struct PhysicsSetupConfig {
 
 class Physics {
    private:
-    inline static const float UPDATE_INTERVAL = 1.0 / 60.0;
+    inline static const float UPDATE_INTERVAL = 1.0f / 60.0f;
 
     float updateTimer_ = 0;
     bool updateEnabled_ = true;
+
+    bool debugDrawEnabled_ = false;
 
     JPH::Factory *factory_ = nullptr;
     JPH::TempAllocator *tempAllocator_ = nullptr;
@@ -110,23 +118,27 @@ class Physics {
     JPH::PhysicsSystem *system = nullptr;
     SensorContactListener *contactListener = nullptr;
 
+    // prevent copy
+    Physics(Physics const &) = delete;
+    Physics &operator=(Physics const &) = delete;
+
     Physics(PhysicsSetupConfig config);
     ~Physics();
 
     void update(float delta);
 
     // returns true when step() should be called
-    bool isNextStepDue();
+    bool isNextStepDue() const;
 
     // andvances the phyics simulation
     void step();
 
     // returns a factor [0;1] between the last tick and the next one.
-    float partialTicks();
+    float partialTicks() const;
 
     void debugDraw(glm::mat4 view_projection_matrix);
 
-    bool enabled() {
+    bool enabled() const {
         return updateEnabled_;
     }
 
@@ -134,9 +146,19 @@ class Physics {
         updateEnabled_ = enabled;
     }
 
-    JPH::BodyInterface &interface() {
+    void setDebugDrawEnabled(bool enabled) {
+#ifdef JPH_DEBUG_RENDERER
+        debugDrawEnabled_ = enabled;
+#endif
+    }
+
+    bool debugDrawEnabled() {
+        return debugDrawEnabled_;
+    }
+
+    JPH::BodyInterface &interface() const {
         return system->GetBodyInterface();
     }
 };
 
-}  // namespace PH
+}  // namespace ph

@@ -3,26 +3,24 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
 void warnAllocationSize(size_t size);
 bool warnAllocationSizeZero(size_t size);
 
-Buffer::Buffer() {
+Buffer::Buffer() : GLObject(GL_BUFFER) {
     glCreateBuffers(1, &id_);
+    track_();
 }
 
 void Buffer::destroy() {
     if (id_ != 0) {
         glDeleteBuffers(1, &id_);
         manager->unbindBuffer(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Buffer::id() const {
-    return id_;
 }
 
 size_t Buffer::size() const {
@@ -92,50 +90,52 @@ bool Buffer::grow(size_t size) {
     if (size < this->size_) {
         return false;
     }
-    int newSize = this->size_;
-    int doubleSize = newSize + newSize;
+    size_t new_size = this->size_;
+    size_t double_size = new_size + new_size;
     // try to be smart about growing the buffer
-    if (size > doubleSize) {
-        newSize = size;
+    if (size > double_size) {
+        new_size = size;
     } else if (this->size_ < 16384) {
-        newSize = doubleSize;
+        new_size = double_size;
     } else {
-        while (0 < newSize && newSize < size) {
-            newSize += newSize / 4;
+        while (0 < new_size && new_size < size) {
+            new_size += new_size / 4;
         }
-        if (newSize <= 0) {
-            newSize = size;
+        if (new_size <= 0) {
+            new_size = size;
         }
     }
 
     if (immutable_) {
-        GLuint newBufferId;
-        glCreateBuffers(1, &newBufferId);
-        glNamedBufferStorage(newBufferId, newSize, nullptr, flags_);
-        glCopyNamedBufferSubData(id_, newBufferId, 0, 0, this->size_);
+        GLuint new_buffer_id;
+        glCreateBuffers(1, &new_buffer_id);
+        glNamedBufferStorage(new_buffer_id, new_size, nullptr, flags_);
+        glCopyNamedBufferSubData(id_, new_buffer_id, 0, 0, this->size_);
         glDeleteBuffers(1, &id_);
-        id_ = newBufferId;
+        untrack_();
+        id_ = new_buffer_id;
+        track_();
     } else {
-        GLuint copyBufferId;
-        glCreateBuffers(1, &copyBufferId);
-        glNamedBufferStorage(copyBufferId, this->size_, nullptr, 0);
-        glCopyNamedBufferSubData(id_, copyBufferId, 0, 0, this->size_);
-        glNamedBufferData(id_, newSize, nullptr, flags_);
-        glCopyNamedBufferSubData(copyBufferId, id_, 0, 0, this->size_);
-        glDeleteBuffers(1, &copyBufferId);
+        GLuint tmp_copy_buffer_id;
+        glCreateBuffers(1, &tmp_copy_buffer_id);
+        glNamedBufferStorage(tmp_copy_buffer_id, this->size_, nullptr, 0);
+        glCopyNamedBufferSubData(id_, tmp_copy_buffer_id, 0, 0, this->size_);
+        glNamedBufferData(id_, new_size, nullptr, flags_);
+        glCopyNamedBufferSubData(tmp_copy_buffer_id, id_, 0, 0, this->size_);
+        glDeleteBuffers(1, &tmp_copy_buffer_id);
     }
-    this->size_ = newSize;
+    this->size_ = new_size;
     return true;
 }
 
 void warnAllocationSize(size_t size) {
-    int lowerLimit = 1024 * 4;
-    int upperLimit = 1024 * 1000 * 1000;
-    if (size < lowerLimit) {
-        std::string msg = "Small buffer allocation: " + std::to_string(size) + " < " + std::to_string(lowerLimit) + " bytes";
+    int lower_limit = 1024 * 4;
+    int upper_limit = 1024 * 1000 * 1000;
+    if (size < lower_limit) {
+        std::string msg = "Small buffer allocation: " + std::to_string(size) + " < " + std::to_string(lower_limit) + " bytes";
         glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PERFORMANCE, 1, GL_DEBUG_SEVERITY_NOTIFICATION, -1, msg.c_str());
-    } else if (size > upperLimit) {
-        std::string msg = "Large buffer allocation: " + std::to_string(size) + " > " + std::to_string(upperLimit) + " bytes";
+    } else if (size > upper_limit) {
+        std::string msg = "Large buffer allocation: " + std::to_string(size) + " > " + std::to_string(upper_limit) + " bytes";
         glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PERFORMANCE, 1, GL_DEBUG_SEVERITY_NOTIFICATION, -1, msg.c_str());
     }
 }
@@ -149,14 +149,16 @@ bool warnAllocationSizeZero(size_t size) {
     return true;
 }
 
-VertexArray::VertexArray() : bindingRanges_(32, std::pair(0, 0)) {
+VertexArray::VertexArray() : GLObject(GL_VERTEX_ARRAY), bindingRanges_(32, std::pair(0, 0)) {
     glCreateVertexArrays(1, &id_);
+    track_();
 }
 
 void VertexArray::destroy() {
     if (id_ != 0) {
         glDeleteVertexArrays(1, &id_);
         manager->unbindVertexArray(id_);
+        untrack_();
         id_ = 0;
     }
 
@@ -165,10 +167,6 @@ void VertexArray::destroy() {
     }
     ownedBuffers_ = {};
     delete this;
-}
-
-GLuint VertexArray::id() const {
-    return id_;
 }
 
 void VertexArray::setDebugLabel(const std::string& label) {
@@ -219,4 +217,4 @@ void VertexArray::own(Buffer* buffer) {
     ownedBuffers_.push_back(buffer);
 }
 
-}  // namespace GL
+}  // namespace gl

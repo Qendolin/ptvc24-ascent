@@ -1,7 +1,7 @@
 #include "../Utils.h"
 #include "Loader.h"
 
-namespace Loader {
+namespace loader {
 std::string text(std::string filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
@@ -45,4 +45,4 @@ std::vector<uint8_t> binary(std::string filename) {
                std::istream_iterator<uint8_t>());
     return vec;
 }
-}  // namespace Loader
+}  // namespace loader

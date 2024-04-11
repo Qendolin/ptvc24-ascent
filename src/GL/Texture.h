@@ -5,23 +5,21 @@
 
 #include "Object.h"
 
-namespace GL {
+namespace gl {
 
 // References:
 // https://www.khronos.org/opengl/wiki/Texture
 class Texture : public GLObject {
    private:
-    GLuint id_ = 0;
     GLenum type_ = 0;
     uint32_t width_ = 0;
     uint32_t height_ = 0;
     uint32_t depth_ = 0;
 
-    Texture(GLenum type, GLuint id) : type_(type), id_(id) {
-    }
-
-    ~Texture() {
-        checkDestroyed(GL_TEXTURE);
+    Texture(GLenum type, GLuint id) : GLObject(GL_TEXTURE) {
+        type_ = type;
+        id_ = id;
+        track_();
     }
 
    public:
@@ -29,18 +27,20 @@ class Texture : public GLObject {
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateTextures.xhtml)
     Texture(GLenum type);
 
+    Texture(Texture&&) noexcept = default;
+
     // Create an alias to this texture with the given type.
     // Useful for 2D array textures or cubemaps.
     Texture* as(GLenum type);
 
-    void setDebugLabel(const std::string& label);
+    void destroy() override;
+
+    void setDebugLabel(const std::string& label) override;
 
     GLenum type() const;
 
     // @returns `1`, `2` or `3` depending on the type
     int dimensions() const;
-
-    GLuint id() const;
 
     uint32_t width() const;
 
@@ -50,8 +50,6 @@ class Texture : public GLObject {
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindTextureUnit.xhtml)
     void bind(int unit);
-
-    void destroy();
 
     // References:
     // - [Wiki](https://www.khronos.org/opengl/wiki/Texture_Storage#Texture_views)
@@ -168,21 +166,14 @@ class Texture : public GLObject {
 // References:
 // https://www.khronos.org/opengl/wiki/Sampler_Object
 class Sampler : public GLObject {
-   private:
-    GLuint id_ = 0;
-
-    ~Sampler() {
-        checkDestroyed(GL_SAMPLER);
-    }
-
    public:
     Sampler();
 
-    void destroy();
+    Sampler(Sampler&&) noexcept = default;
 
-    GLuint id() const;
+    void destroy() override;
 
-    void setDebugLabel(const std::string& label);
+    void setDebugLabel(const std::string& label) override;
 
     void bind(int unit) const;
 
@@ -216,4 +207,4 @@ class Sampler : public GLObject {
     void lodBias(float bias);
 };
 
-}  // namespace GL
+}  // namespace gl

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace GL {
+namespace gl {
 
 Environment createEnvironment() {
     std::string vendor = std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
@@ -29,6 +29,30 @@ Environment createEnvironment() {
         .useIntelTextureBindingFix = vendor == VENDOR_INTEL,
         .useIntelCubemapDsaFix = vendor == VENDOR_INTEL,
         .features = features};
+}
+
+void StateManager::Tracker::add(GLenum type, GLuint id) {
+    if (id == 0) PANIC("Cannot track the default object (id=0)");
+    if (objects_.at(type).contains(id)) PANIC("Object with id=" + std::to_string(id) + " already tracked");
+    objects_.at(type).insert(id);
+}
+
+void StateManager::Tracker::remove(GLenum type, GLuint id) {
+    if (id == 0) PANIC("Cannot untrack the default object (id=0)");
+    auto& set = objects_.at(type);
+    auto pos = set.find(id);
+    if (pos == set.end()) PANIC("Object with id=" + std::to_string(id) + " is not being tracked");
+    set.erase(pos);
+}
+
+std::vector<std::pair<GLenum, GLuint>> StateManager::Tracker::tracked() {
+    std::vector<std::pair<GLenum, GLuint>> result;
+    for (const auto& [key, ids] : objects_) {
+        for (GLuint id : ids) {
+            result.emplace_back(key, id);
+        }
+    }
+    return result;
 }
 
 StateManager::StateManager(Environment env) : caps(),
@@ -503,7 +527,7 @@ void StateManager::bindVertexArray(GLuint array) {
 }
 
 void StateManager::unbindTexture(GLuint texture) {
-    for (size_t unit = 0; unit < textureUnits.size(); unit++) {
+    for (uint32_t unit = 0; unit < textureUnits.size(); unit++) {
         if (textureUnits[unit] == texture) {
             textureUnits[unit] = 0;
             glBindTextureUnit(unit, 0);
@@ -516,7 +540,7 @@ void StateManager::unbindTexture(GLuint texture) {
 }
 
 void StateManager::unbindSampler(GLuint sampler) {
-    for (size_t unit = 0; unit < samplerUnits.size(); unit++) {
+    for (uint32_t unit = 0; unit < samplerUnits.size(); unit++) {
         if (samplerUnits[unit] == sampler) {
             samplerUnits[unit] = 0;
             glBindSampler(unit, 0);
@@ -627,4 +651,4 @@ void StateManager::setClearColor(float r, float g, float b, float a) {
     clearColorRgba = {r, g, b, a};
 }
 
-}  // namespace GL
+}  // namespace gl

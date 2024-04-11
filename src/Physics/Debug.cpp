@@ -4,7 +4,7 @@
 
 #include "../GL/StateManager.h"
 
-namespace PH {
+namespace ph {
 
 // Callback for traces
 void traceCallback(const char *fmt, ...) {
@@ -30,7 +30,7 @@ bool assertFailedCallback(const char *expression, const char *message, const cha
 
 #ifdef JPH_DEBUG_RENDERER
 DebugRendererImpl::DebugRendererImpl() {
-    vao_ = new GL::VertexArray();
+    vao_ = new gl::VertexArray();
     vao_->setDebugLabel("physics/debug/vao");
     // Position
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
@@ -41,18 +41,18 @@ DebugRendererImpl::DebugRendererImpl() {
     // Color
     vao_->layout(0, 3, 4, GL_UNSIGNED_BYTE, true, 8 * sizeof(float));
 
-    vbo_ = new GL::Buffer();
+    vbo_ = new gl::Buffer();
     vbo_->setDebugLabel("physics/debug/vbo");
     vbo_->allocateEmptyMutable(sizeof(Vertex) * 8192, GL_DYNAMIC_DRAW);
-    ebo_ = new GL::Buffer();
+    ebo_ = new gl::Buffer();
     ebo_->setDebugLabel("physics/debug/ebo");
     ebo_->allocateEmptyMutable(sizeof(uint32_t) * 8192, GL_DYNAMIC_DRAW);
 
     vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
     vao_->bindElementBuffer(*ebo_);
 
-    shader_ = new GL::ShaderPipeline({new GL::ShaderProgram("assets/shaders/physics_debug.vert"),
-                                      new GL::ShaderProgram("assets/shaders/physics_debug.frag")});
+    shader_ = new gl::ShaderPipeline({new gl::ShaderProgram("assets/shaders/physics_debug.vert"),
+                                      new gl::ShaderProgram("assets/shaders/physics_debug.frag")});
     shader_->setDebugLabel("physics/debug/shader");
     DebugRenderer::Initialize();
 }
@@ -66,13 +66,11 @@ DebugRendererImpl::~DebugRendererImpl() {
 
 void DebugRendererImpl::DrawLine(JPH::RVec3Arg from, JPH::RVec3Arg to, JPH::ColorArg color) {
     // TODO: implement
-    return;
 }
 
 void DebugRendererImpl::DrawTriangle(JPH::RVec3Arg v1, JPH::RVec3Arg v2, JPH::RVec3Arg v3,
                                      JPH::ColorArg color, ECastShadow castShadow) {
     // TODO: implement
-    return;
 }
 
 JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Triangle *triangles, int triangle_count) {
@@ -81,14 +79,15 @@ JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Triangle 
     std::vector<uint32_t> indices;
     indices.reserve(triangle_count * 3);
 
-    for (size_t i = 0; i < triangle_count; i++) {
+    for (int i = 0; i < triangle_count; i++) {
         const Triangle &triangle = triangles[i];
         vertices.emplace_back(triangle.mV[0]);
         vertices.emplace_back(triangle.mV[1]);
         vertices.emplace_back(triangle.mV[2]);
-        indices.emplace_back(i * 3 + 0);
-        indices.emplace_back(i * 3 + 1);
-        indices.emplace_back(i * 3 + 2);
+        uint32_t index = static_cast<uint32_t>(i);
+        indices.emplace_back(index * 3 + 0);
+        indices.emplace_back(index * 3 + 1);
+        indices.emplace_back(index * 3 + 2);
     }
 
     return CreateTriangleBatch(vertices.data(), vertices.size(), indices.data(), indices.size());
@@ -143,13 +142,13 @@ void DebugRendererImpl::DrawText3D(JPH::RVec3Arg position,
 }
 
 void DebugRendererImpl::Draw(glm::mat4 view_projection_matrix) {
-    GL::pushDebugGroup("JoltDebugRenderer::Draw");
+    gl::pushDebugGroup("JoltDebugRenderer::Draw");
     shader_->vertexStage()->setUniform("u_view_projection_mat", view_projection_matrix);
 
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::Blend, GL::Capability::CullFace});
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
-    GL::manager->blendEquation(GL::BlendEquation::FuncAdd);
-    GL::manager->blendFunc(GL::BlendFactor::SrcAlpha, GL::BlendFactor::OneMinusSrcAlpha);
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::Blend, gl::Capability::CullFace});
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
+    gl::manager->blendFunc(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
     for (auto &&cmd : drawQueue_) {
         vao_->bind();
         shader_->bind();
@@ -158,25 +157,25 @@ void DebugRendererImpl::Draw(glm::mat4 view_projection_matrix) {
         shader_->vertexStage()->setUniform("u_color", cmd.modelColor);
 
         if (cmd.drawMode == EDrawMode::Wireframe) {
-            GL::manager->polygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_LINE);
         } else {
-            GL::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
         if (cmd.cullMode == ECullMode::CullFrontFace) {
-            GL::manager->cullFront();
+            gl::manager->cullFront();
         } else if (cmd.cullMode == ECullMode::CullBackFace) {
-            GL::manager->cullBack();
+            gl::manager->cullBack();
         } else {
-            GL::manager->disable(GL::Capability::CullFace);
+            gl::manager->disable(gl::Capability::CullFace);
         }
 
         glDrawElementsBaseVertex(GL_TRIANGLES, cmd.batch->count(), GL_UNSIGNED_INT, cmd.batch->indexOffset(), cmd.batch->baseVertex());
     }
-    GL::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
     drawQueue_.clear();
-    GL::popDebugGroup();
+    gl::popDebugGroup();
 }
 #endif  // JPH_DEBUG_RENDERER
 
-}  // namespace PH
+}  // namespace ph

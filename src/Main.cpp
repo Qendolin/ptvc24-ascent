@@ -1,6 +1,25 @@
+#include "GL/StateManager.h"
+#include "GL/Util.h"
 #include "Game.h"
 #include "Setup.h"
 #include "Utils.h"
+
+void printNotDeletedOpenGLObjects() {
+    std::vector<std::pair<GLenum, GLuint>> tracked = gl::manager->tracked();
+    if (tracked.empty()) return;
+
+    std::cerr << "Some OpenGL Object were not deleted!" << std::endl;
+    for (const auto& [type, id] : tracked) {
+        std::cerr << " - " << gl::getObjectNamespaceString(type) << " with id=" << id;
+
+        std::string label = gl::getObjectLabel(type, id);
+        if (!label.empty()) {
+            std::cerr << ", label='" << label << "'";
+        }
+
+        std::cerr << std::endl;
+    }
+}
 
 int main(int argc, char** argv) {
     // Print out the date and time of when this binary was built.
@@ -32,6 +51,11 @@ int main(int argc, char** argv) {
         Game::instance = game;
         game->setup();
         game->run();
+        delete game;
+
+        printNotDeletedOpenGLObjects();
+
+        glfwDestroyWindow(window);
 
     } catch (const std::exception& e) {
         std::cerr << "Fatal Error: " << e.what() << std::flush;

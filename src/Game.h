@@ -8,10 +8,12 @@
 
 #include "Camera.h"
 #include "Direct.h"
-#include "Entity.h"
 #include "Input.h"
+#include "Loader/Gltf.h"
 #include "Loader/Loader.h"
 #include "Physics/Physics.h"
+#include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "UI/Screen.h"
 #include "UI/UI.h"
 
@@ -36,7 +38,7 @@ class TweenSystem {
     ~TweenSystem(){};
 
     void update(float time_delta) {
-        carry_ += time_delta * 1000.0;
+        carry_ += time_delta * 1000.0f;
         step_ = (int)floor(carry_);
         carry_ -= step_;
     }
@@ -61,9 +63,11 @@ class Game {
    public:
     inline static Game *instance = nullptr;
 
+    ~Game();
+
     GLFWwindow *window = nullptr;
-    PH::Physics *physics = nullptr;
-    UI::Backend *ui = nullptr;
+    ph::Physics *physics = nullptr;
+    ui::Backend *ui = nullptr;
     Input *input = nullptr;
     TweenSystem tween = TweenSystem();
 
@@ -77,18 +81,18 @@ class Game {
     Camera *camera = nullptr;
 
     // A quad with dimensions (-1,-1) to (1,1)
-    GL::VertexArray *quad = nullptr;
+    gl::VertexArray *quad = nullptr;
     DirectBuffer *dd = nullptr;
 
-    GL::ShaderPipeline *skyShader = nullptr;
-    GL::ShaderPipeline *pbrShader = nullptr;
+    gl::ShaderPipeline *skyShader = nullptr;
+    gl::ShaderPipeline *pbrShader = nullptr;
 
     Screen *screen = nullptr;
-    // All visual instances that need to be rendered.
-    // Loaded from the gltf file.
-    std::shared_ptr<Asset::Scene> scene = nullptr;
-    // All entities that need to process game logic
-    std::vector<Entity *> entities = {};
+
+    // All the stuff loaded from the gltf file (graphics and physics objects).
+    loader::Scene *scene = nullptr;
+
+    scene::Scene *entityScene = nullptr;
 
     // Initializes the games subsystems like input handling and physics
     Game(GLFWwindow *window);

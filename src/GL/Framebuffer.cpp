@@ -5,23 +5,21 @@
 #include "../Utils.h"
 #include "StateManager.h"
 
-namespace GL {
+namespace gl {
 
-Renderbuffer::Renderbuffer() {
+Renderbuffer::Renderbuffer() : GLObject(GL_RENDERBUFFER) {
     glCreateRenderbuffers(1, &id_);
+    track_();
 }
 
 void Renderbuffer::destroy() {
     if (id_ != 0) {
         glDeleteRenderbuffers(1, &id_);
         manager->unbindRenderbuffer(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Renderbuffer::id() const {
-    return id_;
 }
 
 void Renderbuffer::setDebugLabel(const std::string& label) {
@@ -51,21 +49,19 @@ int Framebuffer::mapAttachmentIndex_(int attachment) const {
     return attachment + 2;
 }
 
-Framebuffer::Framebuffer() : textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
+Framebuffer::Framebuffer() : GLObject(GL_FRAMEBUFFER), textures_(MAX_ATTACHMENTS + 2, nullptr), renderbuffers_(MAX_ATTACHMENTS + 2, nullptr) {
     glCreateFramebuffers(1, &id_);
+    track_();
 }
 
 void Framebuffer::destroy() {
     if (id_ != 0) {
         glDeleteFramebuffers(1, &id_);
         manager->unbindFramebuffer(id_);
+        untrack_();
         id_ = 0;
     }
     delete this;
-}
-
-GLuint Framebuffer::id() const {
-    return id_;
 }
 
 void Framebuffer::setDebugLabel(const std::string& label) {
@@ -161,4 +157,4 @@ const Renderbuffer* Framebuffer::getRenderbuffer(int index) const {
     return renderbuffers_[mapAttachmentIndex_(index)];
 }
 
-}  // namespace GL
+}  // namespace gl

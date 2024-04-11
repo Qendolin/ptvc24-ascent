@@ -3,17 +3,22 @@
 #include <chrono>
 
 #include "GL/StateManager.h"
+#include "Physics/Shapes.h"
+#include "Scene/Character.h"
+#include "Scene/Objects/Checkpoint.h"
+#include "Scene/Objects/TestObstacle.h"
+#include "UI/Screens/DebugMenu.h"
 #include "UI/Screens/MainMenu.h"
 #include "UI/Skin.h"
 #include "Utils.h"
 
-GL::VertexArray *createQuad() {
-    GL::Buffer *vbo = new GL::Buffer();
+gl::VertexArray *createQuad() {
+    gl::Buffer *vbo = new gl::Buffer();
     vbo->setDebugLabel("generic_quad/vbo");
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
 
-    GL::VertexArray *quad = new GL::VertexArray();
+    gl::VertexArray *quad = new gl::VertexArray();
     quad->setDebugLabel("generic_quad/vao");
     quad->layout(0, 0, 2, GL_FLOAT, false, 0);
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
@@ -42,7 +47,7 @@ Game::Game(GLFWwindow *window) {
     });
 
     // Create camera with a 90° vertical FOV
-    camera = new Camera(glm::radians(90.), viewportSize, 0.1, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = new Camera(glm::radians(90.0f), viewportSize, 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
@@ -52,7 +57,41 @@ Game::Game(GLFWwindow *window) {
     glfwGetFramebufferSize(window, &vp_width, &vp_height);
     Game::resize(vp_width, vp_height);
 
-    physics = new PH::Physics({});
+    physics = new ph::Physics({});
+    physics->setDebugDrawEnabled(true);
+}
+
+Game::~Game() {
+    window = nullptr;
+    quad->destroy();
+    quad = nullptr;
+
+    dd->destroy();
+    dd = nullptr;
+
+    skyShader->destroy();
+    skyShader = nullptr;
+    pbrShader->destroy();
+    pbrShader = nullptr;
+
+    // delete entities before deleting the physics
+    if (entityScene != nullptr) delete entityScene;
+    entityScene = nullptr;
+
+    if (scene != nullptr) delete scene;
+    scene = nullptr;
+
+    if (screen != nullptr) delete screen;
+    screen = nullptr;
+
+    delete physics;
+    physics = nullptr;
+    delete ui;
+    ui = nullptr;
+    delete input;
+    input = nullptr;
+    delete camera;
+    camera = nullptr;
 }
 
 void Game::resize(int width, int height) {
@@ -63,38 +102,10 @@ void Game::resize(int width, int height) {
 
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
-    UI::set_scale(width, height, x_scale);
+    ui::set_scale(width, height, x_scale);
 
     if (ui != nullptr)
         ui->setViewport(viewportSize);
-}
-
-// This is temporary
-void createPhysicsScene(PH::Physics *physics) {
-    JPH::BodyInterface &interface = physics->interface();
-    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0f, 5.0f, -4.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, PH::Layers::MOVING);
-    // make it bouncy
-    sphere_settings.mRestitution = 0.9;
-    interface.CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
-
-    JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(100.0f, 1.0f, 100.0f));
-    JPH::ShapeRefC floor_shape = floor_shape_settings.Create().Get();
-    JPH::BodyCreationSettings floor_settings(floor_shape, JPH::RVec3(0.0, -1.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PH::Layers::NON_MOVING);
-    interface.CreateAndAddBody(floor_settings, JPH::EActivation::DontActivate);
-
-    JPH::BoxShapeSettings sensor_test_shape_settings(JPH::Vec3(2.0f, 2.0f, 2.0f));
-    JPH::ShapeRefC sensor_test_shape = sensor_test_shape_settings.Create().Get();
-    JPH::BodyCreationSettings sensor_test_settings(sensor_test_shape, JPH::RVec3(5.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Static, PH::Layers::SENSOR);
-    sensor_test_settings.mIsSensor = true;
-    JPH::BodyID sensor_test_id = interface.CreateAndAddBody(sensor_test_settings, JPH::EActivation::DontActivate);
-    physics->contactListener->RegisterCallback(sensor_test_id, [physics](PH::SensorContact contact) {
-        if (contact.persistent) return;
-        LOG("Sensor activated");
-        // JPH::BodyInterface &interface = physics->interface();
-        // interface.RemoveBody(contact.sensor);
-        // interface.DestroyBody(contact.sensor);
-        // physics->contactListener->UnrgisterCallback(contact.sensor);
-    });
 }
 
 void Game::setup() {
@@ -104,25 +115,25 @@ void Game::setup() {
 
     // defer loading assets
     onLoad.push_back([this]() {
-        skyShader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/sky.vert"),
-             new GL::ShaderProgram("assets/shaders/sky.frag")});
+        skyShader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/sky.vert"),
+             new gl::ShaderProgram("assets/shaders/sky.frag")});
         skyShader->setDebugLabel("sky_shader");
-        pbrShader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/test.vert"),
-             new GL::ShaderProgram("assets/shaders/test.frag")});
+        pbrShader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/test.vert"),
+             new gl::ShaderProgram("assets/shaders/test.frag")});
         pbrShader->setDebugLabel("pbr_shader");
-        auto dd_shader = new GL::ShaderPipeline(
-            {new GL::ShaderProgram("assets/shaders/direct.vert"),
-             new GL::ShaderProgram("assets/shaders/direct.frag")});
+        auto dd_shader = new gl::ShaderPipeline(
+            {new gl::ShaderProgram("assets/shaders/direct.vert"),
+             new gl::ShaderProgram("assets/shaders/direct.frag")});
         dd_shader->setDebugLabel("direct_buffer/shader");
         dd = new DirectBuffer(dd_shader);
 
-        auto fonts = new UI::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
+        auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                          {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
                                        "menu_md");
-        auto skin = UI::loadSkin();
-        ui = new UI::Backend(fonts, skin, new UI::Renderer());
+        auto skin = ui::loadSkin();
+        ui = new ui::Backend(fonts, skin, new ui::Renderer());
         ui->setViewport(viewportSize);
     });
 
@@ -145,10 +156,16 @@ void Game::setup() {
         }
     });
 
-    scene = Loader::gltf("assets/models/test_course.glb");
-    createPhysicsScene(physics);
+    const tinygltf::Model &model = loader::gltf("assets/models/test_course.glb");
+    scene = loader::scene(model);
+    scene->physics.create(*physics);
 
-    entities.push_back(new CharacterController(camera));
+    scene::NodeEntityFactory factory;
+    factory.registerEntity<CheckpointEntity>("CheckpointEntity");
+    factory.registerEntity<TestObstacleEntity>("TestObstacleEntity");
+    entityScene = new scene::Scene(*scene, factory);
+
+    entityScene->entities.push_back(new CharacterController(camera));
 }
 
 void Game::run() {
@@ -157,9 +174,7 @@ void Game::run() {
         callback();
     }
 
-    for (auto &&ent : entities) {
-        ent->init();
-    }
+    entityScene->callEntityInit();
 
     physics->system->OptimizeBroadPhase();
 
@@ -193,10 +208,25 @@ void Game::processInput_() {
             callback();
         }
     }
+
     // Pause / Unpause physics
     if (input->isKeyPress(GLFW_KEY_P)) {
         LOG("Toggle phyics update");
         physics->setEnabled(!physics->enabled());
+    }
+
+    // Open Debug Menu
+    if (input->isKeyPress(GLFW_KEY_F3)) {
+        LOG("Open Debug Menu");
+        screen = new DebugMenuScreen();
+    }
+
+    // Spawn shpere (Debugging)
+    if (input->isKeyPress(GLFW_KEY_L)) {
+        LOG("Spawn shere");
+        JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), ph::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, ph::Layers::MOVING);
+        sphere_settings.mRestitution = 0.2f;
+        physics->interface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);
     }
 }
 
@@ -211,7 +241,7 @@ void Game::loop_() {
     // make window transparent
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-    if (nk_begin(nk, "gui", nk_rect(0, 0, viewportSize.x, viewportSize.y), 0)) {
+    if (nk_begin(nk, "gui", nk_recti(0, 0, viewportSize.x, viewportSize.y), 0)) {
         nk_layout_row_dynamic(nk, 30, 2);
         std::chrono::duration<float> total_seconds(input->time());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
@@ -220,7 +250,7 @@ void Game::loop_() {
         std::string time = std::format("Time: {:02}:{:02}", round(minutes.count()), round(seconds.count()));
         nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
 
-        float fps = floor(1.0 / input->timeDelta());
+        float fps = floor(1.0f / input->timeDelta());
         nk_label(nk, std::format("{:4.0f}fps {:5.2f}ms", fps, input->timeDelta() * 1000.0).c_str(), NK_TEXT_ALIGN_RIGHT);
     }
     nk_end(nk);
@@ -229,70 +259,62 @@ void Game::loop_() {
     // Update and step physics
     physics->update(input->timeDelta());
     if (physics->isNextStepDue()) {
-        for (auto &&ent : entities) {
-            ent->prePhysicsUpdate();
-        }
-
+        entityScene->callEntityPrePhysicsUpdate();
         physics->step();
-
-        for (auto &&ent : entities) {
-            ent->postPhysicsUpdate();
-        }
+        entityScene->callEntityPostPhysicsUpdate();
     }
 
     // Update entities
-    for (auto &&ent : entities) {
-        ent->update();
-    }
+    entityScene->callEntityUpdate();
 
     if (screen != nullptr) {
         screen->draw();
     }
 
     // Render scene
-    GL::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
-    GL::manager->disable(GL::Capability::ScissorTest);
-    GL::manager->disable(GL::Capability::StencilTest);
+    gl::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
+    gl::manager->disable(gl::Capability::ScissorTest);
+    gl::manager->disable(gl::Capability::StencilTest);
 
     glClearDepth(0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw the loaded instances of the GLTF scene
     // See docs/Rendering.md for a rough explanation
-    GL::pushDebugGroup("Game::DrawStatic");
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::CullFace});
-    GL::manager->depthMask(true);
-    GL::manager->cullBack();
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
+    gl::pushDebugGroup("Game::DrawStatic");
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
+    gl::manager->depthMask(true);
+    gl::manager->cullBack();
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 
     pbrShader->bind();
     pbrShader->vertexStage()->setUniform("u_view_projection_mat", camera->viewProjectionMatrix());
     pbrShader->fragmentStage()->setUniform("u_camera_pos", camera->position);
 
-    scene->vao->bind();
-    scene->drawCommandBuffer->bind(GL_DRAW_INDIRECT_BUFFER);
-    for (auto &&batch : scene->batches) {
-        auto material = batch.material;
-        pbrShader->fragmentStage()->setUniform("u_albedo_fac", material->albedoFactor);
-        pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material->metallicRoughnessFactor);
-        if (material->albedo == nullptr) {
-            scene->defaultMaterial->albedo->bind(0);
+    scene->graphics.bind();
+    for (auto &&batch : scene->graphics.batches) {
+        auto &material = scene->graphics.materials[batch.material];
+        auto &defaultMaterial = scene->graphics.defaultMaterial;
+        pbrShader->fragmentStage()->setUniform("u_albedo_fac", material.albedoFactor);
+        pbrShader->fragmentStage()->setUniform("u_metallic_roughness_fac", material.metallicRoughnessFactor);
+        if (material.albedo == nullptr) {
+            defaultMaterial.albedo->bind(0);
         } else {
-            material->albedo->bind(0);
+            material.albedo->bind(0);
         }
-        if (material->occlusionMetallicRoughness == nullptr) {
-            scene->defaultMaterial->occlusionMetallicRoughness->bind(1);
+        if (material.occlusionMetallicRoughness == nullptr) {
+            defaultMaterial.occlusionMetallicRoughness->bind(1);
         } else {
-            material->occlusionMetallicRoughness->bind(1);
+            material.occlusionMetallicRoughness->bind(1);
         }
-        if (material->normal == nullptr) {
-            scene->defaultMaterial->normal->bind(2);
+        if (material.normal == nullptr) {
+            defaultMaterial.normal->bind(2);
         } else {
-            material->normal->bind(2);
+            material.normal->bind(2);
         }
         glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, batch.commandOffset, batch.commandCount, 0);
     }
-    GL::popDebugGroup();
+    gl::popDebugGroup();
 
     // Draw physics debugging shapes
     physics->debugDraw(camera->viewProjectionMatrix());
@@ -300,8 +322,8 @@ void Game::loop_() {
     // Draw debug
     dd->draw(camera->viewProjectionMatrix(), camera->position);
 
-    GL::manager->setEnabled({GL::Capability::DepthTest, GL::Capability::DepthClamp});
-    GL::manager->depthFunc(GL::DepthFunc::GreaterOrEqual);
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     // Draw sky
     quad->bind();
     skyShader->bind();
@@ -314,6 +336,11 @@ void Game::loop_() {
 
     // Draw UI
     ui->render();
+
+    if (screen != nullptr && screen->isClosed()) {
+        delete screen;
+        screen = nullptr;
+    }
 
     // Finish the frame
     glfwSwapBuffers(window);

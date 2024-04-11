@@ -9,7 +9,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 
-namespace PH {
+namespace ph {
 
 // Callback for traces
 void traceCallback(const char *fmt, ...);
@@ -22,20 +22,20 @@ bool assertFailedCallback(const char *expression, const char *message, const cha
 #ifdef JPH_DEBUG_RENDERER
 class BatchImpl : public JPH::RefTargetVirtual, public JPH::RefTarget<BatchImpl> {
    private:
-    size_t index_ = 0;
-    size_t vertex_ = 0;
-    size_t count_ = 0;
+    uint32_t index_ = 0;
+    uint32_t vertex_ = 0;
+    uint32_t count_ = 0;
 
    public:
-    BatchImpl(size_t index, size_t vertex, size_t count)
+    BatchImpl(uint32_t index, uint32_t vertex, uint32_t count)
         : index_(index), vertex_(vertex), count_(count) {
     }
 
-    size_t count() const {
+    uint32_t count() const {
         return count_;
     }
 
-    size_t baseVertex() const {
+    uint32_t baseVertex() const {
         return vertex_;
     }
 
@@ -59,10 +59,10 @@ struct DrawCommand {
 
 class DebugRendererImpl final : public JPH::DebugRenderer {
    private:
-    GL::ShaderPipeline *shader_;
-    GL::VertexArray *vao_;
-    GL::Buffer *vbo_;
-    GL::Buffer *ebo_;
+    gl::ShaderPipeline *shader_;
+    gl::VertexArray *vao_;
+    gl::Buffer *vbo_;
+    gl::Buffer *ebo_;
     size_t vboWriteOffset_ = 0;
     size_t eboWriteOffset_ = 0;
     std::vector<struct DrawCommand> drawQueue_ = {};
@@ -93,4 +93,4 @@ class DebugRendererImpl final : public JPH::DebugRenderer {
 };
 #endif  // JPH_DEBUG_RENDERER
 
-}  // namespace PH
+}  // namespace ph
