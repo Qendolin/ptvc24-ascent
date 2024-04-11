@@ -42,6 +42,9 @@ Game::Game(GLFWwindow *window) {
     glfwSetScrollCallback(window, [](GLFWwindow *window, double dx, double dy) {
         Input::instance->onScroll(window, dx, dy);
     });
+    glfwSetCharCallback(window, [](GLFWwindow *window, unsigned int codepoint) {
+        Input::instance->onChar(window, codepoint);
+    });
     glfwSetWindowFocusCallback(window, [](GLFWwindow *window, int focused) {
         Input::instance->invalidate();
     });
@@ -88,6 +91,10 @@ Game::~Game() {
     physics = nullptr;
     delete ui;
     ui = nullptr;
+    if (imgui != nullptr) {
+        delete imgui;
+        imgui = nullptr;
+    }
     delete input;
     input = nullptr;
     delete camera;
@@ -106,6 +113,9 @@ void Game::resize(int width, int height) {
 
     if (ui != nullptr)
         ui->setViewport(viewportSize);
+
+    if (imgui != nullptr)
+        imgui->setViewport(viewportSize);
 }
 
 void Game::setup() {
@@ -135,6 +145,10 @@ void Game::setup() {
         auto skin = ui::loadSkin();
         ui = new ui::Backend(fonts, skin, new ui::Renderer());
         ui->setViewport(viewportSize);
+
+        imgui = new ui::ImGuiBackend();
+        imgui->setViewport(viewportSize);
+        imgui->bind(*input);
     });
 
     onUnload.push_back([this]() {
@@ -153,6 +167,11 @@ void Game::setup() {
         if (ui) {
             delete ui;
             ui = nullptr;
+        }
+        if (imgui) {
+            imgui->unbind(*input);
+            delete imgui;
+            imgui = nullptr;
         }
     });
 
@@ -187,8 +206,9 @@ void Game::run() {
 }
 
 void Game::processInput_() {
+    bool can_capture_mouse = screen == nullptr && !imgui->shouldShowCursor();
     // Capture mouse
-    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased() && screen == nullptr) {
+    if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased() && can_capture_mouse) {
         input->captureMouse();
     }
     // Release mouse
@@ -217,8 +237,9 @@ void Game::processInput_() {
 
     // Open Debug Menu
     if (input->isKeyPress(GLFW_KEY_F3)) {
-        LOG("Open Debug Menu");
-        screen = new DebugMenuScreen();
+        LOG("Toggle Debug Menu");
+        debugMenu_.open = !debugMenu_.open;
+        debugMenu_.open ? input->releaseMouse() : input->captureMouse();
     }
 
     // Spawn shpere (Debugging)
@@ -233,9 +254,12 @@ void Game::processInput_() {
 void Game::loop_() {
     input->update();
     processInput_();
-    ui->update(input);
+    ui->update(*input);
+    imgui->update(*input);
 
     tween.update(input->timeDelta());
+
+    debugMenu_.draw();
 
     nk_context *nk = ui->context();
     // make window transparent
@@ -249,12 +273,8 @@ void Game::loop_() {
 
         std::string time = std::format("Time: {:02}:{:02}", round(minutes.count()), round(seconds.count()));
         nk_label(nk, time.c_str(), NK_TEXT_ALIGN_LEFT);
-
-        float fps = floor(1.0f / input->timeDelta());
-        nk_label(nk, std::format("{:4.0f}fps {:5.2f}ms", fps, input->timeDelta() * 1000.0).c_str(), NK_TEXT_ALIGN_RIGHT);
     }
     nk_end(nk);
-    // drawMenu(this);
 
     // Update and step physics
     physics->update(input->timeDelta());
@@ -336,6 +356,7 @@ void Game::loop_() {
 
     // Draw UI
     ui->render();
+    imgui->render();
 
     if (screen != nullptr && screen->isClosed()) {
         delete screen;

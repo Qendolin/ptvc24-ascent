@@ -40,7 +40,7 @@ class Renderer {
     std::span<uint16_t> indices_ = {};
 
     glm::mat4 projectionMatrix_ = glm::mat4(1.0);
-    glm::ivec2 viewport = glm::ivec2(0, 0);
+    glm::ivec2 viewport_ = glm::ivec2(0, 0);
 
     inline static const struct nk_draw_vertex_layout_element VERTEX_LAYOUT_[] = {
         {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(Vertex, position)},

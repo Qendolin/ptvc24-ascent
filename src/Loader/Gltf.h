@@ -317,7 +317,7 @@ class Scene {
  * @param node the node
  * @param transform the node's world transformation matrix
  */
-typedef std::function<void(const gltf::Node &, const glm::mat4 &)> NodeConsumer;
+typedef std::function<void(const gltf::Node &node, const glm::mat4 &transform)> NodeConsumer;
 
 /**
  * Load a scene's node hierarchy

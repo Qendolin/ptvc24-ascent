@@ -14,8 +14,10 @@
 #include "Physics/Physics.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
+#include "UI/ImGui.h"
 #include "UI/Screen.h"
 #include "UI/UI.h"
+#include "UI/Screens/DebugMenu.h"
 
 // References:
 // https://mobius3.github.io/tweeny/
@@ -52,8 +54,7 @@ class TweenSystem {
 
 class Game {
    private:
-    float tweenTimer_ = 0.0;
-    int tweenTimeStep_ = 0;
+    DebugMenu debugMenu_;
 
     // Called on every game loop iteration
     void loop_();
@@ -68,6 +69,7 @@ class Game {
     GLFWwindow *window = nullptr;
     ph::Physics *physics = nullptr;
     ui::Backend *ui = nullptr;
+    ui::ImGuiBackend *imgui = nullptr;
     Input *input = nullptr;
     TweenSystem tween = TweenSystem();
 

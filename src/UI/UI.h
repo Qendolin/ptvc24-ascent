@@ -13,8 +13,6 @@
 #include <map>
 #include <span>
 
-#include "../GL/Texture.h"
-#include "../Input.h"
 #include "Renderer.h"
 #include "Skin.h"
 
@@ -23,6 +21,12 @@
 // https://immediate-mode-ui.github.io/Nuklear/doc/index.html
 // https://github.com/Immediate-Mode-UI/Nuklear/wiki
 // https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
+
+// forward declaration
+class Input;
+namespace gl {
+class Texture;
+}  // namespace gl
 
 namespace ui {
 
@@ -101,7 +105,7 @@ class Backend {
     Backend(FontAtlas* font_atlas, Skin* skin, Renderer* renderer);
     ~Backend();
 
-    void update(Input* input);
+    void update(Input& input);
 
     nk_context* context() {
         return &context_;

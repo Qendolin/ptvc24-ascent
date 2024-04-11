@@ -1,30 +1,107 @@
-
 #include "DebugMenu.h"
+
+#include <limits>
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui.h>
 
 #include "../../Game.h"
 
-void DebugMenuScreen::draw() {
-    using namespace ui::literals;
+DebugMenu::DebugMenu() {
+    frameTimes.nextMin = std::numeric_limits<float>::infinity();
+    frameTimes.nextMin = -std::numeric_limits<float>::infinity();
+}
+
+void DebugMenu::draw() {
+    if (!open) return;
+
+    drawDebugWindow_();
+    drawPerformanceWindow_();
+}
+
+void DebugMenu::drawDebugWindow_() {
+    using namespace ImGui;
 
     Game& game = *Game::instance;
-    nk_context* nk = game.ui->context();
-
-    // dark background
-    nk->style.window.background = nk_rgba(1, 10, 26, 200);
-    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(1, 10, 26, 200));
-
-    nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
-    if (nk_begin(nk, "debug_menu", {10_vw, 10_vh, 80_vw, 80_vh}, NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE)) {
-        nk_layout_row_dynamic(nk, 30_dp, 1);
-        nk_label(nk, "Physics", NK_TEXT_LEFT);
-        nk_layout_row_dynamic(nk, 30_dp, 1);
-
-        if (nk_button_label(nk, "Debug Draw")) {
-            game.physics->setDebugDrawEnabled(!game.physics->debugDrawEnabled());
+    ph::Physics& physics = *game.physics;
+    Begin("Debug Menu", nullptr, 0);
+    if (CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
+        PushID("physics");
+        Indent();
+        bool physics_enabled = physics.enabled();
+        if (Checkbox("Enable", &physics_enabled)) {
+            physics.setEnabled(physics_enabled);
         }
-    } else {
-        close();
+        bool debug_draw_enabled = physics.debugDrawEnabled();
+        if (Checkbox("Debug Draw", &debug_draw_enabled)) {
+            physics.setDebugDrawEnabled(debug_draw_enabled);
+        }
+        PopID();
     }
+    End();
+}
 
-    nk_end(nk);
+void DebugMenu::drawPerformanceWindow_() {
+    using namespace ImGui;
+
+    Game& game = *Game::instance;
+    Input& input = *game.input;
+
+    Begin("Performance", nullptr, 0);
+    frameTimes.update(input.timeDelta());
+
+    const auto sixty_fps_line_color = 0x808000ff;
+
+    auto draw_list = GetWindowDrawList();
+    Text("%4d fps", frameTimes.current <= 0.00001f ? 0 : (int)(1.0f / frameTimes.current));
+    frameTimes.single[frameTimes.singleIndex] = frameTimes.current * 1000;
+    frameTimes.singleIndex = (frameTimes.singleIndex + 1) % frameTimes.single.size();
+    auto sixty_fps_line_point = GetCursorScreenPos() + ImVec2{0, 48};
+    std::string frame_time_text = std::format("Frame Time - {:4.1f} ms", frameTimes.current * 1000);
+    PlotHistogram("", &frameTimes.single.front(), (int)frameTimes.single.size(), frameTimes.singleIndex, frame_time_text.c_str(), 0.0f, 1000.0f / 30.0f, ImVec2{256, 96});
+    draw_list->AddLine(sixty_fps_line_point, sixty_fps_line_point + ImVec2{256, 0}, sixty_fps_line_color);
+
+    sixty_fps_line_point = GetCursorScreenPos() + ImVec2{0, 48};
+    std::string frame_avg_text = std::format("Avg. Frame Time - {:4.1f} ms", frameTimes.currentAvg * 1000);
+    PlotLines("", &frameTimes.avg.front(), frameTimes.avg.size(), frameTimes.cumulativeIndex, frame_avg_text.c_str(), 0, 1000.0f / 30.0f, ImVec2{256, 96});
+    draw_list->AddLine(sixty_fps_line_point, sixty_fps_line_point + ImVec2{256, 0}, sixty_fps_line_color);
+
+    sixty_fps_line_point = GetCursorScreenPos() + ImVec2{0, 48};
+    std::string frame_min_text = std::format("Min. Frame Time - {:4.1f} ms", frameTimes.currentMin * 1000);
+    PlotLines("", &frameTimes.min.front(), frameTimes.min.size(), frameTimes.cumulativeIndex, frame_min_text.c_str(), 0, 1000.0f / 30.0f, ImVec2{256, 96});
+    draw_list->AddLine(sixty_fps_line_point, sixty_fps_line_point + ImVec2{256, 0}, sixty_fps_line_color);
+
+    sixty_fps_line_point = GetCursorScreenPos() + ImVec2{0, 48};
+    std::string frame_max_text = std::format("Max. Frame Time - {:4.1f} ms", frameTimes.currentMax * 1000);
+    PlotLines("", &frameTimes.max.front(), frameTimes.max.size(), frameTimes.cumulativeIndex, frame_max_text.c_str(), 0, 1000.0f / 30.0f, ImVec2{256, 96});
+    draw_list->AddLine(sixty_fps_line_point, sixty_fps_line_point + ImVec2{256, 0}, sixty_fps_line_color);
+
+    End();
+}
+
+void DebugMenu::FrameTimes::update(float delta) {
+    current = delta;
+    if (current < nextMin)
+        nextMin = current;
+    if (current > nextMax)
+        nextMax = current;
+
+    nextAvgSum += 1;
+    nextAvgTimer += current;
+
+    if (nextAvgTimer >= 1.0) {
+        currentAvg = nextAvgTimer / (float)nextAvgSum;
+        currentMin = isinf(nextMin) ? 0 : nextMin;
+        currentMax = isinf(nextMax) ? 0 : nextMax;
+
+        avg[cumulativeIndex] = currentAvg * 1000;
+        min[cumulativeIndex] = currentMin * 1000;
+        max[cumulativeIndex] = currentMax * 1000;
+
+        cumulativeIndex = (cumulativeIndex + 1) % avg.size();
+        nextMin = std::numeric_limits<float>::infinity();
+        nextMax = -std::numeric_limits<float>::infinity();
+        nextAvgTimer = 0;
+        nextAvgSum = 0;
+    }
 }

@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include <array>
+#include <functional>
 #include <glm/glm.hpp>
 #include <iterator>
 #include <memory>
@@ -34,7 +35,22 @@
  *  - isKeyPressed() == true does not imply that isKeyReleased() == false, both can be true.
  */
 class Input {
+   public:
+    typedef int CallbackRegistrationID;
+
+    typedef std::function<void(float x, float y)> MousePosCallback;
+    typedef std::function<void(int button, int action, int mods)> MouseButtonCallback;
+    typedef std::function<void(float x, float y)> ScrollCallback;
+    typedef std::function<void(int key, int scancode, int action, int mods)> KeyCallback;
+    typedef std::function<void(unsigned int codepoint)> CharCallback;
+
    private:
+    template <typename T>
+    struct CallbackRegistration {
+        CallbackRegistrationID id;
+        T callback;
+    };
+
     enum class State : uint8_t {
         Zero = 0,
         ReleasedBit = 0b001,
@@ -75,6 +91,13 @@ class Input {
     std::unordered_map<std::string, int> keyMap_ = {};
 
     bool stateInvalid_ = true;
+
+    int nextCallbackRegistrationId_ = 1;
+    std::vector<CallbackRegistration<MousePosCallback>> mousePosCallbacks_;
+    std::vector<CallbackRegistration<MouseButtonCallback>> mouseButtonCallbacks_;
+    std::vector<CallbackRegistration<ScrollCallback>> scrollCallbacks_;
+    std::vector<CallbackRegistration<KeyCallback>> keyCallbacks_;
+    std::vector<CallbackRegistration<CharCallback>> charCallbacks_;
 
     /**
      * Polls every key and mouse button to ensure that the internal state is up to date.
@@ -193,6 +216,68 @@ class Input {
         return (keysRead_[key] & State::ReleasedBit) != State::Zero;
     }
 
+    /**
+     * Register a mouse positon callback
+     * @param x mouse x position in window coordinates
+     * @param y mouse y position in window coordinates
+     */
+    CallbackRegistrationID addMousePosCallback(MousePosCallback callback) {
+        int id = nextCallbackRegistrationId_++;
+        mousePosCallbacks_.emplace_back(id, callback);
+        return id;
+    }
+
+    /**
+     * Register a mouse button callback
+     * @param button one of `GLFW_MOUSE_BUTTON_*`
+     * @param action one of `GLFW_PRESS` or `GLFW_RELEASE`
+     * @param mods a bitfiled of `GLFW_MOD_*`
+     */
+    CallbackRegistrationID addMouseButtonCallback(MouseButtonCallback callback) {
+        int id = nextCallbackRegistrationId_++;
+        mouseButtonCallbacks_.emplace_back(id, callback);
+        return id;
+    }
+
+    /**
+     * Register a mouse wheel callback
+     * @param x horizontal scroll delta
+     * @param y vertical scroll delta
+     */
+    CallbackRegistrationID addScrollCallback(ScrollCallback callback) {
+        int id = nextCallbackRegistrationId_++;
+        scrollCallbacks_.emplace_back(id, callback);
+        return id;
+    }
+
+    /**
+     * Register a keyboard key callback
+     * @param key one of `GLFW_KEY_*`
+     * @param scancode the scancode of the key
+     * @param action one of `GLFW_PRESS`, `GLFW_RELEASE` or `GLFW_REPEAT`
+     * @param mods a bitfiled of `GLFW_MOD_*`
+     */
+    CallbackRegistrationID addKeyCallback(KeyCallback callback) {
+        int id = nextCallbackRegistrationId_++;
+        keyCallbacks_.emplace_back(id, callback);
+        return id;
+    }
+
+    /**
+     * Register a keyboard character callback
+     * @param codepoint the charachter codepoint
+     */
+    CallbackRegistrationID addCharCallback(CharCallback callback) {
+        int id = nextCallbackRegistrationId_++;
+        charCallbacks_.emplace_back(id, callback);
+        return id;
+    }
+
+    /**
+     * Remove a callback given its registration id
+     */
+    void removeCallback(CallbackRegistrationID &registration);
+
     void update();
 
     // sets a flag that will poll the true input state on the next update
@@ -204,6 +289,7 @@ class Input {
     void onCursorPos(GLFWwindow *window, double x, double y);
     void onMouseButton(GLFWwindow *window, int button, int action, int mods);
     void onScroll(GLFWwindow *window, double dx, double dy);
+    void onChar(GLFWwindow *window, unsigned int codepoint);
 
     static Input *init(GLFWwindow *window);
 };

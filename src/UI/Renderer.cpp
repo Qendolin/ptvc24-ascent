@@ -69,7 +69,7 @@ Renderer::~Renderer() {
 }
 
 void Renderer::setViewport(glm::ivec2 viewport) {
-    this->viewport = viewport;
+    this->viewport_ = viewport;
     projectionMatrix_ = glm::mat4(
         2.0f / viewport.x, 0.0f, 0.0f, 0.0f,
         0.0f, -2.0f / viewport.y, 0.0f, 0.0f,
@@ -78,7 +78,7 @@ void Renderer::setViewport(glm::ivec2 viewport) {
 }
 
 void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
-    if (viewport == glm::ivec2(0, 0)) {
+    if (viewport_ == glm::ivec2(0, 0)) {
         PANIC("UI renderer viewport not set");
     }
 
@@ -109,7 +109,7 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
         gl::manager->setScissor(
             static_cast<int>(cmd->clip_rect.x),
             // flip y
-            viewport.y - static_cast<int>(cmd->clip_rect.y + cmd->clip_rect.h),
+            viewport_.y - static_cast<int>(cmd->clip_rect.y + cmd->clip_rect.h),
             static_cast<int>(cmd->clip_rect.w),
             static_cast<int>(cmd->clip_rect.h));
         glDrawElements(GL_TRIANGLES, cmd->elem_count, GL_UNSIGNED_SHORT, offset);
