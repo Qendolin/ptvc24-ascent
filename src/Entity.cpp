@@ -48,17 +48,32 @@ void CharacterController::update() {
     camera->angles.x -= input->mouseDelta().y * glm::radians(LOOK_SENSITIVITY);
     camera->angles.x = glm::clamp(camera->angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
+    
+    //query the input GLFW_KEY_F for flying toggle
+    if (input->isKeyPress(GLFW_KEY_F)){
+        isAutoMoveEnabled = !isAutoMoveEnabled;
+    }
+
+    if (isAutoMoveEnabled){
+        glm::vec3 moveDirection_ = camera->rotationMatrix() * glm::vec3(0,0,-1);
+        velocity_ = moveDirection_ * AUTO_MOVE_SPEED;
+    } else velocity_ = glm::vec3{0,0,0};
+
+   std::cout << "pitch of the camera would be: " << camera->angles.x << std::endl;
+
     // Calculate movement input. Use the trick that in c++ we can substract booleans
     glm::vec3 move_input = {
         input->isKeyDown(GLFW_KEY_D) - input->isKeyDown(GLFW_KEY_A),
         input->isKeyDown(GLFW_KEY_SPACE) - input->isKeyDown(GLFW_KEY_LEFT_CONTROL),
         input->isKeyDown(GLFW_KEY_S) - input->isKeyDown(GLFW_KEY_W)};
-    velocity_ = move_input * SPEED;
+    velocity_ += move_input * SPEED;
     if (input->isKeyDown(GLFW_KEY_LEFT_SHIFT)) {
         velocity_ *= SHIFT_SPEED_FACTOR;
     }
     // Rotate the velocity vector towards look direction
-    velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.y, {0, 1, 0})) * velocity_;
+
+    //velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.y, {0, 1, 0})) * velocity_;
+    //velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.x, {1, 0, 0})) * velocity_;
     // The calculated velocity is used later during the physics update.
 
     // Interpolate the camera position from the previous physics body position to the current one.

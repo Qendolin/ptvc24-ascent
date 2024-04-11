@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+//#include <GLFW/glfw3.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 class Camera {
    private:
@@ -65,10 +67,22 @@ class Camera {
     }
 
     glm::mat3 rotationMatrix() const {
-        return glm::mat3(viewMatrix_);
+        return glm::transpose(glm::mat3(viewMatrix_));
     }
 
     glm::mat4 viewProjectionMatrix() const {
         return projectionMatrix_ * viewMatrix_;
+    }
+
+    glm::mat3 getMoveFrontVec(){
+        glm::vec3 upVec = glm::vec3(0,1,0);
+        glm::vec3 frontVec;
+        frontVec.x = cos(glm::radians(angles.y)) * cos(glm::radians(angles.x));
+        frontVec.y = cos(glm::radians(angles.x));
+        frontVec.z = sin(glm::radians(angles.y)) * cos(glm::radians(angles.x));
+        frontVec = glm::normalize(frontVec);
+        glm::mat4 lookAtTrans = glm::lookAt(position, position + frontVec, upVec);
+        glm::mat3 rotationMatrix = glm::mat3(lookAtTrans);
+        return rotationMatrix;
     }
 };

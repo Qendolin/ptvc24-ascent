@@ -33,6 +33,10 @@ class CharacterController : public Entity {
     inline static const float SHIFT_SPEED_FACTOR = 5.0;
     // How much the camera turns when moving the mouse. The unit is Degrees / Pixel.
     inline static const float LOOK_SENSITIVITY = 0.333;
+    // AutoMove Speed
+    inline static const float AUTO_MOVE_SPEED = 20.0;
+    // query flying toggle
+    bool isAutoMoveEnabled = false;
 
     JPH::Character* body_ = nullptr;
     glm::vec3 velocity_ = {};
