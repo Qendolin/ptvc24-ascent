@@ -11,14 +11,13 @@
 #include <string>
 #include <vector>
 
-#include "../Utils.h"
-
-// forward declarations
+#pragma region ForwardDecl
 namespace loader {
 class Scene;
 struct Node;
 struct InstanceAttributes;
 }  // namespace loader
+#pragma endregion
 
 namespace scene {
 
@@ -28,13 +27,15 @@ struct Properties {
    private:
     std::map<std::string, std::any> map_ = {};
 
+    void checkKeyExists_(const std::string& key) const;
+
    public:
     Properties() {}
     Properties(const std::map<std::string, std::any>& map) : map_(map) {}
 
     template <typename T>
     T get(const std::string& key) const {
-        if (map_.count(key) == 0) PANIC("Property " + key + " does not exist");
+        checkKeyExists_(key);
         return std::any_cast<T>(map_.at(key));
     }
 

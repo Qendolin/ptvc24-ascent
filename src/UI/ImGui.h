@@ -53,7 +53,7 @@ class ImGuiBackend {
     // must call unbind before the object is destroyed
     void unbind(Input &input);
 
-    void setViewport(glm::ivec2 viewport);
+    void setViewport(int width, int height);
 
     void render();
 };

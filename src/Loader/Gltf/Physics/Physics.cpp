@@ -1,5 +1,8 @@
 #include "Physics.h"
 
+#include "../../../Physics/Physics.h"
+#include "../../../Physics/Shapes.h"
+
 namespace loader {
 
 // Create a Jolt Physics shape given it's type and size. For mesh shapes the mesh shape is also passed.

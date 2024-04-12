@@ -1,16 +1,30 @@
 #include "Game.h"
 
 #include <chrono>
+#include <glm/glm.hpp>
 
+#include "Camera.h"
+#include "Debug/DebugMenu.h"
+#include "Debug/Direct.h"
+#include "GL/Geometry.h"
+#include "GL/Shader.h"
 #include "GL/StateManager.h"
+#include "GL/Texture.h"
+#include "Input.h"
+#include "Loader/Gltf.h"
+#include "Physics/Physics.h"
 #include "Physics/Shapes.h"
 #include "Scene/Character.h"
 #include "Scene/Objects/Checkpoint.h"
 #include "Scene/Objects/TestObstacle.h"
-#include "UI/Screens/DebugMenu.h"
+#include "Tween.h"
+#include "UI/ImGui.h"
+#include "UI/Renderer.h"
 #include "UI/Screens/MainMenu.h"
 #include "UI/Skin.h"
+#include "UI/UI.h"
 #include "Utils.h"
+#include "Window.h"
 
 gl::VertexArray *createQuad() {
     gl::Buffer *vbo = new gl::Buffer();
@@ -26,96 +40,83 @@ gl::VertexArray *createQuad() {
     return quad;
 }
 
-Game::Game(GLFWwindow *window) {
-    this->window = window;
+Game &Game::get() {
+    if (instance_ == nullptr) PANIC("No instance");
+    return *instance_;
+}
 
-    input = Input::instance = new Input(window);
+Game::Game(Window &window)
+    : window(window) {
+    instance_ = this;
+    tween = std::make_unique<TweenSystem>();
+    debugMenu_ = std::make_unique<DebugMenu>();
+    input = std::make_unique<Input>(window);
     glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-        Input::instance->onKey(window, key, scancode, action, mods);
+        Game::get().input->onKey(window, key, scancode, action, mods);
     });
     glfwSetCursorPosCallback(window, [](GLFWwindow *window, double x, double y) {
-        Input::instance->onCursorPos(window, x, y);
+        Game::get().input->onCursorPos(window, x, y);
     });
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) {
-        Input::instance->onMouseButton(window, button, action, mods);
+        Game::get().input->onMouseButton(window, button, action, mods);
     });
     glfwSetScrollCallback(window, [](GLFWwindow *window, double dx, double dy) {
-        Input::instance->onScroll(window, dx, dy);
+        Game::get().input->onScroll(window, dx, dy);
     });
     glfwSetCharCallback(window, [](GLFWwindow *window, unsigned int codepoint) {
-        Input::instance->onChar(window, codepoint);
+        Game::get().input->onChar(window, codepoint);
     });
     glfwSetWindowFocusCallback(window, [](GLFWwindow *window, int focused) {
-        Input::instance->invalidate();
+        Game::get().input->invalidate();
     });
 
     // Create camera with a 90° vertical FOV
-    camera = new Camera(glm::radians(90.0f), viewportSize, 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = std::make_unique<Camera>(glm::radians(90.0f), window.size, 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
-        Game::instance->resize(width, height);
+        Game::get().resize(width, height);
     });
     int vp_width, vp_height;
     glfwGetFramebufferSize(window, &vp_width, &vp_height);
     Game::resize(vp_width, vp_height);
 
-    physics = new ph::Physics({});
+    physics = std::make_unique<ph::Physics>();
     physics->setDebugDrawEnabled(true);
 }
 
 Game::~Game() {
-    window = nullptr;
-    quad->destroy();
-    quad = nullptr;
+    for (const auto &callback : onUnload) {
+        callback();
+    }
 
-    dd->destroy();
-    dd = nullptr;
+    delete quad;
 
-    skyShader->destroy();
-    skyShader = nullptr;
-    pbrShader->destroy();
-    pbrShader = nullptr;
+    delete skyShader;
+    delete pbrShader;
 
     // delete entities before deleting the physics
-    if (entityScene != nullptr) delete entityScene;
-    entityScene = nullptr;
+    delete entityScene;
+    delete scene;
 
-    if (scene != nullptr) delete scene;
-    scene = nullptr;
-
-    if (screen != nullptr) delete screen;
-    screen = nullptr;
-
-    delete physics;
-    physics = nullptr;
-    delete ui;
-    ui = nullptr;
-    if (imgui != nullptr) {
-        delete imgui;
-        imgui = nullptr;
-    }
-    delete input;
-    input = nullptr;
-    delete camera;
-    camera = nullptr;
+    delete screen;
 }
 
 void Game::resize(int width, int height) {
-    viewportSize = glm::ivec2(width, height);
+    window.size = glm::ivec2(width, height);
 
     if (camera != nullptr)
-        camera->setViewportSize(viewportSize);
+        camera->setViewportSize(window.size);
 
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     ui::set_scale(width, height, x_scale);
 
     if (ui != nullptr)
-        ui->setViewport(viewportSize);
+        ui->setViewport(window.size.x, window.size.y);
 
     if (imgui != nullptr)
-        imgui->setViewport(viewportSize);
+        imgui->setViewport(window.size.x, window.size.y);
 }
 
 void Game::setup() {
@@ -137,42 +138,28 @@ void Game::setup() {
             {new gl::ShaderProgram("assets/shaders/direct.vert"),
              new gl::ShaderProgram("assets/shaders/direct.frag")});
         dd_shader->setDebugLabel("direct_buffer/shader");
-        dd = new DirectBuffer(dd_shader);
+        directDraw_ = std::make_unique<DirectBuffer>(dd_shader);
 
         auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                          {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
                                        "menu_md");
         auto skin = ui::loadSkin();
-        ui = new ui::Backend(fonts, skin, new ui::Renderer());
-        ui->setViewport(viewportSize);
+        ui = std::make_unique<ui::Backend>(fonts, skin, new ui::Renderer());
+        ui->setViewport(window.size.x, window.size.y);
 
-        imgui = new ui::ImGuiBackend();
-        imgui->setViewport(viewportSize);
+        imgui = std::make_unique<ui::ImGuiBackend>();
+        imgui->setViewport(window.size.x, window.size.y);
         imgui->bind(*input);
     });
 
     onUnload.push_back([this]() {
-        if (skyShader) {
-            skyShader->destroy();
-            skyShader = nullptr;
-        }
-        if (pbrShader) {
-            pbrShader->destroy();
-            pbrShader = nullptr;
-        }
-        if (dd) {
-            dd->destroy();
-            dd = nullptr;
-        }
-        if (ui) {
-            delete ui;
-            ui = nullptr;
-        }
-        if (imgui) {
-            imgui->unbind(*input);
-            delete imgui;
-            imgui = nullptr;
-        }
+        delete skyShader;
+        skyShader = nullptr;
+
+        delete pbrShader;
+        pbrShader = nullptr;
+
+        imgui->unbind(*input);
     });
 
     const tinygltf::Model &model = loader::gltf("assets/models/test_course.glb");
@@ -184,7 +171,7 @@ void Game::setup() {
     factory.registerEntity<TestObstacleEntity>("TestObstacleEntity");
     entityScene = new scene::Scene(*scene, factory);
 
-    entityScene->entities.push_back(new CharacterController(camera));
+    entityScene->entities.push_back(new CharacterController(*camera));
 }
 
 void Game::run() {
@@ -238,8 +225,8 @@ void Game::processInput_() {
     // Open Debug Menu
     if (input->isKeyPress(GLFW_KEY_F3)) {
         LOG("Toggle Debug Menu");
-        debugMenu_.open = !debugMenu_.open;
-        debugMenu_.open ? input->releaseMouse() : input->captureMouse();
+        debugMenu_->open = !debugMenu_->open;
+        debugMenu_->open ? input->releaseMouse() : input->captureMouse();
     }
 
     // Spawn shpere (Debugging)
@@ -257,15 +244,15 @@ void Game::loop_() {
     ui->update(*input);
     imgui->update(*input);
 
-    tween.update(input->timeDelta());
+    tween->update(input->timeDelta());
 
-    debugMenu_.draw();
+    debugMenu_->draw();
 
     nk_context *nk = ui->context();
     // make window transparent
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-    if (nk_begin(nk, "gui", nk_recti(0, 0, viewportSize.x, viewportSize.y), 0)) {
+    if (nk_begin(nk, "gui", nk_recti(0, 0, window.size.x, window.size.y), 0)) {
         nk_layout_row_dynamic(nk, 30, 2);
         std::chrono::duration<float> total_seconds(input->time());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
@@ -292,7 +279,7 @@ void Game::loop_() {
     }
 
     // Render scene
-    gl::manager->setViewport(0, 0, viewportSize.x, viewportSize.y);
+    gl::manager->setViewport(0, 0, window.size.x, window.size.y);
     gl::manager->disable(gl::Capability::ScissorTest);
     gl::manager->disable(gl::Capability::StencilTest);
 
@@ -340,7 +327,7 @@ void Game::loop_() {
     physics->debugDraw(camera->viewProjectionMatrix());
 
     // Draw debug
-    dd->draw(camera->viewProjectionMatrix(), camera->position);
+    directDraw_->draw(camera->viewProjectionMatrix(), camera->position);
 
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);

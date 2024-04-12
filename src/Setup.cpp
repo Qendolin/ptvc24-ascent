@@ -1,11 +1,16 @@
 #include "Setup.h"
 
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include <exception>
 #include <memory>
 #include <string>
 
 #include "GL/StateManager.h"
 #include "Utils.h"
+#include "Window.h"
 
 static void APIENTRY debugCallback(
     GLenum source,
@@ -120,7 +125,7 @@ static void APIENTRY debugCallback(
     std::cout << err << std::endl;
 }
 
-GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
+Window createOpenGLContext(bool enableCompatibilityProfile) {
     LOG("Initializing GLFW");
     if (glfwInit() != GLFW_TRUE) {
         throw std::runtime_error("GLFW init failed");
@@ -154,7 +159,11 @@ GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(win, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
-    return win;
+    return Window(win);
+}
+
+void destroyOpenGLContext(Window &window) {
+    glfwDestroyWindow(window.handle);
 }
 
 void initializeOpenGL(bool enableDebug) {

@@ -1,6 +1,8 @@
 #include "Checkpoint.h"
 
 #include "../../Game.h"
+#include "../../Physics/Physics.h"
+#include "../../Utils.h"
 
 using namespace scene;
 

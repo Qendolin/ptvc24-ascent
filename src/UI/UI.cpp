@@ -2,14 +2,7 @@
 
 #include <initializer_list>
 
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
 #define NK_IMPLEMENTATION
-#define NK_KEYSTATE_BASED_INPUT
 #include <nuklear.h>
 
 #include <glm/glm.hpp>
@@ -19,6 +12,9 @@
 #include "../Input.h"
 #include "../Loader/Loader.h"
 #include "../Utils.h"
+#include "../Window.h"
+#include "Renderer.h"
+#include "Skin.h"
 
 namespace ui {
 
@@ -97,12 +93,8 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
 
 FontAtlas::~FontAtlas() {
     nk_font_atlas_clear(&baker_);
-    baker_ = {};
 
-    if (texture_) {
-        texture_->destroy();
-        texture_ = nullptr;
-    }
+    delete texture_;
 }
 
 Backend::Backend(FontAtlas *font_atlas, Skin *skin, Renderer *renderer)
@@ -117,26 +109,12 @@ Backend::Backend(FontAtlas *font_atlas, Skin *skin, Renderer *renderer)
 }
 
 Backend::~Backend() {
-    if (fontAtlas_ != nullptr) {
-        delete fontAtlas_;
-        fontAtlas_ = nullptr;
-    }
-
-    if (renderer_ != nullptr) {
-        delete renderer_;
-        renderer_ = nullptr;
-    }
-
-    if (skin_ != nullptr) {
-        delete skin_;
-        skin_ = nullptr;
-    }
+    delete fontAtlas_;
+    delete renderer_;
+    delete skin_;
 
     nk_buffer_free(&commands_);
-    commands_ = {};
-
     nk_free(&context_);
-    context_ = {};
 }
 
 void Backend::update(Input &input) {
@@ -192,6 +170,14 @@ void Backend::update(Input &input) {
     // Not implemented: NK_BUTTON_DOUBLE
     nk_input_scroll(&context_, {scroll.x, scroll.y});
     nk_input_end(&context_);
+}
+
+void Backend::setViewport(int width, int height) {
+    renderer_->setViewport(width, height);
+}
+
+void Backend::render() {
+    renderer_->render(&context_, &commands_);
 }
 
 }  // namespace ui

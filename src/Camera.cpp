@@ -14,6 +14,8 @@ Camera::Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 p
     updateViewMatrix();
 }
 
+Camera::~Camera() = default;
+
 void Camera::updateProjectionMatrix_() {
     float a = viewportSize_.x / viewportSize_.y;
     float f = 1.0f / std::tan(fov_ / 2.0f);

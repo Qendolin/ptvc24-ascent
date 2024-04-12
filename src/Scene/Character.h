@@ -1,7 +1,7 @@
-#include "../Camera.h"
 #include "Entity.h"
 
 // forward declarations
+class Camera;
 namespace JPH {
 class Character;
 }
@@ -25,11 +25,11 @@ class CharacterController : public scene::Entity {
     glm::vec3 cameraLerpEnd_ = {};
 
    public:
-    Camera* camera = nullptr;
+    Camera& camera;
 
-    CharacterController(Camera* camera);
+    CharacterController(Camera& camera);
 
-    ~CharacterController();
+    virtual ~CharacterController();
 
     void init() override;
 

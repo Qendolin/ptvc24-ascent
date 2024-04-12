@@ -6,8 +6,7 @@
 #include <cstdarg>
 #include <glm/glm.hpp>
 
-#include "../GL/Geometry.h"
-#include "../GL/Shader.h"
+#include "../GL/Declarations.h"
 
 namespace ph {
 

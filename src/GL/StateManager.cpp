@@ -31,6 +31,7 @@ Environment createEnvironment() {
         .features = features};
 }
 
+#ifndef NDEBUG
 void StateManager::Tracker::add(GLenum type, GLuint id) {
     if (id == 0) PANIC("Cannot track the default object (id=0)");
     if (objects_.at(type).contains(id)) PANIC("Object with id=" + std::to_string(id) + " already tracked");
@@ -54,15 +55,13 @@ std::vector<std::pair<GLenum, GLuint>> StateManager::Tracker::tracked() {
     }
     return result;
 }
+#endif
 
 StateManager::StateManager(Environment env) : caps(),
                                               textureUnits(32, 0),
                                               samplerUnits(32, 0),
                                               intelTextureBindingTargets() {
     this->env = env;
-}
-
-StateManager::~StateManager() {
 }
 
 void StateManager::enable(Capability cap) {

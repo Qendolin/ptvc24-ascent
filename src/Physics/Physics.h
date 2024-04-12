@@ -122,7 +122,7 @@ class Physics {
     Physics(Physics const &) = delete;
     Physics &operator=(Physics const &) = delete;
 
-    Physics(PhysicsSetupConfig config);
+    Physics(PhysicsSetupConfig config = {});
     ~Physics();
 
     void update(float delta);

@@ -41,14 +41,12 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
     compile(substitutions);
 }
 
-void ShaderProgram::destroy() {
+ShaderProgram::~ShaderProgram() {
     if (id_ != 0) {
         glDeleteProgram(id_);
         untrack_();
         id_ = 0;
     }
-
-    delete this;
 }
 
 std::string ShaderProgram::source() const {
@@ -206,7 +204,7 @@ ShaderPipeline::ShaderPipeline(std::initializer_list<ShaderProgram*> owned_progr
     ownedPrograms_ = owned_programs;
 }
 
-void ShaderPipeline::destroy() {
+ShaderPipeline::~ShaderPipeline() {
     if (id_ != 0) {
         glDeleteProgramPipelines(1, &id_);
         manager->unbindProgramPipeline(id_);
@@ -214,12 +212,9 @@ void ShaderPipeline::destroy() {
         id_ = 0;
     }
 
-    for (auto&& p : ownedPrograms_) {
-        p->destroy();
+    for (auto&& prog : ownedPrograms_) {
+        delete prog;
     }
-    ownedPrograms_ = {};
-
-    delete this;
 }
 
 void ShaderPipeline::bind() const {

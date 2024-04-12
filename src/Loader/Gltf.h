@@ -14,6 +14,7 @@
 #include <limits>
 #include <ranges>
 
+#include "../GL/Indirect.h"
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
 #include "../Utils.h"
@@ -56,20 +57,7 @@ struct Material {
     // a multipicative factor for metallness and roughness
     glm::vec2 metallicRoughnessFactor = {0, 1};
 
-    ~Material() {
-        if (albedo != nullptr) {
-            albedo->destroy();
-            albedo = nullptr;
-        }
-        if (occlusionMetallicRoughness != nullptr) {
-            occlusionMetallicRoughness->destroy();
-            occlusionMetallicRoughness = nullptr;
-        }
-        if (normal != nullptr) {
-            normal->destroy();
-            normal = nullptr;
-        }
-    }
+    ~Material();
 };
 
 /**
@@ -151,8 +139,8 @@ struct MaterialBatch {
  */
 class Graphics {
    private:
-    std::unique_ptr<gl::VertexArray> vao_ = nullptr;
-    std::unique_ptr<gl::Buffer> drawCommands_ = nullptr;
+    std::unique_ptr<gl::VertexArray> vao_;
+    std::unique_ptr<gl::Buffer> drawCommands_;
 
     /**
      * Pointer into the persistently mapped, instance attributes buffer.
@@ -181,7 +169,7 @@ class Graphics {
         gl::Buffer *instance_attributes,
         gl::Buffer *draw_commands);
 
-    ~Graphics();
+    ~Graphics() = default;
 
     // bind the vao and draw commands
     void bind() const;

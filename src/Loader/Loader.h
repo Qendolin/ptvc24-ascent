@@ -1,15 +1,12 @@
 #pragma once
 
 #include <fstream>
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "../GL/Geometry.h"
-#include "../GL/Texture.h"
+#include "../GL/Declarations.h"
 
 namespace loader {
 
@@ -28,12 +25,14 @@ std::vector<uint8_t> binary(std::string filename);
 
 loader::Image image(std::string filename);
 
+typedef unsigned int GLenum;
+
 struct TextureParameters {
     bool mipmap = true;
     bool srgb = false;
-    GLenum internalFormat = GL_RGBA8;
-    GLenum fileFormat = GL_RGBA;
-    GLenum dataType = GL_UNSIGNED_BYTE;
+    GLenum internalFormat = 0x8058 /* GL_RGBA8 */;
+    GLenum fileFormat = 0x1908 /* GL_RGBA */;
+    GLenum dataType = 0x1401 /* GL_UNSIGNED_BYTE */;
 };
 
 gl::Texture *texture(std::string filename, TextureParameters params = {});

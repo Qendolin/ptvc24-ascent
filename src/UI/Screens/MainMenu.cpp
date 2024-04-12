@@ -1,24 +1,26 @@
 #include "MainMenu.h"
 
+#include "../../GL/Texture.h"
 #include "../../Game.h"
+#include "../../Input.h"
 #include "../../Loader/Loader.h"
+#include "../../Utils.h"
+#include "../../Window.h"
+#include "../UI.h"
 
 MainMenuScreen::MainMenuScreen() {
     titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
 }
 
 MainMenuScreen::~MainMenuScreen() {
-    if (titleImage != nullptr) {
-        titleImage->destroy();
-        titleImage = nullptr;
-    }
+    delete titleImage;
 }
 
 void MainMenuScreen::draw() {
     using namespace ui::literals;
 
-    Game* game = Game::instance;
-    nk_context* nk = game->ui->context();
+    Game& game = Game::get();
+    nk_context* nk = game.ui->context();
 
     // transparent background
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
@@ -29,9 +31,9 @@ void MainMenuScreen::draw() {
         float img_height = 40_vw * titleImage->height() / titleImage->width();
         nk_layout_row_dynamic(nk, img_height, 1);
         nk_image_color(nk, nk_image_id(titleImage->id()), nk_rgba_f(1.0, 1.0, 1.0, titleOpacity.peek()));
-        game->tween.step(titleOpacity);
+        game.tween->step(titleOpacity);
 
-        // vertical spacer
+        // vertil spacer
         nk_layout_row_dynamic(nk, img_height / 2, 1);
 
         // prepare sublayout for buttons
@@ -48,16 +50,16 @@ void MainMenuScreen::draw() {
             nk_style_push_float(nk, &nk->style.window.spacing.y, 50_dp);
 
             nk_layout_row_dynamic(nk, 60_dp, 1);
-            nk_style_set_font(nk, &game->ui->fonts()->get("menu_md")->handle);
+            nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
             if (nk_button_label(nk, "Play")) {
-                game->input->captureMouse();
+                game.input->captureMouse();
                 close();
             }
             if (nk_button_label(nk, "Settings")) {
                 LOG("Settings pressed");
             }
             if (nk_button_label(nk, "Quit")) {
-                glfwSetWindowShouldClose(game->window, true);
+                glfwSetWindowShouldClose(game.window, true);
             }
 
             nk_style_pop_float(nk);  // row sapcing

@@ -3,7 +3,10 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include "GL/StateManager.h"
+#include "../GL/Geometry.h"
+#include "../GL/Shader.h"
+#include "../GL/StateManager.h"
+#include "../Utils.h"
 
 // calculate number of sides for a given radius
 int circleSides(float r) {
@@ -44,11 +47,10 @@ DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
     vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * 4);
 }
 
-void DirectBuffer::destroy() {
-    vao_->destroy();
-    vbo_->destroy();
-    shader_->destroy();
-    delete this;
+DirectBuffer::~DirectBuffer() {
+    delete vao_;
+    delete vbo_;
+    delete shader_;
 }
 
 void DirectBuffer::push() {

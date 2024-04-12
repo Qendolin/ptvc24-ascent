@@ -1,9 +1,7 @@
 #pragma once
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 #define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
@@ -12,9 +10,8 @@
 
 #include <map>
 #include <span>
-
-#include "Renderer.h"
-#include "Skin.h"
+#include <string>
+#include <vector>
 
 // References:
 // https://github.dev/Immediate-Mode-UI/Nuklear/blob/master/demo/glfw_opengl4/nuklear_glfw_gl4.h
@@ -22,11 +19,14 @@
 // https://github.com/Immediate-Mode-UI/Nuklear/wiki
 // https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 
-// forward declaration
+#pragma region ForwardDecl
+#include "../GL/Declarations.h"
 class Input;
-namespace gl {
-class Texture;
-}  // namespace gl
+namespace ui {
+class Renderer;
+struct Skin;
+}  // namespace ui
+#pragma endregion
 
 namespace ui {
 
@@ -115,13 +115,9 @@ class Backend {
         return fontAtlas_;
     }
 
-    void setViewport(glm::ivec2 viewport) {
-        renderer_->setViewport(viewport);
-    }
+    void setViewport(int width, int height);
 
-    void render() {
-        renderer_->render(&context_, &commands_);
-    }
+    void render();
 };
 
 }  // namespace ui

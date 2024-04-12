@@ -1,23 +1,10 @@
 #pragma once
 
-// #include <initializer_list>
 #include <vector>
 
 #include "Object.h"
 
 namespace gl {
-
-// [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElementsIndirect.xhtml#:~:text=packed%20into%20a%20structure)
-struct DrawElementsIndirectCommand {
-    // The element count
-    uint32_t count;
-    uint32_t instanceCount;
-    // The offset for the first index of the mesh in the ebo
-    uint32_t firstIndex;
-    // The offset for the first vertex of the mesh in the vbo
-    int32_t baseVertex;
-    uint32_t baseInstance;
-};
 
 // References:
 // https://www.khronos.org/opengl/wiki/Buffer_Object
@@ -26,16 +13,16 @@ class Buffer : public GLObject {
     size_t size_ = 0;
     uint32_t flags_ = 0;
     bool immutable_ = false;
+    bool isMapped_ = false;
 
     void allocate_(const void* data, size_t size, GLbitfield flags);
     void allocateMutable_(const void* data, size_t size, GLenum usage);
 
    public:
     Buffer();
+    virtual ~Buffer();
 
     Buffer(Buffer&&) noexcept = default;
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 
@@ -88,13 +75,20 @@ class Buffer : public GLObject {
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
     template <typename T>
     T* mapRange(GLbitfield flags) {
+        isMapped_ = true;
         return reinterpret_cast<T*>(glMapNamedBufferRange(id_, 0, size_, flags));
     }
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)
     template <typename T>
     T* mapRange(size_t offset, size_t length, GLbitfield flags) {
+        isMapped_ = true;
         return reinterpret_cast<T*>(glMapNamedBufferRange(id_, offset, length, flags));
+    }
+
+    void unmap() {
+        glUnmapNamedBuffer(id_);
+        isMapped_ = false;
     }
 };
 
@@ -107,10 +101,9 @@ class VertexArray : public GLObject {
 
    public:
     VertexArray();
+    virtual ~VertexArray();
 
     VertexArray(VertexArray&&) noexcept = default;
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 

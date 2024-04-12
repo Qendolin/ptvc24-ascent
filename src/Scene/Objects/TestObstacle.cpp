@@ -1,6 +1,8 @@
 #include "TestObstacle.h"
 
 #include "../../Game.h"
+#include "../../Physics/Physics.h"
+#include "../../Tween.h"
 
 using namespace scene;
 
@@ -22,7 +24,7 @@ void TestObstacleEntity::init() {
 }
 
 void TestObstacleEntity::update() {
-    Game::instance->tween.step(tween);
+    game().tween->step(tween);
     if (tween.progress() == 0.0) {
         tween.forward();
     }
@@ -39,7 +41,6 @@ void TestObstacleEntity::prePhysicsUpdate() {
     auto position = tween.peek();
 
     JPH::BodyID body = collider.physics().body();
-    ph::Physics& physics = *Game::instance->physics;
     // TODO: May want to use MoveKinematic
-    physics.interface().SetPosition(body, {position[0], position[1], position[2]}, JPH::EActivation::Activate);
+    physics().interface().SetPosition(body, {position[0], position[1], position[2]}, JPH::EActivation::Activate);
 }

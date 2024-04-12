@@ -8,6 +8,7 @@
 #include "../GL/Texture.h"
 #include "../Input.h"
 #include "../Utils.h"
+#include "../Window.h"
 
 static ImGuiKey mapGlfwKey(int key);
 
@@ -71,35 +72,24 @@ ImGuiBackend::~ImGuiBackend() {
 
     ImGui::DestroyContext();
 
-    if (fontAtlas_ != nullptr) {
-        fontAtlas_->destroy();
-        fontAtlas_ = nullptr;
-    }
-    if (vao_ != nullptr) {
-        vao_->destroy();
-        vao_ = nullptr;
-    }
-    if (vbo_ != nullptr) {
-        vbo_->destroy();
-        vbo_ = nullptr;
-    }
-    if (ebo_ != nullptr) {
-        ebo_->destroy();
-        ebo_ = nullptr;
-    }
-    if (shader_ != nullptr) {
-        shader_->destroy();
-        shader_ = nullptr;
-    }
+    delete fontAtlas_;
+    delete vao_;
+    delete vbo_;
+    delete ebo_;
+    delete shader_;
 }
 
-void ImGuiBackend::setViewport(glm::ivec2 viewport) {
-    this->viewport_ = viewport;
+void ImGuiBackend::setViewport(int width, int height) {
+    this->viewport_ = {width, height};
+    float w = static_cast<float>(width);
+    float h = static_cast<float>(height);
+    // clang-format off
     projectionMatrix_ = glm::mat4(
-        2.0f / viewport.x, 0.0f, 0.0f, 0.0f,
-        0.0f, -2.0f / viewport.y, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f);
+        2 / w,      0,    0,    0,
+            0, -2 / h,    0,    0,
+            0,      0,    1,    0,
+           -1,      1,    0,    1);
+    // clang-format on
 }
 
 void ImGuiBackend::update(Input& input) {

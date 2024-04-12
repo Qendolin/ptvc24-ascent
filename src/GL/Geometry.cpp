@@ -13,14 +13,16 @@ Buffer::Buffer() : GLObject(GL_BUFFER) {
     track_();
 }
 
-void Buffer::destroy() {
+Buffer::~Buffer() {
     if (id_ != 0) {
+        if (isMapped_) {
+            unmap();
+        }
         glDeleteBuffers(1, &id_);
         manager->unbindBuffer(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
 }
 
 size_t Buffer::size() const {
@@ -154,7 +156,7 @@ VertexArray::VertexArray() : GLObject(GL_VERTEX_ARRAY), bindingRanges_(32, std::
     track_();
 }
 
-void VertexArray::destroy() {
+VertexArray::~VertexArray() {
     if (id_ != 0) {
         glDeleteVertexArrays(1, &id_);
         manager->unbindVertexArray(id_);
@@ -162,11 +164,9 @@ void VertexArray::destroy() {
         id_ = 0;
     }
 
-    for (auto&& b : ownedBuffers_) {
-        b->destroy();
+    for (auto&& buf : ownedBuffers_) {
+        delete buf;
     }
-    ownedBuffers_ = {};
-    delete this;
 }
 
 void VertexArray::setDebugLabel(const std::string& label) {

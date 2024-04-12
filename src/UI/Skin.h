@@ -1,12 +1,12 @@
 #pragma once
 
-#include <nuklear.h>
-
-#include <map>
-#include <string>
 #include <vector>
 
-#include "../GL/Object.h"
+#include "UI.h"
+
+namespace gl {
+class GLObject;
+}
 
 namespace ui {
 struct Skin {

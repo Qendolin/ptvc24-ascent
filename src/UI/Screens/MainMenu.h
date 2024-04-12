@@ -1,8 +1,7 @@
 #pragma once
 
-#include <tweeny/tweeny.h>
-
-#include "../../GL/Texture.h"
+#include "../../GL/Declarations.h"
+#include "../../Tween.h"
 #include "../Screen.h"
 
 class MainMenuScreen : public Screen {
@@ -12,7 +11,7 @@ class MainMenuScreen : public Screen {
 
    public:
     MainMenuScreen();
-    ~MainMenuScreen();
+    virtual ~MainMenuScreen();
 
     void draw() override;
 };

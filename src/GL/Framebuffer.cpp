@@ -4,6 +4,7 @@
 
 #include "../Utils.h"
 #include "StateManager.h"
+#include "Texture.h"
 
 namespace gl {
 
@@ -12,14 +13,13 @@ Renderbuffer::Renderbuffer() : GLObject(GL_RENDERBUFFER) {
     track_();
 }
 
-void Renderbuffer::destroy() {
+Renderbuffer::~Renderbuffer() {
     if (id_ != 0) {
         glDeleteRenderbuffers(1, &id_);
         manager->unbindRenderbuffer(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
 }
 
 void Renderbuffer::setDebugLabel(const std::string& label) {
@@ -54,14 +54,13 @@ Framebuffer::Framebuffer() : GLObject(GL_FRAMEBUFFER), textures_(MAX_ATTACHMENTS
     track_();
 }
 
-void Framebuffer::destroy() {
+Framebuffer::~Framebuffer() {
     if (id_ != 0) {
         glDeleteFramebuffers(1, &id_);
         manager->unbindFramebuffer(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
 }
 
 void Framebuffer::setDebugLabel(const std::string& label) {

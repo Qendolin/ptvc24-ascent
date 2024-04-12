@@ -26,14 +26,13 @@ class Texture : public GLObject {
     // creat a texture with the given type. Usually `GL_TEXTURE_2D`.
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateTextures.xhtml)
     Texture(GLenum type);
+    virtual ~Texture();
 
     Texture(Texture&&) noexcept = default;
 
     // Create an alias to this texture with the given type.
     // Useful for 2D array textures or cubemaps.
     Texture* as(GLenum type);
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 
@@ -168,10 +167,9 @@ class Texture : public GLObject {
 class Sampler : public GLObject {
    public:
     Sampler();
+    virtual ~Sampler();
 
     Sampler(Sampler&&) noexcept = default;
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 

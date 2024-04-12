@@ -25,10 +25,9 @@ class ShaderProgram : public GLObject {
     // Load and compile the given shader file. The stage is determined by the file extension.
     // See `compile` for details.
     ShaderProgram(std::string filename, std::map<std::string, std::string> substitutions = {});
+    virtual ~ShaderProgram();
 
     ShaderProgram(ShaderProgram&&) noexcept = default;
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 
@@ -75,10 +74,9 @@ class ShaderPipeline : public GLObject {
     // Initialize a pipeline with owned programs. See `own` for details.
     // They will be automatically attached.
     ShaderPipeline(std::initializer_list<ShaderProgram*> owned_programs);
+    virtual ~ShaderPipeline();
 
     ShaderPipeline(ShaderPipeline&&) noexcept = default;
-
-    void destroy() override;
 
     void setDebugLabel(const std::string& label) override;
 

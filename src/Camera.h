@@ -28,6 +28,7 @@ class Camera {
      * @param angles orientation of the camera
      */
     Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 position, glm::vec3 angles);
+    ~Camera();
 
     // Recalculate the view matrix
     void updateViewMatrix();

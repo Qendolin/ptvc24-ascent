@@ -1,9 +1,31 @@
 #include "Renderer.h"
 
+#include "../GL/Geometry.h"
+#include "../GL/Shader.h"
 #include "../GL/StateManager.h"
+#include "../GL/Texture.h"
 #include "../Utils.h"
 
 namespace ui {
+
+static const struct nk_draw_vertex_layout_element VERTEX_LAYOUT[] = {
+    {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(Renderer::Vertex, position)},
+    {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(Renderer::Vertex, uv)},
+    {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(Renderer::Vertex, color)},
+    {NK_VERTEX_LAYOUT_END}};
+
+static const struct nk_convert_config CONVERT_CONFIG = {
+    .global_alpha = 1,
+    .line_AA = NK_ANTI_ALIASING_ON,
+    .shape_AA = NK_ANTI_ALIASING_ON,
+    .circle_segment_count = 22,
+    .arc_segment_count = 22,
+    .curve_segment_count = 22,
+    .tex_null = {.texture = 0, .uv = {0, 0}},
+    .vertex_layout = VERTEX_LAYOUT,
+    .vertex_size = sizeof(Renderer::Vertex),
+    .vertex_alignment = NK_ALIGNOF(Renderer::Vertex),
+};
 
 Renderer::Renderer(int max_vertices, int max_indices) {
     shader_ = new gl::ShaderPipeline({
@@ -29,7 +51,7 @@ Renderer::Renderer(int max_vertices, int max_indices) {
     size_t vbo_size = sizeof(Vertex) * max_vertices;
     vbo_->allocateEmpty(vbo_size, flags);
     vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
-    Vertex *mapped_vbo = reinterpret_cast<Vertex *>(glMapNamedBufferRange(vbo_->id(), 0, vbo_size, flags));
+    Vertex *mapped_vbo = vbo_->mapRange<Vertex>(flags);
     vertices_ = {mapped_vbo, vbo_size};
 
     ebo_ = new gl::Buffer();
@@ -37,44 +59,29 @@ Renderer::Renderer(int max_vertices, int max_indices) {
     size_t ebo_size = sizeof(uint16_t) * max_indices;
     ebo_->allocateEmpty(ebo_size, flags);
     vao_->bindElementBuffer(*ebo_);
-    uint16_t *mapped_ebo = reinterpret_cast<uint16_t *>(glMapNamedBufferRange(ebo_->id(), 0, ebo_size, flags));
+    uint16_t *mapped_ebo = ebo_->mapRange<uint16_t>(flags);
     indices_ = {mapped_ebo, ebo_size};
 }
 
 Renderer::~Renderer() {
-    if (shader_) {
-        shader_->destroy();
-        shader_ = nullptr;
-    }
-    if (sampler_) {
-        sampler_->destroy();
-        sampler_ = nullptr;
-    }
-    if (vao_) {
-        vao_->destroy();
-        vao_ = nullptr;
-    }
-    if (vbo_) {
-        glUnmapNamedBuffer(vbo_->id());
-        vertices_ = {};
-        vbo_->destroy();
-        vbo_ = nullptr;
-    }
-    if (ebo_) {
-        glUnmapNamedBuffer(ebo_->id());
-        indices_ = {};
-        ebo_->destroy();
-        ebo_ = nullptr;
-    }
+    delete shader_;
+    delete sampler_;
+    delete vao_;
+    delete vbo_;
+    delete ebo_;
 }
 
-void Renderer::setViewport(glm::ivec2 viewport) {
-    this->viewport_ = viewport;
+void Renderer::setViewport(int width, int height) {
+    this->viewport_ = {width, height};
+    float w = static_cast<float>(width);
+    float h = static_cast<float>(height);
+    // clang-format off
     projectionMatrix_ = glm::mat4(
-        2.0f / viewport.x, 0.0f, 0.0f, 0.0f,
-        0.0f, -2.0f / viewport.y, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f);
+        2 / w,      0,    0,    0,
+            0, -2 / h,    0,    0,
+            0,      0,    1,    0,
+           -1,      1,    0,    1);
+    // clang-format on
 }
 
 void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
@@ -87,7 +94,7 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
     struct nk_buffer vertex_buffer = {}, element_buffer = {};
     nk_buffer_init_fixed(&vertex_buffer, vertices_.data(), vertices_.size_bytes());
     nk_buffer_init_fixed(&element_buffer, indices_.data(), indices_.size_bytes());
-    nk_convert(context, commands, &vertex_buffer, &element_buffer, &convertConfig_);
+    nk_convert(context, commands, &vertex_buffer, &element_buffer, &CONVERT_CONFIG);
 
     gl::manager->setEnabled({gl::Capability::Blend, gl::Capability::ScissorTest});
     gl::manager->blendEquation(gl::BlendEquation::FuncAdd);

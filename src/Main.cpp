@@ -3,6 +3,7 @@
 #include "Game.h"
 #include "Setup.h"
 #include "Utils.h"
+#include "Window.h"
 
 void printNotDeletedOpenGLObjects() {
     std::vector<std::pair<GLenum, GLuint>> tracked = gl::manager->tracked();
@@ -24,7 +25,12 @@ void printNotDeletedOpenGLObjects() {
 int main(int argc, char** argv) {
     // Print out the date and time of when this binary was built.
     // Note: Local time, not UTC.
-    LOG("Build from " << __TIMESTAMP__);
+
+#ifndef NDEBUG
+    LOG("Debug build from " << __TIMESTAMP__);
+#else
+    LOG("Release build from " << __TIMESTAMP__);
+#endif
 
     LOG("Parsing arguments");
     bool enableCompatibilityProfile = false;
@@ -44,19 +50,17 @@ int main(int argc, char** argv) {
 #endif
 
     try {
-        GLFWwindow* window = createOpenGLContext(enableCompatibilityProfile);
+        Window window = createOpenGLContext(enableCompatibilityProfile);
         initializeOpenGL(enableGlDebug);
 
         Game* game = new Game(window);
-        Game::instance = game;
         game->setup();
         game->run();
         delete game;
 
         printNotDeletedOpenGLObjects();
 
-        glfwDestroyWindow(window);
-
+        destroyOpenGLContext(window);
     } catch (const std::exception& e) {
         std::cerr << "Fatal Error: " << e.what() << std::flush;
         return EXIT_FAILURE;

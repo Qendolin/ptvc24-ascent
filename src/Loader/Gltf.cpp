@@ -3,9 +3,18 @@
 #define TINYGLTF_IMPLEMENTATION
 #include <tiny_gltf.h>
 
+#include "../GL/Geometry.h"
+#include "../GL/Texture.h"
+
 namespace gltf = tinygltf;
 
 namespace loader {
+
+Material::~Material() {
+    delete albedo;
+    delete occlusionMetallicRoughness;
+    delete normal;
+}
 
 const gltf::Model gltf(const std::string filename) {
     gltf::TinyGLTF loader;
@@ -61,20 +70,6 @@ Graphics::Graphics(
 void Graphics::bind() const {
     vao_->bind();
     drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);
-}
-
-Graphics::~Graphics() {
-    if (vao_ != nullptr) {
-        // I admit, this is shit
-        auto tmp = vao_.release();
-        tmp->destroy();
-        vao_ = nullptr;
-    }
-    if (drawCommands_ != nullptr) {
-        auto tmp = drawCommands_.release();
-        tmp->destroy();
-        drawCommands_ = nullptr;
-    }
 }
 
 InstanceAttributes *Graphics::attributes(int32_t index) const {

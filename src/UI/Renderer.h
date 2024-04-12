@@ -1,17 +1,12 @@
 #pragma once
 
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#include <nuklear.h>
-
+#include <glm/glm.hpp>
 #include <span>
 
-#include "../GL/Geometry.h"
-#include "../GL/Shader.h"
-#include "../GL/Texture.h"
-#include "../Input.h"
+#include "../GL/Declarations.h"
+#include "UI.h"
+
+class Input;
 
 namespace ui {
 
@@ -42,33 +37,11 @@ class Renderer {
     glm::mat4 projectionMatrix_ = glm::mat4(1.0);
     glm::ivec2 viewport_ = glm::ivec2(0, 0);
 
-    inline static const struct nk_draw_vertex_layout_element VERTEX_LAYOUT_[] = {
-        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(Vertex, position)},
-        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(Vertex, uv)},
-        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(Vertex, color)},
-        {NK_VERTEX_LAYOUT_END}};
-
-    struct nk_convert_config convertConfig_ = {
-        .global_alpha = 1.0f,
-        .line_AA = NK_ANTI_ALIASING_ON,
-        .shape_AA = NK_ANTI_ALIASING_ON,
-        .circle_segment_count = 22,
-        .arc_segment_count = 22,
-        .curve_segment_count = 22,
-        .tex_null = {.texture = 0, .uv = {0, 0}},
-        .vertex_layout = VERTEX_LAYOUT_,
-        .vertex_size = sizeof(Vertex),
-        .vertex_alignment = NK_ALIGNOF(Vertex),
-    };
-
    public:
     Renderer(int max_vertices = 4 * 1024, int max_indices = 4 * 1024);
     ~Renderer();
 
-    /**
-     * @param viewport the viewport size
-     */
-    void setViewport(glm::ivec2 viewport);
+    void setViewport(int width, int height);
 
     void render(struct nk_context* context, struct nk_buffer* commands);
 };

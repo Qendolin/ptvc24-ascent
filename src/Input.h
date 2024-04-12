@@ -1,15 +1,15 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include <array>
 #include <functional>
 #include <glm/glm.hpp>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+struct Window;
+struct GLFWwindow;
 
 /**
  * The input class handles user input.
@@ -75,7 +75,7 @@ class Input {
         return lhs = lhs & rhs;
     }
 
-    GLFWwindow *window_ = nullptr;
+    const Window &window_;
     double timeRead_ = 0;
     float timeDelta_ = 0;
     bool mouseCaptured_ = false;
@@ -84,10 +84,10 @@ class Input {
     glm::vec2 mouseDelta_ = {};
     glm::vec2 scrollDeltaRead_ = {};
     glm::vec2 scrollDeltaWrite_ = {};
-    std::array<State, GLFW_MOUSE_BUTTON_LAST + 1> mouseButtonsRead_;
-    std::array<State, GLFW_MOUSE_BUTTON_LAST + 1> mouseButtonsWrite_;
-    std::array<State, GLFW_KEY_LAST + 1> keysRead_;
-    std::array<State, GLFW_KEY_LAST + 1> keysWrite_;
+    std::array<State, 8> mouseButtonsRead_;
+    std::array<State, 8> mouseButtonsWrite_;
+    std::array<State, 349> keysRead_;
+    std::array<State, 349> keysWrite_;
     std::unordered_map<std::string, int> keyMap_ = {};
 
     bool stateInvalid_ = true;
@@ -106,12 +106,8 @@ class Input {
     void pollCurrentState_();
 
    public:
-    inline static Input *instance = nullptr;
-
-    Input(GLFWwindow *window);
-    ~Input() {
-        window_ = nullptr;
-    };
+    Input(Window &window);
+    ~Input();
 
     /**
      * @return the mouse position measured from top-left corner of the viewport
@@ -141,10 +137,7 @@ class Input {
         return mouseCaptured_;
     }
 
-    void captureMouse() {
-        glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        mouseCaptured_ = true;
-    }
+    void captureMouse();
 
     /**
      * @return `true` if the mouse is **not** captured (aka. grabbed).
@@ -153,10 +146,7 @@ class Input {
         return !mouseCaptured_;
     }
 
-    void releaseMouse() {
-        glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        mouseCaptured_ = false;
-    }
+    void releaseMouse();
 
     /**
      * @param button one of `GLFW_MOUSE_BUTTON_*`

@@ -13,6 +13,15 @@ Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     manager->intelTextureBindingSetTarget(id_, type_);
 }
 
+Texture::~Texture() {
+    if (id_ != 0) {
+        glDeleteTextures(1, &id_);
+        manager->unbindTexture(id_);
+        untrack_();
+        id_ = 0;
+    }
+}
+
 Texture* Texture::as(GLenum type) {
     return new Texture(type, id_);
 }
@@ -39,16 +48,6 @@ uint32_t Texture::depth() const {
 
 void Texture::bind(int unit) {
     manager->bindTextureUnit(unit, id_);
-}
-
-void Texture::destroy() {
-    if (id_ != 0) {
-        glDeleteTextures(1, &id_);
-        manager->unbindTexture(id_);
-        untrack_();
-        id_ = 0;
-    }
-    delete this;
 }
 
 int Texture::dimensions() const {
@@ -163,14 +162,13 @@ Sampler::Sampler() : GLObject(GL_SAMPLER) {
     track_();
 }
 
-void Sampler::destroy() {
+Sampler::~Sampler() {
     if (id_ != 0) {
         glDeleteSamplers(1, &id_);
         manager->unbindSampler(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
 }
 
 void Sampler::setDebugLabel(const std::string& label) {

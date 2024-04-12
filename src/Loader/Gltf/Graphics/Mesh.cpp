@@ -1,5 +1,8 @@
 #include "Graphics.h"
 
+//
+#include "../../../GL/Geometry.h"
+
 namespace gltf = tinygltf;
 
 namespace loader {

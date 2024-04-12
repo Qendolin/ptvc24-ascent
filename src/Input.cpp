@@ -3,8 +3,9 @@
 #include <algorithm>
 
 #include "Utils.h"
+#include "Window.h"
 
-Input::Input(GLFWwindow *window) : window_(window) {
+Input::Input(Window &window) : window_(window) {
     std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::Zero);
     std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::Zero);
     std::fill(std::begin(keysWrite_), std::end(keysWrite_), State::Zero);
@@ -17,6 +18,8 @@ Input::Input(GLFWwindow *window) : window_(window) {
         }
     }
 }
+
+Input::~Input() = default;
 
 void Input::pollCurrentState_() {
     stateInvalid_ = false;
@@ -73,6 +76,16 @@ void Input::update() {
     for (size_t i = 0; i < mouseButtonsWrite_.size(); i++) {
         mouseButtonsWrite_[i] &= State::ClearMask;
     }
+}
+
+void Input::captureMouse() {
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    mouseCaptured_ = true;
+}
+
+void Input::releaseMouse() {
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    mouseCaptured_ = false;
 }
 
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {

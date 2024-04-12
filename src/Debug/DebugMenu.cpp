@@ -1,16 +1,21 @@
 #include "DebugMenu.h"
 
 #include <limits>
+#include <string>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "../../Game.h"
+#include "../Game.h"
+#include "../Input.h"
+#include "../Physics/Physics.h"
 
 DebugMenu::DebugMenu() {
     frameTimes.nextMin = std::numeric_limits<float>::infinity();
     frameTimes.nextMin = -std::numeric_limits<float>::infinity();
 }
+
+DebugMenu::~DebugMenu() = default;
 
 void DebugMenu::draw() {
     if (!open) return;
@@ -22,8 +27,7 @@ void DebugMenu::draw() {
 void DebugMenu::drawDebugWindow_() {
     using namespace ImGui;
 
-    Game& game = *Game::instance;
-    ph::Physics& physics = *game.physics;
+    ph::Physics& physics = *Game::get().physics;
     Begin("Debug Menu", nullptr, 0);
     if (CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
         PushID("physics");
@@ -44,8 +48,7 @@ void DebugMenu::drawDebugWindow_() {
 void DebugMenu::drawPerformanceWindow_() {
     using namespace ImGui;
 
-    Game& game = *Game::instance;
-    Input& input = *game.input;
+    Input& input = *Game::get().input;
 
     Begin("Performance", nullptr, 0);
     frameTimes.update(input.timeDelta());

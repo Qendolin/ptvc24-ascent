@@ -33,7 +33,7 @@ class DebugMenu {
     // `true` will draw the debug menu. `false` will hide it
     bool open = false;
     DebugMenu();
-    ~DebugMenu() {}
+    ~DebugMenu();
 
     void draw();
 };

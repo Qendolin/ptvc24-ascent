@@ -5,7 +5,7 @@
 
 namespace gl {
 
-void GLObject::checkDestroyed() {
+GLObject::~GLObject() {
     if (id_ == 0) return;
 
     std::string label = gl::getObjectLabel(type_, id_);

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "../GL/Geometry.h"
+#include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 
 namespace ph {
@@ -58,10 +60,10 @@ DebugRendererImpl::DebugRendererImpl() {
 }
 
 DebugRendererImpl::~DebugRendererImpl() {
-    vao_->destroy();
-    vbo_->destroy();
-    ebo_->destroy();
-    shader_->destroy();
+    delete vao_;
+    delete vbo_;
+    delete ebo_;
+    delete shader_;
 }
 
 void DebugRendererImpl::DrawLine(JPH::RVec3Arg from, JPH::RVec3Arg to, JPH::ColorArg color) {
