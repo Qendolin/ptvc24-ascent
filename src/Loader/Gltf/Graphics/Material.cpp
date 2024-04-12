@@ -12,13 +12,13 @@ gl::Texture *loadTexture(GraphicsLoadingContext &context, const gltf::TextureInf
         return nullptr;
     }
     if (texture_info.texCoord != 0) {
-        LOG("only texCoord=0 is supported");
+        LOG_WARN("only texCoord=0 is supported");
         return nullptr;
     }
     const gltf::Texture &texture = context.model.textures[texture_info.index];
     const gltf::Image &image = context.model.images[texture.source];
     if (image.bits != 8) {
-        LOG("only 8-bit images are supported");
+        LOG_WARN("only 8-bit images are supported");
         return nullptr;
     }
 

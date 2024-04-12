@@ -27,12 +27,12 @@ int main(int argc, char** argv) {
     // Note: Local time, not UTC.
 
 #ifndef NDEBUG
-    LOG("Debug build from " << __TIMESTAMP__);
+    LOG_INFO("Debug build from " << __TIMESTAMP__);
 #else
-    LOG("Release build from " << __TIMESTAMP__);
+    LOG_INFO("Release build from " << __TIMESTAMP__);
 #endif
 
-    LOG("Parsing arguments");
+    LOG_INFO("Parsing arguments");
     bool enableCompatibilityProfile = false;
     bool enableGlDebug = false;
     for (int i = 1; i < argc; i++) {
@@ -67,5 +67,5 @@ int main(int argc, char** argv) {
     }
 
     std::cerr << std::flush;
-    LOG("Exit");
+    LOG_INFO("Exit");
 }

@@ -56,7 +56,7 @@ void MainMenuScreen::draw() {
                 close();
             }
             if (nk_button_label(nk, "Settings")) {
-                LOG("Settings pressed");
+                LOG_INFO("Settings pressed");
             }
             if (nk_button_label(nk, "Quit")) {
                 glfwSetWindowShouldClose(game.window, true);

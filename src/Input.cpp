@@ -155,7 +155,7 @@ void removeCallbackFromVec(std::vector<T> &vec, Input::CallbackRegistrationID id
 
 void Input::removeCallback(CallbackRegistrationID &registration) {
     if (registration == 0) {
-        LOG("removeCallback called with invalid registration id (0)");
+        LOG_WARN("removeCallback called with invalid registration id (0)");
     }
     removeCallbackFromVec(mousePosCallbacks_, registration);
     removeCallbackFromVec(mouseButtonCallbacks_, registration);

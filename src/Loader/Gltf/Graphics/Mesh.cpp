@@ -129,7 +129,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     }
 
     if (total_vertex_count == 0 || total_element_count == 0) {
-        LOG("Mesh has no valid vertices. TODO: handle error");
+        LOG_WARN("Mesh has no valid vertices. TODO: handle error");
     }
 
     // The vector must not grow / shrink, so it is initialized to the correct size

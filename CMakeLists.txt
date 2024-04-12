@@ -86,6 +86,9 @@ if(UNIX AND NOT APPLE)
     target_include_directories(${PROJECT_NAME} PRIVATE ${X11_INCLUDE_DIR})
 endif()
 
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
+
 if(MSVC)
     # enable warnings except: 
     # 'size_t' possible loss of data, 'identifier' hides class member,  unused parameter

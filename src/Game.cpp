@@ -184,7 +184,7 @@ void Game::run() {
 
     physics->system->OptimizeBroadPhase();
 
-    LOG("Entering main loop");
+    LOG_INFO("Entering main loop");
     glfwShowWindow(window);
     input->invalidate();
     while (!glfwWindowShouldClose(window)) {
@@ -207,7 +207,7 @@ void Game::processInput_() {
 
     // Reload assets
     if (input->isKeyPress(GLFW_KEY_F5)) {
-        LOG("Reloading assets");
+        LOG_INFO("Reloading assets");
         for (const auto &callback : onUnload) {
             callback();
         }
@@ -218,20 +218,20 @@ void Game::processInput_() {
 
     // Pause / Unpause physics
     if (input->isKeyPress(GLFW_KEY_P)) {
-        LOG("Toggle phyics update");
+        LOG_INFO("Toggle phyics update");
         physics->setEnabled(!physics->enabled());
     }
 
     // Open Debug Menu
     if (input->isKeyPress(GLFW_KEY_F3)) {
-        LOG("Toggle Debug Menu");
+        LOG_INFO("Toggle Debug Menu");
         debugMenu_->open = !debugMenu_->open;
         debugMenu_->open ? input->releaseMouse() : input->captureMouse();
     }
 
     // Spawn shpere (Debugging)
     if (input->isKeyPress(GLFW_KEY_L)) {
-        LOG("Spawn shere");
+        LOG_INFO("Spawn shere");
         JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), ph::convert(camera->position - glm::vec3{0.0, 1.0, 0.0}), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, ph::Layers::MOVING);
         sphere_settings.mRestitution = 0.2f;
         physics->interface().CreateAndAddBody(sphere_settings, JPH::EActivation::Activate);

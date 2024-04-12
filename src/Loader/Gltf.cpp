@@ -22,7 +22,7 @@ const gltf::Model gltf(const std::string filename) {
     std::string err;
     std::string warn;
 
-    LOG("Loading GLTF: " + filename);
+    LOG_INFO("Loading GLTF: " + filename);
 
     std::string ext = filename.substr(filename.find_last_of("."));
     bool ok = false;
@@ -35,11 +35,11 @@ const gltf::Model gltf(const std::string filename) {
     }
 
     if (!warn.empty()) {
-        LOG("Warning: " + warn);
+        LOG_WARN("Warning: " + warn);
     }
 
     if (!err.empty()) {
-        LOG("Error: " + err);
+        LOG_WARN("Error: " + err);
     }
 
     if (!ok) {

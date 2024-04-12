@@ -67,7 +67,7 @@ ImGuiBackend::ImGuiBackend() {
 
 ImGuiBackend::~ImGuiBackend() {
     if (hasCallbacksBound_) {
-        LOG("Forgot to call unbind, callbacks are stil registered!");
+        LOG_WARN("Forgot to call unbind, callbacks are stil registered!");
     }
 
     ImGui::DestroyContext();

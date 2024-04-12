@@ -15,12 +15,12 @@ void CheckpointEntity::init() {
     });
 
     std::string next = base.prop<std::string>("next_checkpoint", "");
-    LOG("Next of " + base.name() + " is " + next);
+    LOG_DEBUG("Next of " + base.name() + " is " + next);
 }
 
 void CheckpointEntity::onTriggerActivated() {
     Trigger trigger = sensor.physics().trigger();
-    LOG("Triggered action " + trigger.action + "(" + trigger.argument + ") on checkpoint '" + base.name() + "'");
+    LOG_DEBUG("Triggered action " + trigger.action + "(" + trigger.argument + ") on checkpoint '" + base.name() + "'");
 }
 
 void CheckpointEntity::update() {
