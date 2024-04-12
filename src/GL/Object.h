@@ -11,6 +11,7 @@ class GLObject {
    protected:
     GLenum type_ = GL_NONE;
     GLuint id_ = 0;
+    std::string debugLabel_ = "";
 
     /**
      * @param type One of the namespaces in the table [here](https://www.khronos.org/opengl/wiki/OpenGL_Object#Object_names).
@@ -31,7 +32,11 @@ class GLObject {
 
     virtual ~GLObject();
 
-    virtual void setDebugLabel(const std::string& label) = 0;
+    virtual void setDebugLabel(const std::string& label);
+
+    std::string debugLabel() {
+        return debugLabel_;
+    }
 
     GLuint id() const {
         return id_;

@@ -277,7 +277,7 @@ void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
 
     size_t buffer_size = data_.size() * sizeof(float);
     if (vbo_->grow(buffer_size)) {
-        vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * sizeof(float));
+        vao_->reBindBuffer(0, *vbo_);
     }
     vbo_->write(0, data_.data(), buffer_size);
 

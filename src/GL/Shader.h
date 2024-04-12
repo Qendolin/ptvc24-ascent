@@ -29,8 +29,6 @@ class ShaderProgram : public GLObject {
 
     ShaderProgram(ShaderProgram&&) noexcept = default;
 
-    void setDebugLabel(const std::string& label) override;
-
     std::string source() const;
 
     GLenum stage() const;

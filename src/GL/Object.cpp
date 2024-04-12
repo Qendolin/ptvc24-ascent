@@ -15,7 +15,12 @@ GLObject::~GLObject() {
         labelString = " label='" + label + "'";
     }
 
-    std::cerr << "GL " << gl::getObjectNamespaceString(type_) << " Object id=" << std::to_string(id_) << labelString << " not destroyed!" << std::endl;
+    LOG_WARN("GL " << gl::getObjectNamespaceString(type_) << " Object id=" << std::to_string(id_) << labelString << " not destroyed!");
+}
+
+void GLObject::setDebugLabel(const std::string& label) {
+    debugLabel_ = label;
+    glObjectLabel(type_, id_, -1, label.c_str());
 }
 
 void GLObject::track_() {

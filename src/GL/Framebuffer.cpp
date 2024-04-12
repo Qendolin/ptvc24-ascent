@@ -22,10 +22,6 @@ Renderbuffer::~Renderbuffer() {
     }
 }
 
-void Renderbuffer::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_RENDERBUFFER, id_, -1, label.c_str());
-}
-
 void Renderbuffer::bind() const {
     manager->bindRenderbuffer(id_);
 }
@@ -61,10 +57,6 @@ Framebuffer::~Framebuffer() {
         untrack_();
         id_ = 0;
     }
-}
-
-void Framebuffer::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_FRAMEBUFFER, id_, -1, label.c_str());
 }
 
 void Framebuffer::bindTargets(const std::vector<int>& indices) {

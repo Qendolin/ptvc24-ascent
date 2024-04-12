@@ -14,13 +14,13 @@ JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, c
     JPH::IndexedTriangleList triangles;
 
     if (mesh.primitives.size() > 1) {
-        // Just a warning
-        std::cerr << "Physics Mesh contains more than one primitive" << std::endl;
+        // Just a warning, not an issue
+        LOG_WARN("Physics Mesh contains more than one primitive");
     }
 
     for (const gltf::Primitive &primitive : mesh.primitives) {
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES) {
-            std::cerr << "Unsupported primitive mode " << std::to_string(primitive.mode) << std::endl;
+            LOG_WARN("Unsupported primitive mode " << std::to_string(primitive.mode));
             continue;
         }
 
@@ -33,33 +33,33 @@ JPH::RefConst<JPH::MeshShapeSettings> loadMesh(PhysicsLoadingContext &context, c
         }
 
         if (position_access_ref < 0) {
-            std::cerr << "Primitive is missing a position attribute" << std::endl;
+            LOG_WARN("Primitive is missing a position attribute");
             continue;
         }
 
         const gltf::Accessor &position_access = model.accessors[position_access_ref];
         const gltf::Accessor &index_access = model.accessors[primitive.indices];
         if (position_access.componentType != GL_FLOAT || position_access.type != TINYGLTF_TYPE_VEC3 || position_access.sparse.isSparse || position_access.bufferView < 0) {
-            std::cerr << "Primitive position attribute has invalid access" << std::endl;
+            LOG_WARN("Primitive position attribute has invalid access");
             continue;
         }
         if ((index_access.componentType != GL_UNSIGNED_SHORT && index_access.componentType != GL_UNSIGNED_INT) || index_access.type != TINYGLTF_TYPE_SCALAR || index_access.sparse.isSparse || index_access.bufferView < 0) {
-            std::cerr << "Primitive index has invalid access" << std::endl;
+            LOG_WARN("Primitive index has invalid access");
             continue;
         }
         if (index_access.count % 3 != 0) {
-            std::cerr << "Primitive index count not a multiple of three" << std::endl;
+            LOG_WARN("Primitive index count not a multiple of three");
             continue;
         }
 
         const gltf::BufferView &position_view = model.bufferViews[position_access.bufferView];
         const gltf::BufferView &index_view = model.bufferViews[index_access.bufferView];
         if (position_view.target != GL_ARRAY_BUFFER || position_view.byteStride != 0) {
-            std::cerr << "Primitive position attribute has invalid view" << std::endl;
+            LOG_WARN("Primitive position attribute has invalid view");
             continue;
         }
         if (index_view.target != GL_ELEMENT_ARRAY_BUFFER || index_view.byteStride != 0) {
-            std::cerr << "Primitive index has invalid view" << std::endl;
+            LOG_WARN("Primitive index has invalid view");
             continue;
         }
 

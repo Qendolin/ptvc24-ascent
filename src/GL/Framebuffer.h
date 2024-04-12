@@ -18,8 +18,6 @@ class Renderbuffer : public GLObject {
 
     Renderbuffer(Renderbuffer&&) noexcept = default;
 
-    void setDebugLabel(const std::string& label) override;
-
     void bind() const;
 
     void allocate(GLenum internalFormat, uint32_t width, uint32_t height);
@@ -43,8 +41,6 @@ class Framebuffer : public GLObject {
     virtual ~Framebuffer();
 
     Framebuffer(Framebuffer&&) noexcept = default;
-
-    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawBuffers.xhtml)
     void bindTargets(const std::vector<int>& indices);

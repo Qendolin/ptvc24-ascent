@@ -19,9 +19,9 @@
 #define LOG_DEBUG(msg) \
     std::cout << "[DBG " << __FILENAME__ << ":" << __LINE__ << "]: " << msg << std::endl
 #else
-#define LOG_DEBUG(msg) \
-    do {               \
-    } while (0)
+// clang-format off
+#define LOG_DEBUG(msg) do {} while (0)
+// clang-format on
 #endif
 
 #define PANIC(msg) \

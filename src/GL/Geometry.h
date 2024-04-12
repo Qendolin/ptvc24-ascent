@@ -12,19 +12,15 @@ class Buffer : public GLObject {
    private:
     size_t size_ = 0;
     uint32_t flags_ = 0;
-    bool immutable_ = false;
     bool isMapped_ = false;
 
     void allocate_(const void* data, size_t size, GLbitfield flags);
-    void allocateMutable_(const void* data, size_t size, GLenum usage);
 
    public:
     Buffer();
     virtual ~Buffer();
 
     Buffer(Buffer&&) noexcept = default;
-
-    void setDebugLabel(const std::string& label) override;
 
     // @returns allocated buffer size in bytes
     size_t size() const;
@@ -35,24 +31,15 @@ class Buffer : public GLObject {
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferStorage.xhtml)
     void allocateEmpty(size_t size, GLbitfield flags);
 
-    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml)
-    void allocateEmptyMutable(size_t size, GLenum usage);
-
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferStorage.xhtml)
     template <typename T>
     void allocate(const T* data, size_t size, GLbitfield flags) {
         allocate_(static_cast<const void*>(data), size, flags);
     }
 
-    // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml)
-    template <typename T>
-    void allocateMutable(const T* data, size_t size, GLenum usage) {
-        allocateMutable_(static_cast<const void*>(data), size, flags_);
-    }
-
     /**
      * Grows the buffer to at least the spcified size.
-     * It the buffer was allocated immutable it will get a new id and must be reattached to any vaos if it gorws.
+     * The must be reattached to any vaos if it gorws!
      * @param size size in bytes
      * @returns `true` if the buffer did grow.
      */
@@ -104,8 +91,6 @@ class VertexArray : public GLObject {
     virtual ~VertexArray();
 
     VertexArray(VertexArray&&) noexcept = default;
-
-    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindVertexArray.xhtml)
     void bind() const;

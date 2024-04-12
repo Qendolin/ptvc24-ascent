@@ -17,13 +17,13 @@ void traceCallback(const char *fmt, ...) {
     std::vsnprintf(buffer, sizeof(buffer), fmt, list);
     va_end(list);
 
-    std::cout << buffer << std::endl;
+    std::cout << "[JPH]: " << buffer << std::endl;
 }
 
 #ifdef JPH_ENABLE_ASSERTS
 // Callback for asserts, connect this to your own assert handler if you have one
 bool assertFailedCallback(const char *expression, const char *message, const char *file, uint32_t line) {
-    std::cout << file << ":" << line << ": (" << expression << ") " << (message != nullptr ? message : "") << std::endl;
+    std::cout << "[JPH]: " << file << ":" << line << ": (" << expression << ") " << (message != nullptr ? message : "") << std::endl;
 
     // Breakpoint
     return true;
@@ -45,10 +45,10 @@ DebugRendererImpl::DebugRendererImpl() {
 
     vbo_ = new gl::Buffer();
     vbo_->setDebugLabel("physics/debug/vbo");
-    vbo_->allocateEmptyMutable(sizeof(Vertex) * 8192, GL_DYNAMIC_DRAW);
+    vbo_->allocateEmpty(sizeof(Vertex) * 1024 * 16, GL_DYNAMIC_STORAGE_BIT);
     ebo_ = new gl::Buffer();
     ebo_->setDebugLabel("physics/debug/ebo");
-    ebo_->allocateEmptyMutable(sizeof(uint32_t) * 8192, GL_DYNAMIC_DRAW);
+    ebo_->allocateEmpty(sizeof(uint32_t) * 1024 * 64, GL_DYNAMIC_STORAGE_BIT);
 
     vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
     vao_->bindElementBuffer(*ebo_);
@@ -99,7 +99,9 @@ JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Vertex *v
                                                                  const uint32_t *indices, int index_count) {
     size_t length = vertex_count * sizeof(Vertex);
     size_t vertex = vboWriteOffset_ / sizeof(Vertex);
-    vbo_->grow(vboWriteOffset_ + length);
+    if (vbo_->grow(vboWriteOffset_ + length)) {
+        vao_->reBindBuffer(0, *vbo_);
+    }
     vbo_->write(vboWriteOffset_, vertices, length);
     vboWriteOffset_ += length;
 
@@ -107,7 +109,9 @@ JPH::DebugRenderer::Batch DebugRendererImpl::CreateTriangleBatch(const Vertex *v
     BatchImpl *batch = new BatchImpl(index, vertex, index_count);
 
     length = index_count * sizeof(uint32_t);
-    ebo_->grow(eboWriteOffset_ + length);
+    if (ebo_->grow(eboWriteOffset_ + length)) {
+        vao_->bindElementBuffer(*ebo_);
+    }
     ebo_->write(eboWriteOffset_, indices, length);
     eboWriteOffset_ += length;
 
@@ -151,10 +155,9 @@ void DebugRendererImpl::Draw(glm::mat4 view_projection_matrix) {
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
     gl::manager->blendFunc(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
+    vao_->bind();
+    shader_->bind();
     for (auto &&cmd : drawQueue_) {
-        vao_->bind();
-        shader_->bind();
-
         shader_->vertexStage()->setUniform("u_model_mat", cmd.modelMatrix);
         shader_->vertexStage()->setUniform("u_color", cmd.modelColor);
 

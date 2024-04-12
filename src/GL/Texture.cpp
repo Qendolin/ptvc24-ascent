@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "../Utils.h"
 #include "StateManager.h"
 
 namespace gl {
@@ -24,10 +25,6 @@ Texture::~Texture() {
 
 Texture* Texture::as(GLenum type) {
     return new Texture(type, id_);
-}
-
-void Texture::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_TEXTURE, id_, -1, label.c_str());
 }
 
 GLenum Texture::type() const {
@@ -71,7 +68,7 @@ int Texture::dimensions() const {
         case GL_TEXTURE_CUBE_MAP:
             return 3;
         default:
-            std::cerr << "invalid dimension for texture " << std::to_string(id_) << ": " << std::to_string(type_);
+            LOG_WARN("invalid dimension for texture " << std::to_string(id_) << ": " << std::to_string(type_));
             return 0;
     }
 }
@@ -169,10 +166,6 @@ Sampler::~Sampler() {
         untrack_();
         id_ = 0;
     }
-}
-
-void Sampler::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_SAMPLER, id_, -1, label.c_str());
 }
 
 void Sampler::bind(int unit) const {

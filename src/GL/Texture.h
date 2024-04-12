@@ -34,8 +34,6 @@ class Texture : public GLObject {
     // Useful for 2D array textures or cubemaps.
     Texture* as(GLenum type);
 
-    void setDebugLabel(const std::string& label) override;
-
     GLenum type() const;
 
     // @returns `1`, `2` or `3` depending on the type
@@ -170,8 +168,6 @@ class Sampler : public GLObject {
     virtual ~Sampler();
 
     Sampler(Sampler&&) noexcept = default;
-
-    void setDebugLabel(const std::string& label) override;
 
     void bind(int unit) const;
 

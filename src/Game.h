@@ -60,7 +60,6 @@ class Game {
     std::vector<std::function<void()>> onLoad = {};
     std::vector<std::function<void()>> onUnload = {};
 
-    int viewportSize[2] = {1600, 900};
     std::unique_ptr<Camera> camera;
 
     // A quad with dimensions (-1,-1) to (1,1)

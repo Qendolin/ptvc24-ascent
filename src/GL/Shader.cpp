@@ -53,10 +53,6 @@ std::string ShaderProgram::source() const {
     return sourceModified_;
 }
 
-void ShaderProgram::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_PROGRAM, id_, -1, label.c_str());
-}
-
 GLenum ShaderProgram::stage() const {
     return stage_;
 }
@@ -104,7 +100,7 @@ GLint ShaderProgram::getUniformLocation(const std::string& name) {
     uniformLocations_[name] = location;
 
     if (location == -1) {
-        std::cerr << "Could not get location of " << name << std::endl;
+        LOG_WARN("Could not get location of " << name);
     }
 
     return location;
@@ -230,7 +226,8 @@ ShaderProgram* ShaderPipeline::fragmentStage() const {
 }
 
 void ShaderPipeline::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_PROGRAM_PIPELINE, id_, -1, label.c_str());
+    GLObject::setDebugLabel(label);
+
     for (auto&& program : ownedPrograms_) {
         if (label == "") {
             program->setDebugLabel("");

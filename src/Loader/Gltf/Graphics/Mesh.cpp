@@ -18,7 +18,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     uint32_t total_vertex_count = 0, total_element_count = 0, chunk_count = 0;
     for (const gltf::Primitive &primitive : mesh.primitives) {
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES) {
-            std::cerr << "Unsupported primitive mode " << std::to_string(primitive.mode) << std::endl;
+            LOG_WARN("Unsupported primitive mode " << std::to_string(primitive.mode));
             continue;
         }
 
@@ -39,7 +39,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         }
 
         if (position_access_ref < 0 || normal_access_ref < 0 || texcoord_access_ref < 0) {
-            std::cerr << "Primitive is missing a required attribute" << std::endl;
+            LOG_WARN("Primitive is missing a required attribute");
             continue;
         }
 
@@ -49,23 +49,23 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         const gltf::Accessor &index_access = model.accessors[primitive.indices];
 
         if (position_access.componentType != GL_FLOAT || position_access.type != TINYGLTF_TYPE_VEC3 || position_access.sparse.isSparse || position_access.bufferView < 0) {
-            std::cerr << "Primitive position attribute has invalid access" << std::endl;
+            LOG_WARN("Primitive position attribute has invalid access");
             continue;
         }
         if (normal_access.componentType != GL_FLOAT || normal_access.type != TINYGLTF_TYPE_VEC3 || normal_access.sparse.isSparse || normal_access.bufferView < 0) {
-            std::cerr << "Primitive normal attribute has invalid access" << std::endl;
+            LOG_WARN("Primitive normal attribute has invalid access");
             continue;
         }
         if (texcoord_access.componentType != GL_FLOAT || texcoord_access.type != TINYGLTF_TYPE_VEC2 || texcoord_access.sparse.isSparse || texcoord_access.bufferView < 0) {
-            std::cerr << "Primitive texcoord attribute has invalid access" << std::endl;
+            LOG_WARN("Primitive texcoord attribute has invalid access");
             continue;
         }
         if ((index_access.componentType != GL_UNSIGNED_SHORT && index_access.componentType != GL_UNSIGNED_INT) || index_access.type != TINYGLTF_TYPE_SCALAR || index_access.sparse.isSparse || index_access.bufferView < 0) {
-            std::cerr << "Primitive index has invalid access" << std::endl;
+            LOG_WARN("Primitive index has invalid access");
             continue;
         }
         if (index_access.count % 3 != 0) {
-            std::cerr << "Primitive index count not a multiple of three" << std::endl;
+            LOG_WARN("Primitive index count not a multiple of three");
             continue;
         }
 
@@ -75,19 +75,19 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         const gltf::BufferView &index_view = model.bufferViews[index_access.bufferView];
 
         if (position_view.target != GL_ARRAY_BUFFER || position_view.byteStride != 0) {
-            std::cerr << "Primitive position attribute has invalid view" << std::endl;
+            LOG_WARN("Primitive position attribute has invalid view");
             continue;
         }
         if (normal_view.target != GL_ARRAY_BUFFER || normal_view.byteStride != 0) {
-            std::cerr << "Primitive normal attribute has invalid view" << std::endl;
+            LOG_WARN("Primitive normal attribute has invalid view");
             continue;
         }
         if (texcoord_view.target != GL_ARRAY_BUFFER || texcoord_view.byteStride != 0) {
-            std::cerr << "Primitive texcoord attribute has invalid view" << std::endl;
+            LOG_WARN("Primitive texcoord attribute has invalid view");
             continue;
         }
         if (index_view.target != GL_ELEMENT_ARRAY_BUFFER || index_view.byteStride != 0) {
-            std::cerr << "Primitive index has invalid view" << std::endl;
+            LOG_WARN("Primitive index has invalid view");
             continue;
         }
 
@@ -97,7 +97,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
 
         // TODO: support int and short indices
         if (index_size != 2) {
-            std::cerr << "Primitive does not have short indices" << std::endl;
+            LOG_WARN("Primitive does not have short indices");
             continue;
         }
 
