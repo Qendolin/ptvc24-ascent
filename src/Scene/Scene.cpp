@@ -14,7 +14,7 @@ void Properties::checkKeyExists_(const std::string& key) const {
         PANIC("Property " + key + " does not exist");
 }
 
-Scene::Scene(const loader::Scene& scene, NodeEntityFactory& factory) {
+Scene::Scene(const loader::SceneData& scene, NodeEntityFactory& factory) {
     transforms.reserve(scene.count());
     nodes.reserve(scene.count());
     // this will allocate more than needed
@@ -29,7 +29,7 @@ Scene::~Scene() {
     }
 }
 
-int32_t Scene::convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
+int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
     int32_t index = nodes.size();
     Node& result = nodes.emplace_back();
     result = {

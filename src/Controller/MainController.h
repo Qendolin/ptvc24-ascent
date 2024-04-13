@@ -9,7 +9,7 @@ class MaterialBatchRenderer;
 class SkyRenderer;
 class Camera;
 namespace loader {
-class Scene;
+class SceneData;
 }
 namespace scene {
 class Scene;
@@ -21,8 +21,8 @@ class MainController : public GameController {
     std::unique_ptr<MaterialBatchRenderer> materialBatchRenderer;
     std::unique_ptr<SkyRenderer> skyRenderer;
 
-    std::unique_ptr<loader::Scene> loaderScene;
-    std::unique_ptr<scene::Scene> sceneScene;
+    std::unique_ptr<loader::SceneData> sceneData;
+    std::unique_ptr<scene::Scene> scene;
 
     /**
      * Draw the on screen hud (timer, score, etc.)

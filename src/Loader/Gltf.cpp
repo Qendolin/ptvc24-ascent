@@ -49,7 +49,7 @@ const gltf::Model gltf(const std::string filename) {
     return model;
 }
 
-Graphics::Graphics(
+GraphicsData::GraphicsData(
     std::vector<Instance> &&instances,
     std::vector<Material> &&materials,
     int32_t default_material,
@@ -68,23 +68,23 @@ Graphics::Graphics(
     instanceAttributesData_ = instance_attributes->mapRange<InstanceAttributes>(GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 }
 
-Graphics::~Graphics() = default;
+GraphicsData::~GraphicsData() = default;
 
-void Graphics::bind() const {
+void GraphicsData::bind() const {
     vao_->bind();
     drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);
 }
 
-InstanceAttributes *Graphics::attributes(int32_t index) const {
+InstanceAttributes *GraphicsData::attributes(int32_t index) const {
     return &instanceAttributesData_[index];
 }
 
-Physics::Physics(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
+PhysicsData::PhysicsData(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
 
-Physics::~Physics() = default;
+PhysicsData::~PhysicsData() = default;
 
 // TODO: move this somewhere else, should not be part of this class
-void Physics::create(ph::Physics &physics) {
+void PhysicsData::create(ph::Physics &physics) {
     for (size_t i = 0; i < instances.size(); i++) {
         PhysicsInstance &instance = instances[i];
         JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
@@ -93,12 +93,12 @@ void Physics::create(ph::Physics &physics) {
     }
 }
 
-Scene *scene(const gltf::Model &model) {
+SceneData *scene(const gltf::Model &model) {
     std::map<std::string, loader::Node> nodes = loadNodeTree(model);
-    Graphics g = loadGraphics(model, nodes);
-    Physics ph = loadPhysics(model, nodes);
+    GraphicsData g = loadGraphics(model, nodes);
+    PhysicsData ph = loadPhysics(model, nodes);
     std::string name = model.scenes[model.defaultScene].name;
-    return new Scene(name, std::move(g), std::move(ph), std::move(nodes));
+    return new SceneData(name, std::move(g), std::move(ph), std::move(nodes));
 }
 
 namespace util {
@@ -121,7 +121,7 @@ bool getJsonValue<bool>(const gltf::Value &object, const std::string &key) {
 
 }  // namespace util
 
-Scene::Scene(std::string name, loader::Graphics &&graphics, loader::Physics &&physics, std::map<std::string, loader::Node> &&nodes)
+SceneData::SceneData(std::string name, loader::GraphicsData &&graphics, loader::PhysicsData &&physics, std::map<std::string, loader::Node> &&nodes)
     : name(name),
       graphics(std::move(graphics)),
       physics(std::move(physics)),

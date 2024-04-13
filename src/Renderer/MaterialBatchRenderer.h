@@ -4,7 +4,7 @@
 #include "../GL/Declarations.h"
 class Camera;
 namespace loader {
-class Graphics;
+class GraphicsData;
 }  // namespace loader
 #pragma endregion
 
@@ -16,5 +16,5 @@ class MaterialBatchRenderer {
     MaterialBatchRenderer();
     ~MaterialBatchRenderer();
 
-    void render(Camera &camera, loader::Graphics &graphics);
+    void render(Camera &camera, loader::GraphicsData &graphics);
 };

@@ -123,7 +123,7 @@ void loadInstances(PhysicsLoadingContext &context, const gltf::Scene &scene) {
     });
 }
 
-Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
+PhysicsData loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     PhysicsLoadingContext context(model, nodes);
 
     loadMeshes(context);
@@ -131,7 +131,7 @@ Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node
     const gltf::Scene &scene = context.model.scenes[context.model.defaultScene];
     loadInstances(context, scene);
 
-    Physics result = {
+    PhysicsData result = {
         context.instances,
     };
     return result;

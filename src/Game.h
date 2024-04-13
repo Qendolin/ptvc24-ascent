@@ -25,7 +25,7 @@ class ImGuiBackend;
 }  // namespace ui
 
 namespace loader {
-class Scene;
+class SceneData;
 }
 
 namespace scene {

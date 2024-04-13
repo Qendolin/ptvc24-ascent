@@ -27,16 +27,16 @@ void MainController::load() {
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
     skyRenderer = std::make_unique<SkyRenderer>();
 
-    if (loaderScene == nullptr) {
+    if (sceneData == nullptr) {
         const tinygltf::Model &model = loader::gltf("assets/models/test_course.glb");
-        loaderScene = std::unique_ptr<loader::Scene>(loader::scene(model));
-        loaderScene->physics.create(*game.physics);
+        sceneData = std::unique_ptr<loader::SceneData>(loader::scene(model));
+        sceneData->physics.create(*game.physics);
 
         scene::NodeEntityFactory factory;
         scene::registerEntityTypes(factory);
-        sceneScene = std::make_unique<scene::Scene>(*loaderScene, factory);
-        sceneScene->entities.push_back(new CharacterController(*game.camera));
-        sceneScene->callEntityInit();
+        scene = std::make_unique<scene::Scene>(*sceneData, factory);
+        scene->entities.push_back(new CharacterController(*game.camera));
+        scene->callEntityInit();
 
         game.physics->system->OptimizeBroadPhase();
     }
@@ -59,13 +59,13 @@ void MainController::update() {
     // Update and step physics
     game.physics->update(game.input->timeDelta());
     if (game.physics->isNextStepDue()) {
-        sceneScene->callEntityPrePhysicsUpdate();
+        scene->callEntityPrePhysicsUpdate();
         game.physics->step();
-        sceneScene->callEntityPostPhysicsUpdate();
+        scene->callEntityPostPhysicsUpdate();
     }
 
     // Update entities
-    sceneScene->callEntityUpdate();
+    scene->callEntityUpdate();
 }
 
 void MainController::drawHud() {
@@ -87,6 +87,6 @@ void MainController::drawHud() {
 }
 
 void MainController::render() {
-    materialBatchRenderer->render(*game.camera, loaderScene->graphics);
+    materialBatchRenderer->render(*game.camera, sceneData->graphics);
     skyRenderer->render(*game.camera);
 }

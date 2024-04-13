@@ -137,7 +137,7 @@ struct MaterialBatch {
 /**
  * Contains all the graphics instances and their related data.
  */
-class Graphics {
+class GraphicsData {
    private:
     std::unique_ptr<gl::VertexArray> vao_;
     std::unique_ptr<gl::Buffer> drawCommands_;
@@ -155,11 +155,11 @@ class Graphics {
     std::vector<Mesh> meshes;
     std::vector<MaterialBatch> batches;
 
-    Graphics(Graphics const &) = delete;
-    Graphics &operator=(Graphics const &) = delete;
-    Graphics(Graphics &&) noexcept = default;
+    GraphicsData(GraphicsData const &) = delete;
+    GraphicsData &operator=(GraphicsData const &) = delete;
+    GraphicsData(GraphicsData &&) noexcept = default;
 
-    Graphics(
+    GraphicsData(
         std::vector<Instance> &&instances,
         std::vector<Material> &&materials,
         int32_t default_material,
@@ -169,7 +169,7 @@ class Graphics {
         gl::Buffer *instance_attributes,
         gl::Buffer *draw_commands);
 
-    ~Graphics();
+    ~GraphicsData();
 
     // bind the vao and draw commands
     void bind() const;
@@ -199,16 +199,16 @@ struct PhysicsInstance {
 /**
  * Contains all the physics instances.
  */
-class Physics {
+class PhysicsData {
    public:
     std::vector<PhysicsInstance> instances;
 
-    Physics(Physics const &) = delete;
-    Physics &operator=(Physics const &) = delete;
-    Physics(Physics &&) = default;
+    PhysicsData(PhysicsData const &) = delete;
+    PhysicsData &operator=(PhysicsData const &) = delete;
+    PhysicsData(PhysicsData &&) = default;
 
-    Physics(std::vector<PhysicsInstance> &instances);
-    ~Physics();
+    PhysicsData(std::vector<PhysicsInstance> &instances);
+    ~PhysicsData();
 
     // TODO: this is temporary
     void create(ph::Physics &physics);
@@ -258,7 +258,7 @@ struct Node {
  * Represents a scene loaded from a gltf file.
  * It contains a hierarchy of nodes and the associated physics and graphics.
  */
-class Scene {
+class SceneData {
    private:
     std::map<std::string, loader::Node> nodes_;
     const loader::Node &root_;
@@ -266,13 +266,13 @@ class Scene {
    public:
     std::string name = "";
 
-    loader::Graphics graphics;
-    loader::Physics physics;
+    loader::GraphicsData graphics;
+    loader::PhysicsData physics;
 
-    Scene(Scene const &) = delete;
-    Scene &operator=(Scene const &) = delete;
+    SceneData(SceneData const &) = delete;
+    SceneData &operator=(SceneData const &) = delete;
 
-    Scene(std::string name, loader::Graphics &&graphics, loader::Physics &&physics, std::map<std::string, loader::Node> &&nodes);
+    SceneData(std::string name, loader::GraphicsData &&graphics, loader::PhysicsData &&physics, std::map<std::string, loader::Node> &&nodes);
 
     // @return the root node
     const loader::Node &root() const {
@@ -318,18 +318,18 @@ const gltf::Model gltf(const std::string filename);
  * @param model the gltf model
  * @param nodes the loaded node hierarchy
  */
-Graphics loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
+GraphicsData loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
 
 /**
  * Load physics instances from the gltf model.
  * @param model the gltf model
  * @param nodes the loaded node hierarchy
  */
-Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
+PhysicsData loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes);
 
 std::map<std::string, loader::Node> loadNodeTree(const gltf::Model &model);
 
-Scene *scene(const gltf::Model &model);
+SceneData *scene(const gltf::Model &model);
 
 namespace util {
 

@@ -18,7 +18,7 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete shader;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::Graphics &graphics) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);

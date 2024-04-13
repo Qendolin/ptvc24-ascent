@@ -13,7 +13,7 @@
 
 #pragma region ForwardDecl
 namespace loader {
-class Scene;
+class SceneData;
 struct Node;
 struct InstanceAttributes;
 }  // namespace loader
@@ -94,7 +94,7 @@ class Entity;
 
 class Scene {
    private:
-    int32_t convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
+    int32_t convertNodes_(const loader::SceneData& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
 
    public:
     std::vector<Node> nodes;
@@ -103,7 +103,7 @@ class Scene {
     std::vector<Transform> transforms;
     std::vector<Entity*> entities;
 
-    Scene(const loader::Scene& scene, NodeEntityFactory& factory);
+    Scene(const loader::SceneData& scene, NodeEntityFactory& factory);
 
     ~Scene();
 

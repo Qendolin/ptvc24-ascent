@@ -186,7 +186,7 @@ void loadInstances(GraphicsLoadingContext &context, const gltf::Scene &scene) {
     });
 }
 
-Graphics loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
+GraphicsData loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     GraphicsLoadingContext context(model, nodes);
 
     loadMaterials(context);
@@ -202,7 +202,7 @@ Graphics loadGraphics(const gltf::Model &model, std::map<std::string, loader::No
 
     createBatches(context);
 
-    Graphics result(
+    GraphicsData result(
         std::move(context.instances),
         std::move(context.materials),
         context.defaultMaterial,
