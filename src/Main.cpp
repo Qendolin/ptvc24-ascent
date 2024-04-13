@@ -54,8 +54,9 @@ int main(int argc, char** argv) {
         initializeOpenGL(enableGlDebug);
 
         Game* game = new Game(window);
-        game->setup();
+        game->load();
         game->run();
+        game->unload();
         delete game;
 
         printNotDeletedOpenGLObjects();

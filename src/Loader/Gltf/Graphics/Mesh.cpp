@@ -2,6 +2,7 @@
 
 //
 #include "../../../GL/Geometry.h"
+#include "../../../Utils.h"
 
 namespace gltf = tinygltf;
 

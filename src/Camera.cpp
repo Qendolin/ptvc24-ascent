@@ -3,9 +3,8 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
-Camera::Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 position, glm::vec3 angles) {
+Camera::Camera(float fov, float near_plane, glm::vec3 position, glm::vec3 angles) {
     this->fov_ = fov;
-    this->viewportSize_ = viewport_size;
     this->nearPlane_ = near_plane;
     this->position = position;
     this->angles = angles;

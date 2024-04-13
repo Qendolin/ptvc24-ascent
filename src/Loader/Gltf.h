@@ -14,10 +14,10 @@
 #include <limits>
 #include <ranges>
 
+#include "../GL/Declarations.h"
 #include "../GL/Indirect.h"
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
-#include "../Utils.h"
 #include "Loader.h"
 
 namespace gltf = tinygltf;
@@ -169,7 +169,7 @@ class Graphics {
         gl::Buffer *instance_attributes,
         gl::Buffer *draw_commands);
 
-    ~Graphics() = default;
+    ~Graphics();
 
     // bind the vao and draw commands
     void bind() const;
@@ -207,17 +207,11 @@ class Physics {
     Physics &operator=(Physics const &) = delete;
     Physics(Physics &&) = default;
 
-    Physics(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
+    Physics(std::vector<PhysicsInstance> &instances);
+    ~Physics();
 
     // TODO: this is temporary
-    void create(ph::Physics &physics) {
-        for (size_t i = 0; i < instances.size(); i++) {
-            PhysicsInstance &instance = instances[i];
-            JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
-            if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
-            instance.id = id;
-        }
-    }
+    void create(ph::Physics &physics);
 };
 
 /**

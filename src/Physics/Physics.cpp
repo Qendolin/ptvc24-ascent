@@ -167,7 +167,7 @@ float Physics::partialTicks() const {
     return std::clamp(updateTimer_ / UPDATE_INTERVAL, 0.0f, 1.0f);
 }
 
-void Physics::debugDraw(glm::mat4 view_projection_matrix) {
+void Physics::debugRender(glm::mat4 view_projection_matrix) {
     if (!debugDrawEnabled_) return;
 
 #ifdef JPH_DEBUG_RENDERER

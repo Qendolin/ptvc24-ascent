@@ -5,6 +5,7 @@
 
 #include "../GL/Geometry.h"
 #include "../GL/Texture.h"
+#include "../Utils.h"
 
 namespace gltf = tinygltf;
 
@@ -67,6 +68,8 @@ Graphics::Graphics(
     instanceAttributesData_ = instance_attributes->mapRange<InstanceAttributes>(GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 }
 
+Graphics::~Graphics() = default;
+
 void Graphics::bind() const {
     vao_->bind();
     drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);
@@ -74,6 +77,20 @@ void Graphics::bind() const {
 
 InstanceAttributes *Graphics::attributes(int32_t index) const {
     return &instanceAttributesData_[index];
+}
+
+Physics::Physics(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
+
+Physics::~Physics() = default;
+
+// TODO: move this somewhere else, should not be part of this class
+void Physics::create(ph::Physics &physics) {
+    for (size_t i = 0; i < instances.size(); i++) {
+        PhysicsInstance &instance = instances[i];
+        JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
+        if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
+        instance.id = id;
+    }
 }
 
 Scene *scene(const gltf::Model &model) {

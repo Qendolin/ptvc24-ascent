@@ -13,6 +13,7 @@ class TweenSystem;
 class DebugMenu;
 class Screen;
 struct Window;
+class GameController;
 
 namespace ph {
 class Physics;
@@ -37,12 +38,16 @@ class Game {
     inline static Game *instance_ = nullptr;
 
     std::unique_ptr<DebugMenu> debugMenu_;
-    std::unique_ptr<DirectBuffer> directDraw_;
+    // the controller which will get activated at the start of the next frame
+    std::unique_ptr<GameController> queuedController_;
 
-    // Called on every game loop iteration
-    void loop_();
     // Process user input
     void processInput_();
+
+    // Called every frame before `render_`
+    void update_();
+    // Called every frame after `update_`
+    void render_();
 
    public:
     // get the game instance singleton
@@ -54,25 +59,10 @@ class Game {
     std::unique_ptr<ui::ImGuiBackend> imgui;
     std::unique_ptr<Input> input;
     std::unique_ptr<TweenSystem> tween;
-
-    // Callbacks for laoding / unloading assets
-    // Doing it this way makes reloading easy
-    std::vector<std::function<void()>> onLoad = {};
-    std::vector<std::function<void()>> onUnload = {};
-
     std::unique_ptr<Camera> camera;
+    std::unique_ptr<DirectBuffer> directDraw;
 
-    // A quad with dimensions (-1,-1) to (1,1)
-    gl::VertexArray *quad = nullptr;
-
-    gl::ShaderPipeline *skyShader = nullptr;
-    gl::ShaderPipeline *pbrShader = nullptr;
-
-    Screen *screen = nullptr;
-
-    // All the stuff loaded from the gltf file (graphics and physics objects).
-    loader::Scene *scene = nullptr;
-    scene::Scene *entityScene = nullptr;
+    std::unique_ptr<GameController> controller;
 
     // prevent copy
     Game(Game const &) = delete;
@@ -82,12 +72,23 @@ class Game {
     Game(Window &window);
     ~Game();
 
-    // Load assets and such
-    void setup();
+    // Called when the game starts and when assets are reloaded
+    void load();
+
+    // Called when the game exits and when assets are reloaded
+    void unload();
 
     // Run the game until the window is closed
     void run();
 
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
+
+    /**
+     * Queue a controller to be activated next frame.
+     */
+    template <typename T>
+    void queueController() {
+        queuedController_ = std::make_unique<T>(*this);
+    }
 };

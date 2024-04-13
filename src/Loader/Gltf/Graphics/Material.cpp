@@ -2,6 +2,7 @@
 
 // later
 #include "../../../GL/Texture.h"
+#include "../../../Utils.h"
 
 namespace gltf = tinygltf;
 

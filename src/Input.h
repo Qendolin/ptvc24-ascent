@@ -149,6 +149,11 @@ class Input {
     void releaseMouse();
 
     /**
+     * @return `true` if the window is focused / selected by the user
+    */
+    bool isWindowFocused();
+
+    /**
      * @param button one of `GLFW_MOUSE_BUTTON_*`
      * @return `true` if the given button is being held down.
      */

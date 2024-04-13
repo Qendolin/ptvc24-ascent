@@ -30,7 +30,7 @@ class DirectBuffer {
     glm::vec3 normal_ = {0, 0, 0};
 
    public:
-    DirectBuffer(gl::ShaderPipeline* shader);
+    DirectBuffer();
     ~DirectBuffer();
 
     DirectBuffer(DirectBuffer const&) = delete;
@@ -174,7 +174,7 @@ class DirectBuffer {
     /**
      * Renders the buffer's contents and empties it for the next frame.
      */
-    void draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos);
+    void render(glm::mat4 view_proj_mat, glm::vec3 camera_pos);
 
     void clear();
 };

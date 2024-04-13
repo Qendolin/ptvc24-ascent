@@ -136,7 +136,8 @@ class Physics {
     // returns a factor [0;1] between the last tick and the next one.
     float partialTicks() const;
 
-    void debugDraw(glm::mat4 view_projection_matrix);
+    // render physics bodies for debugging
+    void debugRender(glm::mat4 view_projection_matrix);
 
     bool enabled() const {
         return updateEnabled_;

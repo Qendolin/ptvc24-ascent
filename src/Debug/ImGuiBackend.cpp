@@ -15,7 +15,9 @@ static ImGuiKey mapGlfwKey(int key);
 namespace ui {
 
 ImGuiBackend::ImGuiBackend() {
-    ImGui::CreateContext();
+    if (ImGui::GetCurrentContext() == nullptr)
+        PANIC("No ImGui Context");
+
     ImGuiIO& io = ImGui::GetIO();
 #ifndef NDEBUG
     io.IniFilename = INI_FILENAME;
@@ -69,8 +71,6 @@ ImGuiBackend::~ImGuiBackend() {
     if (hasCallbacksBound_) {
         LOG_WARN("Forgot to call unbind, callbacks are stil registered!");
     }
-
-    ImGui::DestroyContext();
 
     delete fontAtlas_;
     delete vao_;

@@ -34,7 +34,12 @@ glm::vec3 perpendicular(glm::vec3 v) {
     return glm::cross(v, e);
 }
 
-DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
+DirectBuffer::DirectBuffer() {
+    shader_ = new gl::ShaderPipeline(
+        {new gl::ShaderProgram("assets/shaders/direct.vert"),
+         new gl::ShaderProgram("assets/shaders/direct.frag")});
+    shader_->setDebugLabel("direct_buffer/shader");
+
     vao_ = new gl::VertexArray();
     vao_->setDebugLabel("direct_buffer/vao");
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
@@ -270,7 +275,7 @@ void DirectBuffer::unitBox() {
     quad(glm::vec3(-0.5, +0.5, +0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(-0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, -0.5));
 }
 
-void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
+void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     if (data_.empty()) {
         return;
     }

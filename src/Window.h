@@ -4,15 +4,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-
 struct GLFWwindow;
 
 struct Window {
     GLFWwindow *handle = nullptr;
 
-    // The size is the real window size minus the border and title bar
-    glm::ivec2 size = {1600, 900};
+    // The size of the content area / viewport
+    struct {
+        int x = 1600;
+        int y = 900;
+    } size;
 
     Window(GLFWwindow *handle) : handle(handle){};
 

@@ -6,7 +6,7 @@ class Camera {
    private:
     // vertical field of view, in radians
     float fov_;
-    glm::vec2 viewportSize_;
+    glm::vec2 viewportSize_ = {1600, 900};
     float nearPlane_;
 
     glm::mat4 viewMatrix_;
@@ -22,22 +22,22 @@ class Camera {
 
     /**
      * @param fov vertical field of view, in radians
-     * @param viewport_size size of the viewport area, in pixels
      * @param near_plane distance of the near plane
      * @param position position of the camera
      * @param angles orientation of the camera
      */
-    Camera(float fov, glm::vec2 viewport_size, float near_plane, glm::vec3 position, glm::vec3 angles);
+    Camera(float fov, float near_plane, glm::vec3 position, glm::vec3 angles);
     ~Camera();
 
     // Recalculate the view matrix
     void updateViewMatrix();
 
     /**
-     * @param viewport_size size of the viewport area, in pixels
+     * @param width of the viewport area, in pixels
+     * @param height of the viewport area, in pixels
      */
-    void setViewportSize(glm::vec2 viewport_size) {
-        viewportSize_ = viewport_size;
+    void setViewport(int width, int height) {
+        viewportSize_ = {width, height};
         updateProjectionMatrix_();
     }
 

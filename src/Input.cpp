@@ -88,6 +88,10 @@ void Input::releaseMouse() {
     mouseCaptured_ = false;
 }
 
+bool Input::isWindowFocused() {
+    return glfwGetWindowAttrib(window_, GLFW_FOCUSED) == GLFW_TRUE;
+}
+
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
         // set the pressed and down bit
