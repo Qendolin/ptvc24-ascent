@@ -67,7 +67,7 @@ void CharacterController::update() {
         velocity_ = moveDirection_ * AUTO_MOVE_SPEED;
     } else velocity_ = glm::vec3{0,0,0};
 
-   std::cout << "pitch of the camera would be: " << camera->angles.x << std::endl;
+  
 
     // Calculate movement input. Use the trick that in c++ we can substract booleans
     glm::vec3 move_input = {
