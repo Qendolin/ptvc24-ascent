@@ -3,9 +3,19 @@
 #define TINYGLTF_IMPLEMENTATION
 #include <tiny_gltf.h>
 
+#include "../GL/Geometry.h"
+#include "../GL/Texture.h"
+#include "../Utils.h"
+
 namespace gltf = tinygltf;
 
 namespace loader {
+
+Material::~Material() {
+    delete albedo;
+    delete occlusionMetallicRoughness;
+    delete normal;
+}
 
 const gltf::Model gltf(const std::string filename) {
     gltf::TinyGLTF loader;
@@ -13,7 +23,7 @@ const gltf::Model gltf(const std::string filename) {
     std::string err;
     std::string warn;
 
-    LOG("Loading GLTF: " + filename);
+    LOG_INFO("Loading GLTF: " + filename);
 
     std::string ext = filename.substr(filename.find_last_of("."));
     bool ok = false;
@@ -26,11 +36,11 @@ const gltf::Model gltf(const std::string filename) {
     }
 
     if (!warn.empty()) {
-        LOG("Warning: " + warn);
+        LOG_WARN("Warning: " + warn);
     }
 
     if (!err.empty()) {
-        LOG("Error: " + err);
+        LOG_WARN("Error: " + err);
     }
 
     if (!ok) {
@@ -39,7 +49,7 @@ const gltf::Model gltf(const std::string filename) {
     return model;
 }
 
-Graphics::Graphics(
+GraphicsData::GraphicsData(
     std::vector<Instance> &&instances,
     std::vector<Material> &&materials,
     int32_t default_material,
@@ -58,35 +68,37 @@ Graphics::Graphics(
     instanceAttributesData_ = instance_attributes->mapRange<InstanceAttributes>(GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 }
 
-void Graphics::bind() const {
+GraphicsData::~GraphicsData() = default;
+
+void GraphicsData::bind() const {
     vao_->bind();
     drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);
 }
 
-Graphics::~Graphics() {
-    if (vao_ != nullptr) {
-        // I admit, this is shit
-        auto tmp = vao_.release();
-        tmp->destroy();
-        vao_ = nullptr;
-    }
-    if (drawCommands_ != nullptr) {
-        auto tmp = drawCommands_.release();
-        tmp->destroy();
-        drawCommands_ = nullptr;
-    }
-}
-
-InstanceAttributes *Graphics::attributes(int32_t index) const {
+InstanceAttributes *GraphicsData::attributes(int32_t index) const {
     return &instanceAttributesData_[index];
 }
 
-Scene *scene(const gltf::Model &model) {
+PhysicsData::PhysicsData(std::vector<PhysicsInstance> &instances) : instances(std::move(instances)) {}
+
+PhysicsData::~PhysicsData() = default;
+
+// TODO: move this somewhere else, should not be part of this class
+void PhysicsData::create(ph::Physics &physics) {
+    for (size_t i = 0; i < instances.size(); i++) {
+        PhysicsInstance &instance = instances[i];
+        JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
+        if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
+        instance.id = id;
+    }
+}
+
+SceneData *scene(const gltf::Model &model) {
     std::map<std::string, loader::Node> nodes = loadNodeTree(model);
-    Graphics g = loadGraphics(model, nodes);
-    Physics ph = loadPhysics(model, nodes);
+    GraphicsData g = loadGraphics(model, nodes);
+    PhysicsData ph = loadPhysics(model, nodes);
     std::string name = model.scenes[model.defaultScene].name;
-    return new Scene(name, std::move(g), std::move(ph), std::move(nodes));
+    return new SceneData(name, std::move(g), std::move(ph), std::move(nodes));
 }
 
 namespace util {
@@ -109,7 +121,7 @@ bool getJsonValue<bool>(const gltf::Value &object, const std::string &key) {
 
 }  // namespace util
 
-Scene::Scene(std::string name, loader::Graphics &&graphics, loader::Physics &&physics, std::map<std::string, loader::Node> &&nodes)
+SceneData::SceneData(std::string name, loader::GraphicsData &&graphics, loader::PhysicsData &&physics, std::map<std::string, loader::Node> &&nodes)
     : name(name),
       graphics(std::move(graphics)),
       physics(std::move(physics)),

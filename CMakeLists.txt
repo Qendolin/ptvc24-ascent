@@ -40,11 +40,29 @@ FetchContent_Declare(
     SOURCE_SUBDIR "Build")
 FetchContent_MakeAvailable(JoltPhysics)
 
+# Include ImGui
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.90.4
+)
+FetchContent_MakeAvailable(imgui)
+include_directories(${imgui_SOURCE_DIR}/)
+set(IMGUI_INCLUDE_DIR ${imgui_SOURCE_DIR}/)
+file(GLOB IMGUI_SOURCES ${imgui_SOURCE_DIR}/*.cpp)
+file(GLOB IMGUI_HEADERS ${imgui_SOURCE_DIR}/*.h)
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui PUBLIC ${IMGUI_INCLUDE_DIR})
+# Maybe I can get this to work, but it's not really needed right now
+# set(IMGUI_USER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/UI/imconfig.h")
+# target_compile_definitions(imgui INTERFACE "-DIMGUI_USER_CONFIG=<${IMGUI_USER_CONFIG}>")
+
 set(LINK_LIBRARIES
     debug glfw3d optimized glfw3
     debug glew32sd optimized glew32s
     OpenGL::GL
     Jolt
+    imgui
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -67,6 +85,9 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${X11_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PRIVATE ${X11_INCLUDE_DIR})
 endif()
+
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
 if(MSVC)
     # enable warnings except: 

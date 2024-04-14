@@ -3,7 +3,10 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include "GL/StateManager.h"
+#include "../GL/Geometry.h"
+#include "../GL/Shader.h"
+#include "../GL/StateManager.h"
+#include "../Utils.h"
 
 // calculate number of sides for a given radius
 int circleSides(float r) {
@@ -31,7 +34,12 @@ glm::vec3 perpendicular(glm::vec3 v) {
     return glm::cross(v, e);
 }
 
-DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
+DirectBuffer::DirectBuffer() {
+    shader_ = new gl::ShaderPipeline(
+        {new gl::ShaderProgram("assets/shaders/direct.vert"),
+         new gl::ShaderProgram("assets/shaders/direct.frag")});
+    shader_->setDebugLabel("direct_buffer/shader");
+
     vao_ = new gl::VertexArray();
     vao_->setDebugLabel("direct_buffer/vao");
     vao_->layout(0, 0, 3, GL_FLOAT, false, 0);
@@ -44,11 +52,10 @@ DirectBuffer::DirectBuffer(gl::ShaderPipeline* shader) : shader_(shader) {
     vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * 4);
 }
 
-void DirectBuffer::destroy() {
-    vao_->destroy();
-    vbo_->destroy();
-    shader_->destroy();
-    delete this;
+DirectBuffer::~DirectBuffer() {
+    delete vao_;
+    delete vbo_;
+    delete shader_;
 }
 
 void DirectBuffer::push() {
@@ -268,14 +275,14 @@ void DirectBuffer::unitBox() {
     quad(glm::vec3(-0.5, +0.5, +0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(-0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, -0.5));
 }
 
-void DirectBuffer::draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
+void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     if (data_.empty()) {
         return;
     }
 
     size_t buffer_size = data_.size() * sizeof(float);
     if (vbo_->grow(buffer_size)) {
-        vao_->bindBuffer(0, *vbo_, 0, (3 + 3 + 3) * sizeof(float));
+        vao_->reBindBuffer(0, *vbo_);
     }
     vbo_->write(0, data_.data(), buffer_size);
 

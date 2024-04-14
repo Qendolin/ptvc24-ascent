@@ -2,7 +2,10 @@
 
 #include <algorithm>
 
-Input::Input(GLFWwindow *window) : window_(window) {
+#include "Utils.h"
+#include "Window.h"
+
+Input::Input(Window &window) : window_(window) {
     std::fill(std::begin(mouseButtonsWrite_), std::end(mouseButtonsWrite_), State::Zero);
     std::fill(std::begin(mouseButtonsRead_), std::end(mouseButtonsRead_), State::Zero);
     std::fill(std::begin(keysWrite_), std::end(keysWrite_), State::Zero);
@@ -15,6 +18,8 @@ Input::Input(GLFWwindow *window) : window_(window) {
         }
     }
 }
+
+Input::~Input() = default;
 
 void Input::pollCurrentState_() {
     stateInvalid_ = false;
@@ -73,6 +78,20 @@ void Input::update() {
     }
 }
 
+void Input::captureMouse() {
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    mouseCaptured_ = true;
+}
+
+void Input::releaseMouse() {
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    mouseCaptured_ = false;
+}
+
+bool Input::isWindowFocused() {
+    return glfwGetWindowAttrib(window_, GLFW_FOCUSED) == GLFW_TRUE;
+}
+
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
         // set the pressed and down bit
@@ -85,11 +104,17 @@ void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mod
         keysWrite_[key] |= State::ReleasedBit;
         keysWrite_[key] &= static_cast<State>(~static_cast<uint8_t>(State::PersistentPressedBit));
     }
+
+    for (auto &&reg : keyCallbacks_)
+        reg.callback(key, scancode, action, mods);
 }
 
 void Input::onCursorPos(GLFWwindow *window, double x, double y) {
     mousePosWrite_.x = static_cast<float>(x);
     mousePosWrite_.y = static_cast<float>(y);
+
+    for (auto &&reg : mousePosCallbacks_)
+        reg.callback(static_cast<float>(x), static_cast<float>(y));
 }
 
 void Input::onMouseButton(GLFWwindow *window, int button, int action, int mods) {
@@ -104,9 +129,42 @@ void Input::onMouseButton(GLFWwindow *window, int button, int action, int mods) 
         mouseButtonsWrite_[button] |= State::ReleasedBit;
         mouseButtonsWrite_[button] &= static_cast<State>(~static_cast<uint8_t>(State::PersistentPressedBit));
     }
+
+    for (auto &&reg : mouseButtonCallbacks_)
+        reg.callback(button, action, mods);
 }
 
 void Input::onScroll(GLFWwindow *window, double dx, double dy) {
     scrollDeltaWrite_.x += static_cast<float>(dx);
     scrollDeltaWrite_.y += static_cast<float>(dy);
+
+    for (auto &&reg : scrollCallbacks_)
+        reg.callback(static_cast<float>(dx), static_cast<float>(dy));
+}
+
+void Input::onChar(GLFWwindow *window, unsigned int codepoint) {
+    for (auto &&reg : charCallbacks_)
+        reg.callback(codepoint);
+}
+
+// a little helper function
+template <typename T>
+void removeCallbackFromVec(std::vector<T> &vec, Input::CallbackRegistrationID id) {
+    vec.erase(
+        std::remove_if(
+            vec.begin(), vec.end(),
+            [&id](T &elem) { return elem.id == id; }),
+        vec.end());
+}
+
+void Input::removeCallback(CallbackRegistrationID &registration) {
+    if (registration == 0) {
+        LOG_WARN("removeCallback called with invalid registration id (0)");
+    }
+    removeCallbackFromVec(mousePosCallbacks_, registration);
+    removeCallbackFromVec(mouseButtonCallbacks_, registration);
+    removeCallbackFromVec(scrollCallbacks_, registration);
+    removeCallbackFromVec(keyCallbacks_, registration);
+    removeCallbackFromVec(charCallbacks_, registration);
+    registration = 0;
 }

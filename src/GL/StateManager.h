@@ -145,7 +145,7 @@ class StateManager {
 
    public:
     StateManager(Environment env);
-    ~StateManager();
+    ~StateManager(){};
 
     // Keep track of a gl object
     void track(GLenum type, GLuint id) {

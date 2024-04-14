@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "../Utils.h"
 #include "StateManager.h"
 
 namespace gl {
@@ -13,12 +14,17 @@ Texture::Texture(GLenum type) : GLObject(GL_TEXTURE), type_(type) {
     manager->intelTextureBindingSetTarget(id_, type_);
 }
 
-Texture* Texture::as(GLenum type) {
-    return new Texture(type, id_);
+Texture::~Texture() {
+    if (id_ != 0) {
+        glDeleteTextures(1, &id_);
+        manager->unbindTexture(id_);
+        untrack_();
+        id_ = 0;
+    }
 }
 
-void Texture::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_TEXTURE, id_, -1, label.c_str());
+Texture* Texture::as(GLenum type) {
+    return new Texture(type, id_);
 }
 
 GLenum Texture::type() const {
@@ -39,16 +45,6 @@ uint32_t Texture::depth() const {
 
 void Texture::bind(int unit) {
     manager->bindTextureUnit(unit, id_);
-}
-
-void Texture::destroy() {
-    if (id_ != 0) {
-        glDeleteTextures(1, &id_);
-        manager->unbindTexture(id_);
-        untrack_();
-        id_ = 0;
-    }
-    delete this;
 }
 
 int Texture::dimensions() const {
@@ -72,7 +68,7 @@ int Texture::dimensions() const {
         case GL_TEXTURE_CUBE_MAP:
             return 3;
         default:
-            std::cerr << "invalid dimension for texture " << std::to_string(id_) << ": " << std::to_string(type_);
+            LOG_WARN("invalid dimension for texture " << std::to_string(id_) << ": " << std::to_string(type_));
             return 0;
     }
 }
@@ -163,18 +159,13 @@ Sampler::Sampler() : GLObject(GL_SAMPLER) {
     track_();
 }
 
-void Sampler::destroy() {
+Sampler::~Sampler() {
     if (id_ != 0) {
         glDeleteSamplers(1, &id_);
         manager->unbindSampler(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
-}
-
-void Sampler::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_SAMPLER, id_, -1, label.c_str());
 }
 
 void Sampler::bind(int unit) const {

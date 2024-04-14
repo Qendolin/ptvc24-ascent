@@ -10,7 +10,7 @@ class Screen {
     Screen& operator=(Screen const&) = delete;
 
     Screen() {}
-    virtual ~Screen(){};
+    virtual ~Screen() {}
 
     virtual void draw() = 0;
 

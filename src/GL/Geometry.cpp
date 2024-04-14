@@ -13,22 +13,20 @@ Buffer::Buffer() : GLObject(GL_BUFFER) {
     track_();
 }
 
-void Buffer::destroy() {
+Buffer::~Buffer() {
     if (id_ != 0) {
+        if (isMapped_) {
+            unmap();
+        }
         glDeleteBuffers(1, &id_);
         manager->unbindBuffer(id_);
         untrack_();
         id_ = 0;
     }
-    delete this;
 }
 
 size_t Buffer::size() const {
     return size_;
-}
-
-void Buffer::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_BUFFER, id_, -1, label.c_str());
 }
 
 void Buffer::bind(GLenum target) const {
@@ -36,9 +34,6 @@ void Buffer::bind(GLenum target) const {
 }
 
 void Buffer::allocateEmpty(size_t size, GLbitfield flags) {
-    if (immutable_) {
-        PANIC("VBO is immutable");
-    }
     if (warnAllocationSizeZero(size)) {
         return;
     }
@@ -46,26 +41,9 @@ void Buffer::allocateEmpty(size_t size, GLbitfield flags) {
     glNamedBufferStorage(id_, size, nullptr, flags);
     this->size_ = size;
     this->flags_ = flags;
-    immutable_ = true;
-}
-
-void Buffer::allocateEmptyMutable(size_t size, GLenum usage) {
-    if (immutable_) {
-        PANIC("VBO is immutable");
-    }
-    if (warnAllocationSizeZero(size)) {
-        return;
-    }
-    warnAllocationSize(size);
-    glNamedBufferData(id_, size, nullptr, usage);
-    this->flags_ = usage;
-    this->size_ = size;
 }
 
 void Buffer::allocate_(const void* data, size_t size, GLbitfield flags) {
-    if (immutable_) {
-        PANIC("VBO is immutable");
-    }
     if (warnAllocationSizeZero(size)) {
         return;
     }
@@ -73,17 +51,6 @@ void Buffer::allocate_(const void* data, size_t size, GLbitfield flags) {
     glNamedBufferStorage(id_, size, data, flags);
     this->size_ = size;
     this->flags_ = flags;
-    immutable_ = true;
-}
-
-void Buffer::allocateMutable_(const void* data, size_t size, GLbitfield usage) {
-    if (immutable_) {
-        PANIC("VBO is immutable");
-    }
-    warnAllocationSize(size);
-    glNamedBufferData(id_, size, data, usage);
-    this->flags_ = usage;
-    this->size_ = size;
 }
 
 bool Buffer::grow(size_t size) {
@@ -106,24 +73,17 @@ bool Buffer::grow(size_t size) {
         }
     }
 
-    if (immutable_) {
-        GLuint new_buffer_id;
-        glCreateBuffers(1, &new_buffer_id);
-        glNamedBufferStorage(new_buffer_id, new_size, nullptr, flags_);
-        glCopyNamedBufferSubData(id_, new_buffer_id, 0, 0, this->size_);
-        glDeleteBuffers(1, &id_);
-        untrack_();
-        id_ = new_buffer_id;
-        track_();
-    } else {
-        GLuint tmp_copy_buffer_id;
-        glCreateBuffers(1, &tmp_copy_buffer_id);
-        glNamedBufferStorage(tmp_copy_buffer_id, this->size_, nullptr, 0);
-        glCopyNamedBufferSubData(id_, tmp_copy_buffer_id, 0, 0, this->size_);
-        glNamedBufferData(id_, new_size, nullptr, flags_);
-        glCopyNamedBufferSubData(tmp_copy_buffer_id, id_, 0, 0, this->size_);
-        glDeleteBuffers(1, &tmp_copy_buffer_id);
-    }
+    GLuint new_buffer_id;
+    glCreateBuffers(1, &new_buffer_id);
+    glNamedBufferStorage(new_buffer_id, new_size, nullptr, flags_);
+    glCopyNamedBufferSubData(id_, new_buffer_id, 0, 0, this->size_);
+    glDeleteBuffers(1, &id_);
+    untrack_();
+    id_ = new_buffer_id;
+    track_();
+
+    // carry over the debug label
+    if (!debugLabel().empty()) setDebugLabel(debugLabel());
     this->size_ = new_size;
     return true;
 }
@@ -154,7 +114,7 @@ VertexArray::VertexArray() : GLObject(GL_VERTEX_ARRAY), bindingRanges_(32, std::
     track_();
 }
 
-void VertexArray::destroy() {
+VertexArray::~VertexArray() {
     if (id_ != 0) {
         glDeleteVertexArrays(1, &id_);
         manager->unbindVertexArray(id_);
@@ -162,15 +122,9 @@ void VertexArray::destroy() {
         id_ = 0;
     }
 
-    for (auto&& b : ownedBuffers_) {
-        b->destroy();
+    for (auto&& buf : ownedBuffers_) {
+        delete buf;
     }
-    ownedBuffers_ = {};
-    delete this;
-}
-
-void VertexArray::setDebugLabel(const std::string& label) {
-    glObjectLabel(GL_VERTEX_ARRAY, id_, -1, label.c_str());
 }
 
 void VertexArray::bind() const {

@@ -1,5 +1,6 @@
 #include "Skin.h"
 
+#include "../GL/Texture.h"
 #include "../Loader/Loader.h"
 #include "../Utils.h"
 
@@ -42,7 +43,7 @@ namespace ui {
 
 Skin::~Skin() {
     for (auto&& resource : resources) {
-        resource->destroy();
+        delete resource;
     }
 }
 

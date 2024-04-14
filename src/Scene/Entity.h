@@ -18,7 +18,7 @@ class Entity {
     ph::Physics& physics();
 
    public:
-    virtual ~Entity() {}
+    virtual ~Entity(){};
 
     // Called at scene creation
     virtual void init() = 0;

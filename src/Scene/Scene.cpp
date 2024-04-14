@@ -2,13 +2,19 @@
 
 #include "../Loader/Gltf.h"
 #include "../Physics/Physics.h"
+#include "../Utils.h"
 #include "Entity.h"
 
 namespace scene {
 
 using GraphicsInstanceAttributes = loader::InstanceAttributes;
 
-Scene::Scene(const loader::Scene& scene, NodeEntityFactory& factory) {
+void Properties::checkKeyExists_(const std::string& key) const {
+    if (map_.count(key) == 0)
+        PANIC("Property " + key + " does not exist");
+}
+
+Scene::Scene(const loader::SceneData& scene, NodeEntityFactory& factory) {
     transforms.reserve(scene.count());
     nodes.reserve(scene.count());
     // this will allocate more than needed
@@ -21,10 +27,9 @@ Scene::~Scene() {
     for (auto&& e : entities) {
         delete e;
     }
-    entities = {};
 }
 
-int32_t Scene::convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
+int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent) {
     int32_t index = nodes.size();
     Node& result = nodes.emplace_back();
     result = {

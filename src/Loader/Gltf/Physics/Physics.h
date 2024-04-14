@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../../../Physics/Physics.h"
-#include "../../../Physics/Shapes.h"
 #include "../../Gltf.h"
 
 namespace loader {

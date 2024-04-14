@@ -4,21 +4,19 @@
 #include <vector>
 
 #include "Object.h"
-#include "Texture.h"
 
 namespace gl {
+
+class Texture;
 
 // References;
 // https://www.khronos.org/opengl/wiki/Renderbuffer_Object
 class Renderbuffer : public GLObject {
    public:
     Renderbuffer();
+    virtual ~Renderbuffer();
 
     Renderbuffer(Renderbuffer&&) noexcept = default;
-
-    void destroy() override;
-
-    void setDebugLabel(const std::string& label) override;
 
     void bind() const;
 
@@ -40,12 +38,9 @@ class Framebuffer : public GLObject {
 
    public:
     Framebuffer();
+    virtual ~Framebuffer();
 
     Framebuffer(Framebuffer&&) noexcept = default;
-
-    void destroy() override;
-
-    void setDebugLabel(const std::string& label) override;
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawBuffers.xhtml)
     void bindTargets(const std::vector<int>& indices);

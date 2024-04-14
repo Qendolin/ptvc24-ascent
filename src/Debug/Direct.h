@@ -1,17 +1,10 @@
 #pragma once
-#define GLEW_STATIC
-#include <GL/glew.h>
 
 #include <glm/glm.hpp>
+#include <vector>
 
-#include "GL/Geometry.h"
-#include "GL/Shader.h"
-#include "Utils.h"
-
-struct MatrixStackEntry {
-    glm::mat4 positionMatrix;
-    glm::mat3 normalMatrix;
-};
+#include "../GL/Declarations.h"
+#include "../Window.h"
 
 /**
  * A utility for debug drawing.
@@ -20,6 +13,11 @@ struct MatrixStackEntry {
  */
 class DirectBuffer {
    private:
+    struct MatrixStackEntry {
+        glm::mat4 positionMatrix;
+        glm::mat3 normalMatrix;
+    };
+
     gl::ShaderPipeline* shader_;
     gl::VertexArray* vao_;
     gl::Buffer* vbo_;
@@ -31,12 +29,12 @@ class DirectBuffer {
     bool autoShade_ = false;
     glm::vec3 normal_ = {0, 0, 0};
 
-    ~DirectBuffer(){};
-
    public:
-    DirectBuffer(gl::ShaderPipeline* shader);
+    DirectBuffer();
+    ~DirectBuffer();
 
-    void destroy();
+    DirectBuffer(DirectBuffer const&) = delete;
+    DirectBuffer& operator=(DirectBuffer const&) = delete;
 
     /**
      * Adds a new entry to the transformation stack.
@@ -176,7 +174,7 @@ class DirectBuffer {
     /**
      * Renders the buffer's contents and empties it for the next frame.
      */
-    void draw(glm::mat4 view_proj_mat, glm::vec3 camera_pos);
+    void render(glm::mat4 view_proj_mat, glm::vec3 camera_pos);
 
     void clear();
 };

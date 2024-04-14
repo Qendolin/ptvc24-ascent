@@ -1,11 +1,16 @@
 #include "Setup.h"
 
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include <exception>
 #include <memory>
 #include <string>
 
 #include "GL/StateManager.h"
 #include "Utils.h"
+#include "Window.h"
 
 static void APIENTRY debugCallback(
     GLenum source,
@@ -106,7 +111,7 @@ static void APIENTRY debugCallback(
             break;
     }
 
-    std::string err = "[" + severity_str + "] " + type_str + " #" + std::to_string(id) + " from " + source_str + ": " + message;
+    std::string err = "[GL][" + severity_str + "] " + type_str + " #" + std::to_string(id) + " from " + source_str + ": " + message;
 
     if (severity == GL_DEBUG_SEVERITY_HIGH) {
         std::string stack;
@@ -120,8 +125,8 @@ static void APIENTRY debugCallback(
     std::cout << err << std::endl;
 }
 
-GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
-    LOG("Initializing GLFW");
+Window createOpenGLContext(bool enableCompatibilityProfile) {
+    LOG_INFO("Initializing GLFW");
     if (glfwInit() != GLFW_TRUE) {
         throw std::runtime_error("GLFW init failed");
     }
@@ -137,13 +142,13 @@ GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
 
     if (enableCompatibilityProfile) {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-        LOG("Using GL compatability profile");
+        LOG_INFO("Using GL compatability profile");
     } else {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        LOG("Using GL core profile");
+        LOG_INFO("Using GL core profile");
     }
 
-    LOG("Creating Window");
+    LOG_INFO("Creating Window");
     GLFWwindow *win = glfwCreateWindow(1600, 900, "Ascent", nullptr, nullptr);
     if (win == nullptr) {
         throw std::runtime_error("GLFW window creation failed");
@@ -154,11 +159,15 @@ GLFWwindow *createOpenGLContext(bool enableCompatibilityProfile) {
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(win, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
-    return win;
+    return Window(win);
+}
+
+void destroyOpenGLContext(Window &window) {
+    glfwDestroyWindow(window.handle);
 }
 
 void initializeOpenGL(bool enableDebug) {
-    LOG("Initializing OpenGL");
+    LOG_INFO("Initializing OpenGL");
 
     glewExperimental = true;
     GLenum err = glewInit();
@@ -170,7 +179,7 @@ void initializeOpenGL(bool enableDebug) {
             reinterpret_cast<const char *>(glewGetErrorString(err))));
     }
 
-    LOG("Using GPU: " << glGetString(GL_RENDERER));
+    LOG_INFO("Using GPU: " << glGetString(GL_RENDERER));
 
     gl::manager = std::make_unique<gl::StateManager>(gl::createEnvironment());
 
@@ -184,7 +193,7 @@ void initializeOpenGL(bool enableDebug) {
     if (enableDebug && glDebugMessageCallback != NULL) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        LOG("Enabled GL debug output");
+        LOG_INFO("Enabled GL debug output");
 
         std::vector<std::string> *group_stack = new std::vector<std::string>{"top"};
         glDebugMessageCallback(debugCallback, group_stack);

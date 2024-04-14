@@ -17,6 +17,8 @@ class TestObstacleEntity : public scene::NodeEntity {
     TestObstacleEntity(scene::SceneRef scene, scene::NodeRef node) : scene::NodeEntity(scene, node) {
     }
 
+    virtual ~TestObstacleEntity(){};
+
     void init() override;
 
     void update() override;

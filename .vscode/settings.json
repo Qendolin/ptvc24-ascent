@@ -94,8 +94,15 @@
 	"git.ignoreSubmodules": true,
 	"C_Cpp.default.cppStandard": "c++23",
 	"C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+	"C_Cpp.default.defines": ["SOURCE_PATH_SIZE"],
 	"search.exclude": {
 		"build": true,
 		"include": true
+	},
+	"files.exclude": {
+		"**/.git": true,
+		"**/.DS_Store": true,
+		"**/Thumbs.db": true,
+		"build": true
 	}
 }

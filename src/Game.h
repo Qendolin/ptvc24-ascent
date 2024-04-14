@@ -1,108 +1,94 @@
 #pragma once
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <tweeny/tweeny.h>
 
-#include <variant>
+#include <functional>
+#include <memory>
+#include <vector>
 
-#include "Camera.h"
-#include "Direct.h"
-#include "Input.h"
-#include "Loader/Gltf.h"
-#include "Loader/Loader.h"
-#include "Physics/Physics.h"
-#include "Scene/Entity.h"
-#include "Scene/Scene.h"
-#include "UI/Screen.h"
-#include "UI/UI.h"
+#pragma region ForwardDecl
+#include "GL/Declarations.h"
+class Camera;
+class Input;
+class DirectBuffer;
+class TweenSystem;
+class DebugMenu;
+class Screen;
+struct Window;
+class GameController;
 
-// References:
-// https://mobius3.github.io/tweeny/
-//
-// The "tweeny" tweens need to be updated in discrete time steps.
-// This game uses one milliseconds as the smallest unit. (1000 tween units = 1 second)
-// The purpose of this class is to aggregate frame times and calculate the `step` value accordingly.
-// Examples using the notation: `(carry, step) > time_delta > (next_carry, next_step)`
-// 1: `(0.0ms, 0) > 0.4ms > (0.4ms, 0) > 0.4ms > (0.8ms, 0) > 0.4ms > (0.2ms, 1) > 0.4ms > (0.6ms, 0)`
-// 2: `(0.0ms, 0) > 12.5ms > (0.5ms, 12) > 16.0ms > (0.5ms, 16) > 10.5ms > (0.0ms, 10)`
-class TweenSystem {
-   private:
-    // the carry aggregates sub-millisecond times until a full millisecond is reached.
-    float carry_ = 0.0;
-    // the step stores the amount of tweeny time units that each tween should be advanced for this frame.
-    int step_ = 0;
+namespace ph {
+class Physics;
+}
 
-   public:
-    TweenSystem(){};
-    ~TweenSystem(){};
+namespace ui {
+class Backend;
+class ImGuiBackend;
+}  // namespace ui
 
-    void update(float time_delta) {
-        carry_ += time_delta * 1000.0f;
-        step_ = (int)floor(carry_);
-        carry_ -= step_;
-    }
+namespace loader {
+class SceneData;
+}
 
-    // Takes a tween and advances it
-    template <typename T, typename... Ts>
-    void step(tweeny::tween<T, Ts...> &tween) const {
-        tween.step(step_);
-    }
-};
+namespace scene {
+class Scene;
+}
+#pragma endregion
 
 class Game {
    private:
-    float tweenTimer_ = 0.0;
-    int tweenTimeStep_ = 0;
+    inline static Game *instance_ = nullptr;
 
-    // Called on every game loop iteration
-    void loop_();
+    std::unique_ptr<DebugMenu> debugMenu_;
+    // the controller which will get activated at the start of the next frame
+    std::unique_ptr<GameController> queuedController_;
+
     // Process user input
     void processInput_();
 
+    // Called every frame before `render_`
+    void update_();
+    // Called every frame after `update_`
+    void render_();
+
    public:
-    inline static Game *instance = nullptr;
+    // get the game instance singleton
+    static Game &get();
 
-    ~Game();
+    Window &window;
+    std::unique_ptr<ph::Physics> physics;
+    std::unique_ptr<ui::Backend> ui;
+    std::unique_ptr<ui::ImGuiBackend> imgui;
+    std::unique_ptr<Input> input;
+    std::unique_ptr<TweenSystem> tween;
+    std::unique_ptr<Camera> camera;
+    std::unique_ptr<DirectBuffer> directDraw;
 
-    GLFWwindow *window = nullptr;
-    ph::Physics *physics = nullptr;
-    ui::Backend *ui = nullptr;
-    Input *input = nullptr;
-    TweenSystem tween = TweenSystem();
+    std::unique_ptr<GameController> controller;
 
-    // Callbacks for laoding / unloading assets
-    // Doing it this way makes reloading easy
-    std::vector<std::function<void()>> onLoad = {};
-    std::vector<std::function<void()>> onUnload = {};
-
-    // Thew viewport size is the window size minus the border and title bar
-    glm::ivec2 viewportSize = {1600, 900};
-    Camera *camera = nullptr;
-
-    // A quad with dimensions (-1,-1) to (1,1)
-    gl::VertexArray *quad = nullptr;
-    DirectBuffer *dd = nullptr;
-
-    gl::ShaderPipeline *skyShader = nullptr;
-    gl::ShaderPipeline *pbrShader = nullptr;
-
-    Screen *screen = nullptr;
-
-    // All the stuff loaded from the gltf file (graphics and physics objects).
-    loader::Scene *scene = nullptr;
-
-    scene::Scene *entityScene = nullptr;
+    // prevent copy
+    Game(Game const &) = delete;
+    Game &operator=(Game const &) = delete;
 
     // Initializes the games subsystems like input handling and physics
-    Game(GLFWwindow *window);
+    Game(Window &window);
+    ~Game();
 
-    // Load assets and such
-    void setup();
+    // Called when the game starts and when assets are reloaded
+    void load();
+
+    // Called when the game exits and when assets are reloaded
+    void unload();
 
     // Run the game until the window is closed
     void run();
 
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
+
+    /**
+     * Queue a controller to be activated next frame.
+     */
+    template <typename T>
+    void queueController() {
+        queuedController_ = std::make_unique<T>(*this);
+    }
 };

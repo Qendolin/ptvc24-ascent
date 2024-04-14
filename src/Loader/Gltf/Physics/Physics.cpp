@@ -1,5 +1,9 @@
 #include "Physics.h"
 
+#include "../../../Physics/Physics.h"
+#include "../../../Physics/Shapes.h"
+#include "../../../Utils.h"
+
 namespace loader {
 
 // Create a Jolt Physics shape given it's type and size. For mesh shapes the mesh shape is also passed.
@@ -119,7 +123,7 @@ void loadInstances(PhysicsLoadingContext &context, const gltf::Scene &scene) {
     });
 }
 
-Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
+PhysicsData loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     PhysicsLoadingContext context(model, nodes);
 
     loadMeshes(context);
@@ -127,7 +131,7 @@ Physics loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node
     const gltf::Scene &scene = context.model.scenes[context.model.defaultScene];
     loadInstances(context, scene);
 
-    Physics result = {
+    PhysicsData result = {
         context.instances,
     };
     return result;

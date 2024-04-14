@@ -11,14 +11,13 @@
 #include <string>
 #include <vector>
 
-#include "../Utils.h"
-
-// forward declarations
+#pragma region ForwardDecl
 namespace loader {
-class Scene;
+class SceneData;
 struct Node;
 struct InstanceAttributes;
 }  // namespace loader
+#pragma endregion
 
 namespace scene {
 
@@ -28,13 +27,15 @@ struct Properties {
    private:
     std::map<std::string, std::any> map_ = {};
 
+    void checkKeyExists_(const std::string& key) const;
+
    public:
     Properties() {}
     Properties(const std::map<std::string, std::any>& map) : map_(map) {}
 
     template <typename T>
     T get(const std::string& key) const {
-        if (map_.count(key) == 0) PANIC("Property " + key + " does not exist");
+        checkKeyExists_(key);
         return std::any_cast<T>(map_.at(key));
     }
 
@@ -93,7 +94,7 @@ class Entity;
 
 class Scene {
    private:
-    int32_t convertNodes_(const loader::Scene& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
+    int32_t convertNodes_(const loader::SceneData& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
 
    public:
     std::vector<Node> nodes;
@@ -102,7 +103,7 @@ class Scene {
     std::vector<Transform> transforms;
     std::vector<Entity*> entities;
 
-    Scene(const loader::Scene& scene, NodeEntityFactory& factory);
+    Scene(const loader::SceneData& scene, NodeEntityFactory& factory);
 
     ~Scene();
 

@@ -10,6 +10,8 @@ class CheckpointEntity : public scene::NodeEntity {
     CheckpointEntity(scene::SceneRef scene, scene::NodeRef base) : scene::NodeEntity(scene, base) {
     }
 
+    virtual ~CheckpointEntity(){};
+
     void init() override;
 
     void update() override;
