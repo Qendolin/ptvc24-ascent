@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-//#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 class Camera {
@@ -19,7 +18,7 @@ class Camera {
 
    public:
     glm::vec3 position;
-    // pitch, yaw, roll
+    // pitch, yaw, roll in radians
     glm::vec3 angles;
 
     /**
@@ -75,8 +74,8 @@ class Camera {
         return projectionMatrix_ * viewMatrix_;
     }
 
-    glm::mat3 getMoveFrontVec(){
-        glm::vec3 upVec = glm::vec3(0,1,0);
+    glm::mat3 getMoveFrontVec() {
+        glm::vec3 upVec = glm::vec3(0, 1, 0);
         glm::vec3 frontVec;
         frontVec.x = cos(glm::radians(angles.y)) * cos(glm::radians(angles.x));
         frontVec.y = cos(glm::radians(angles.x));

@@ -1,10 +1,15 @@
+#include "../Timer.h"
 #include "Entity.h"
 
-// forward declarations
+#pragma region ForwardDecl
 class Camera;
 namespace JPH {
 class Character;
 }
+namespace ph {
+struct SensorContact;
+}
+#pragma endregion
 
 // The character controller handles movement and mouse look.
 // It links the character physics body to the camera.
@@ -20,6 +25,7 @@ class CharacterController : public scene::Entity {
     inline static const float AUTO_MOVE_SPEED = 20.0f;
     // query flying toggle
     bool isAutoMoveEnabled = false;
+    Timer invulnerabilityTimer;
 
     JPH::Character* body_ = nullptr;
     glm::vec3 velocity_ = {};
@@ -28,10 +34,16 @@ class CharacterController : public scene::Entity {
     glm::vec3 cameraLerpStart_ = {};
     glm::vec3 cameraLerpEnd_ = {};
 
+    // called as a callback by the physics engine
+    void onBodyContact_(ph::SensorContact& contact);
+
+    // respawn the character at the last checkpoint
+    void respawn_();
+
    public:
     Camera& camera;
 
-    CharacterController(Camera& camera);
+    CharacterController(scene::SceneRef scene, Camera& camera);
 
     virtual ~CharacterController();
 

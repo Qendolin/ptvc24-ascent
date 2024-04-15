@@ -9,6 +9,7 @@
 #include "../Game.h"
 #include "../Input.h"
 #include "../Physics/Physics.h"
+#include "Settings.h"
 
 DebugMenu::DebugMenu() {
     frameTimes.nextMin = std::numeric_limits<float>::infinity();
@@ -27,8 +28,11 @@ void DebugMenu::draw() {
 void DebugMenu::drawDebugWindow_() {
     using namespace ImGui;
 
+    DebugSettings& settings = Game::get().debugSettings;
+
     ph::Physics& physics = *Game::get().physics;
     Begin("Debug Menu", nullptr, 0);
+    // Physics
     if (CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
         PushID("physics");
         Indent();
@@ -40,8 +44,19 @@ void DebugMenu::drawDebugWindow_() {
         if (Checkbox("Debug Draw", &debug_draw_enabled)) {
             physics.setDebugDrawEnabled(debug_draw_enabled);
         }
+        Unindent();
         PopID();
     }
+
+    // Entities
+    if (CollapsingHeader("Entities", ImGuiTreeNodeFlags_DefaultOpen)) {
+        PushID("entities");
+        Indent();
+        Checkbox("Debug Draw", &settings.entity.debugDrawEnabled);
+        Unindent();
+        PopID();
+    }
+
     End();
 }
 

@@ -107,7 +107,7 @@ void DirectBuffer::light(glm::vec3 c) {
 }
 
 void DirectBuffer::vert(glm::vec3 pos) {
-    glm::vec3 normal;
+    glm::vec3 normal = {};
     MatrixStackEntry& head = stack_.back();
     if (shaded_) {
         normal = head.normalMatrix * normal_;
@@ -170,6 +170,29 @@ void DirectBuffer::line(glm::vec3 a, glm::vec3 b) {
     b0 = glm::vec3(b[0] + bitangent[0] / 2, b[1] + bitangent[1] / 2, b[2] + bitangent[2] / 2);
     b1 = glm::vec3(b[0] - bitangent[0] / 2, b[1] - bitangent[1] / 2, b[2] - bitangent[2] / 2);
     quad(a0, b0, a1, b1);
+}
+
+void DirectBuffer::axes(glm::mat4 transformation, float scale) {
+    glm::vec3 center = transformation * glm::vec4(0, 0, 0, 1);
+    color(1.0, 0.0, 0.0);
+    line(center, transformation * glm::vec4(scale, 0, 0, 1));
+    color(0.0, 1.0, 0.0);
+    line(center, transformation * glm::vec4(0, scale, 0, 1));
+    color(0.0, 0.0, 1.0);
+    line(center, transformation * glm::vec4(0, 0, scale, 1));
+}
+
+void DirectBuffer::axes(glm::vec3 position, glm::mat3 orientation, float scale) {
+    color(1.0, 0.0, 0.0);
+    line(position, position + orientation * glm::vec3(scale, 0, 0));
+    color(0.0, 1.0, 0.0);
+    line(position, position + orientation * glm::vec3(0, scale, 0));
+    color(0.0, 0.0, 1.0);
+    line(position, position + orientation * glm::vec3(0, 0, scale));
+}
+
+void DirectBuffer::axes(glm::vec3 position, glm::quat orientation, float scale) {
+    axes(position, glm::mat3_cast(orientation), scale);
 }
 
 void DirectBuffer::circleLine(glm::vec3 c, glm::vec3 n, float r) {

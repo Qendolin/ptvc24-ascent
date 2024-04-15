@@ -23,7 +23,7 @@ namespace scene {
 
 using GraphicsInstanceAttributes = loader::InstanceAttributes;
 
-struct Properties {
+class Properties {
    private:
     std::map<std::string, std::any> map_ = {};
 
@@ -46,18 +46,32 @@ struct Properties {
     }
 };
 
+class Tags {
+   private:
+    std::vector<std::string> tags_ = {};
+
+   public:
+    Tags() {}
+    Tags(const std::vector<std::string>& tags) : tags_(tags) {}
+
+    bool has(const std::string& tag) const {
+        return std::find(tags_.cbegin(), tags_.cend(), tag) != tags_.cend();
+    }
+};
+
 struct Node {
     std::string name;
     int32_t index;
 
     int32_t graphics;
     int32_t physics;
+    int32_t entity;
 
     int32_t parent;
     std::vector<int32_t> children;
 
     Properties properties;
-    std::vector<std::string> tags = {};
+    Tags tags;
 };
 
 struct Graphics {
@@ -98,6 +112,10 @@ class Scene {
 
    public:
     std::vector<Node> nodes;
+    // map node names to indices
+    std::unordered_map<std::string, int32_t> nodesByName;
+    // map body ids to indices, assues that body ids don't get reused
+    std::unordered_map<JPH::BodyID, int32_t> nodesByBodyID;
     std::vector<Graphics> graphics;
     std::vector<Physics> physics;
     std::vector<Transform> transforms;
@@ -128,8 +146,16 @@ class TransformRef {
         : scene_(&scene), index_(index) {
     }
 
+    bool isValid() const {
+        return scene_ != nullptr && index_ >= 0;
+    }
+
     bool isInvalid() const {
-        return scene_ == nullptr || index_ < 0;
+        return !isValid();
+    }
+
+    operator bool() const {
+        return isValid();
     }
 
     glm::vec3 position() {
@@ -181,8 +207,16 @@ class GraphicsRef {
         : scene_(&scene), index_(index), node_(node) {
     }
 
+    bool isValid() const {
+        return scene_ != nullptr && index_ >= 0;
+    }
+
     bool isInvalid() const {
-        return scene_ == nullptr || index_ < 0;
+        return !isValid();
+    }
+
+    operator bool() const {
+        return isValid();
     }
 
     void setTransformFromNode();
@@ -215,8 +249,16 @@ class PhysicsRef {
         return scene_->physics[index_].trigger;
     }
 
+    bool isValid() const {
+        return scene_ != nullptr && index_ >= 0;
+    }
+
     bool isInvalid() const {
-        return scene_ == nullptr || index_ < 0;
+        return !isValid();
+    }
+
+    operator bool() const {
+        return isValid();
     }
 };
 
@@ -237,8 +279,16 @@ class NodeRef {
         return scene_->nodes[index_].name;
     }
 
+    bool isValid() const {
+        return scene_ != nullptr && index_ >= 0;
+    }
+
     bool isInvalid() const {
-        return scene_ == nullptr || index_ < 0;
+        return !isValid();
+    }
+
+    operator bool() const {
+        return isValid();
     }
 
     bool isRoot() const {
@@ -265,6 +315,16 @@ class NodeRef {
         return PhysicsRef(*scene_, scene_->nodes[index_].physics, index_);
     }
 
+    bool hasEntity() const {
+        return scene_->nodes[index_].entity >= 0;
+    }
+
+    template <class T = Entity>
+    T* entity() const {
+        Entity* entity = scene_->entities[scene_->nodes[index_].entity];
+        return dynamic_cast<T*>(entity);
+    }
+
     std::vector<NodeRef> children() const {
         std::vector<NodeRef> result;
         std::vector<int32_t>& children = scene_->nodes[index_].children;
@@ -281,8 +341,10 @@ class NodeRef {
 
     NodeRef find(const std::string& path) const;
 
-    std::vector<std::string> tags() const {
-        return scene_->nodes[index_].tags;
+    NodeRef find(const std::string& path, std::function<bool(NodeRef& node)> predicate) const;
+
+    bool hasTag(const std::string& tag) const {
+        return scene_->nodes[index_].tags.has(tag);
     }
 
     template <typename T>
@@ -318,8 +380,29 @@ class SceneRef {
 
     NodeRef find(NodeRef parent, std::string path) const;
 
+    NodeRef find(NodeRef parent, std::function<bool(NodeRef& node)> predicate) const;
+
+    NodeRef byName(std::string name) const;
+
+    NodeRef byPhysicsBody(JPH::BodyID body_id) const {
+        if (scene_->nodesByBodyID.count(body_id) == 0) return NodeRef();
+        return NodeRef(*scene_, scene_->nodesByBodyID.at(body_id));
+    }
+
+    NodeRef root() const {
+        return NodeRef(*scene_, 0);
+    }
+
+    bool isValid() const {
+        return scene_ != nullptr;
+    }
+
     bool isInvalid() const {
-        return scene_ == nullptr;
+        return !isValid();
+    }
+
+    operator bool() const {
+        return isValid();
     }
 };
 

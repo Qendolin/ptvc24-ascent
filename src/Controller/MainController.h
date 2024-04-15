@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "GameController.h"
 
@@ -8,6 +9,7 @@
 class MaterialBatchRenderer;
 class SkyRenderer;
 class Camera;
+class CheckpointEntity;
 namespace loader {
 class SceneData;
 }
@@ -15,6 +17,29 @@ namespace scene {
 class Scene;
 }
 #pragma endregion
+
+// Handles the logic of measuring score and checkpoints
+class RaceManager {
+    int lastPassedCheckpoint = -1;
+    double startTime = -1.0;
+    float penaltyTime = 0.0;
+    std::vector<CheckpointEntity *> checkpoints;
+
+   public:
+    void onCheckpointEntered(CheckpointEntity *checkpoint);
+
+    void loadCheckpoints(CheckpointEntity *start);
+
+    CheckpointEntity *getLastCheckpoint();
+
+    // @return timer time in seconds
+    float timer();
+
+    // @return penalty time in seconds
+    float penalty() {
+        return penaltyTime;
+    }
+};
 
 class MainController : public GameController {
    private:
@@ -30,6 +55,8 @@ class MainController : public GameController {
     void drawHud();
 
    public:
+    RaceManager raceManager;
+
     MainController(Game &game);
 
     virtual ~MainController();

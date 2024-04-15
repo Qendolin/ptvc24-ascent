@@ -7,20 +7,26 @@
 #include <Jolt/Physics/Character/Character.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
 #include "../Camera.h"
+#include "../Controller/MainController.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
+#include "../Utils.h"
 #include "../Window.h"
+#include "Objects/Checkpoint.h"
 
 using namespace scene;
 
-CharacterController::CharacterController(Camera& camera) : camera(camera) {
+glm::vec2 quatToAzimuthElevation(const glm::quat& q);
+
+CharacterController::CharacterController(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
 }
 
 CharacterController::~CharacterController() {
@@ -41,13 +47,48 @@ void CharacterController::init() {
     body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics().system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
+
+    physics().contactListener->RegisterCallback(
+        body_->GetBodyID(),
+        [this](ph::SensorContact contact) {
+            if (!contact.persistent) this->onBodyContact_(contact);
+        });
+}
+
+void CharacterController::onBodyContact_(ph::SensorContact& contact) {
+    NodeRef contactNode = scene.byPhysicsBody(contact.other);
+    // The contact node should always have physics
+    if (!contactNode.hasPhysics()) {
+        LOG_WARN("Contact node did not have physics?!?");
+        return;
+    }
+    // can't collide with triggers
+    if (contactNode.physics().hasTrigger()) return;
+
+    if (!invulnerabilityTimer.isZero()) return;
+    invulnerabilityTimer = 2.0;
+    respawn_();
+}
+
+void CharacterController::respawn_() {
+    MainController& controller = dynamic_cast<MainController&>(*game().controller);
+    CheckpointEntity* last_checkpoint = controller.raceManager.getLastCheckpoint();
+    if (last_checkpoint == nullptr) return;
+    scene::TransformRef transform = last_checkpoint->respawnTransformation();
+    glm::vec2 azimuth_elevation = quatToAzimuthElevation(transform.rotation());
+    camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
+    camera.position = transform.position();
+    body_->SetPosition(ph::convert(camera.position));
 }
 
 void CharacterController::update() {
     Input& input = *game().input;
     if (input.isMouseReleased()) {
+        velocity_ = glm::vec3(0);
         return;
     }
+
+    invulnerabilityTimer.update(input.timeDelta());
 
     // Camera movement
     // yaw
@@ -99,4 +140,21 @@ void CharacterController::prePhysicsUpdate() {
 
 void CharacterController::postPhysicsUpdate() {
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
+}
+
+// calculate azimuth and elevation from quaternion. Caution: AI Generated
+glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
+    // Calculate elevation
+    float sin_pitch = 2.0f * (q.y * q.z + q.w * q.x);
+    float elevation = glm::asin(sin_pitch);
+
+    // Calculate azimuth (handle gimbal lock near poles)
+    float azimuth;
+    if (glm::epsilonEqual(glm::abs(sin_pitch), 1.0f, glm::epsilon<float>())) {
+        azimuth = 0.0f;
+    } else {
+        azimuth = glm::atan(q.y * q.w - q.z * q.x, 0.5f - q.x * q.x - q.y * q.y);
+    }
+
+    return glm::vec2(azimuth, elevation);
 }

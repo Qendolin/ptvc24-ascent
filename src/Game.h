@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "Debug/Settings.h"
+
 #pragma region ForwardDecl
 #include "GL/Declarations.h"
 class Camera;
@@ -54,6 +56,7 @@ class Game {
     static Game &get();
 
     Window &window;
+    DebugSettings debugSettings = {};
     std::unique_ptr<ph::Physics> physics;
     std::unique_ptr<ui::Backend> ui;
     std::unique_ptr<ui::ImGuiBackend> imgui;

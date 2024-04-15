@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <vector>
 
 #include "../GL/Declarations.h"
@@ -105,6 +106,21 @@ class DirectBuffer {
      * Add a line to the buffer.
      */
     void line(glm::vec3 a, glm::vec3 b);
+
+    /**
+     * Adds three lines in the direction of the transformation axes
+     */
+    void axes(glm::mat4 transformation, float scale = 1.0);
+
+    /**
+     * Adds three lines in the direction of the orientation axes
+     */
+    void axes(glm::vec3 position, glm::mat3 orientation, float scale = 1.0);
+
+    /**
+     * Adds three lines in the direction of the orientation axes
+     */
+    void axes(glm::vec3 position, glm::quat orientation, float scale = 1.0);
 
     /**
      * Adds a "hollow" circle to the buffer.

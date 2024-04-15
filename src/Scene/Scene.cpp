@@ -11,7 +11,7 @@ using GraphicsInstanceAttributes = loader::InstanceAttributes;
 
 void Properties::checkKeyExists_(const std::string& key) const {
     if (map_.count(key) == 0)
-        PANIC("Property " + key + " does not exist");
+        PANIC("Property '" + key + "' does not exist");
 }
 
 Scene::Scene(const loader::SceneData& scene, NodeEntityFactory& factory) {
@@ -40,6 +40,7 @@ int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFac
         .properties = Properties(node.properties),
         .tags = node.tags,
     };
+    nodesByName[node.name] = index;
 
     transforms.emplace_back() = {
         .t = node.initialPosition,
@@ -48,8 +49,11 @@ int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFac
     };
 
     // entity
-    if (!node.entityClass.empty()) {
+    if (node.entityClass.empty()) {
+        result.entity = -1;
+    } else {
         entities.push_back(factory.create(node.entityClass, SceneRef(*this), NodeRef(*this, index)));
+        result.entity = entities.size() - 1;
     }
 
     // graphics
@@ -73,6 +77,7 @@ int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFac
             .body = instance.id,
             .trigger = {.enabled = instance.isTrigger, .action = instance.trigger.action, .argument = instance.trigger.argument},
         };
+        nodesByBodyID[instance.id] = index;
     }
 
     // children
@@ -171,6 +176,24 @@ NodeRef SceneRef::find(NodeRef parent, std::string path) const {
 
 NodeRef NodeRef::find(const std::string& path) const {
     return SceneRef(*scene_).find(*this, path);
+}
+
+NodeRef SceneRef::find(NodeRef parent, std::function<bool(NodeRef& node)> predicate) const {
+    for (int32_t index = 0; index < static_cast<int32_t>(scene_->nodes.size()); index++) {
+        NodeRef ref(*scene_, index);
+        if (predicate(ref)) return ref;
+    }
+    // not found
+    return NodeRef();
+}
+
+NodeRef NodeRef::find(const std::string& path, std::function<bool(NodeRef& node)> predicate) const {
+    return SceneRef(*scene_).find(*this, predicate);
+}
+
+NodeRef SceneRef::byName(std::string name) const {
+    if (scene_->nodesByName.count(name) == 0) return NodeRef();
+    return NodeRef(*scene_, scene_->nodesByName.at(name));
 }
 
 void GraphicsRef::setTransformFromNode() {
