@@ -100,11 +100,11 @@ void Framebuffer::bind(GLenum target) const {
     manager->bindFramebuffer(target, id_);
 }
 
-void Framebuffer::attachTexture(int index, const Texture* texture) {
+void Framebuffer::attachTexture(int index, Texture* texture) {
     attachTextureLevel(index, texture, 0);
 }
 
-void Framebuffer::attachTextureLevel(int index, const Texture* texture, int level) {
+void Framebuffer::attachTextureLevel(int index, Texture* texture, int level) {
     textures_[mapAttachmentIndex_(index)] = texture;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
@@ -112,11 +112,11 @@ void Framebuffer::attachTextureLevel(int index, const Texture* texture, int leve
     glNamedFramebufferTexture(id_, index, texture->id(), level);
 }
 
-void Framebuffer::attachTextureLayer(int index, const Texture* texture, int layer) {
+void Framebuffer::attachTextureLayer(int index, Texture* texture, int layer) {
     attachTextureLayerLevel(index, texture, layer, 0);
 }
 
-void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int layer, int level) {
+void Framebuffer::attachTextureLayerLevel(int index, Texture* texture, int layer, int level) {
     textures_[mapAttachmentIndex_(index)] = texture;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
@@ -132,7 +132,7 @@ void Framebuffer::attachTextureLayerLevel(int index, const Texture* texture, int
     }
 }
 
-void Framebuffer::attachRenderbuffer(int index, const Renderbuffer* renderbuffer) {
+void Framebuffer::attachRenderbuffer(int index, Renderbuffer* renderbuffer) {
     renderbuffers_[mapAttachmentIndex_(index)] = renderbuffer;
     if (index <= MAX_ATTACHMENTS) {
         index += GL_COLOR_ATTACHMENT0;
@@ -140,11 +140,11 @@ void Framebuffer::attachRenderbuffer(int index, const Renderbuffer* renderbuffer
     glNamedFramebufferRenderbuffer(id_, index, GL_RENDERBUFFER, renderbuffer->id());
 }
 
-const Texture* Framebuffer::getTexture(int index) const {
+Texture* Framebuffer::getTexture(int index) const {
     return textures_[mapAttachmentIndex_(index)];
 }
 
-const Renderbuffer* Framebuffer::getRenderbuffer(int index) const {
+Renderbuffer* Framebuffer::getRenderbuffer(int index) const {
     return renderbuffers_[mapAttachmentIndex_(index)];
 }
 

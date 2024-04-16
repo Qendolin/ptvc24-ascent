@@ -139,6 +139,7 @@ void MainController::drawHud() {
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
     if (nk_begin(nk, "gui", nk_recti(0, 0, (int)100_vw, (int)100_vh), 0)) {
+        nk_style_push_color(nk, &nk->style.text.color, nk_rgb(0, 0, 0));
         nk_layout_row_dynamic(nk, 30, 1);
         std::chrono::duration<float> total_seconds(raceManager.timer());
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
@@ -150,6 +151,7 @@ void MainController::drawHud() {
         nk_layout_row_dynamic(nk, 30, 1);
         std::string penalty_str = "+" + formatTimeMMSS(raceManager.penalty());
         nk_label(nk, penalty_str.c_str(), NK_TEXT_ALIGN_RIGHT);
+        nk_style_pop_color(nk);
     }
     nk_end(nk);
 }

@@ -11,6 +11,14 @@ class GraphicsData;
 class MaterialBatchRenderer {
    private:
     gl::ShaderPipeline *shader;
+    gl::Texture *iblDiffuse;
+    gl::Texture *iblSpecular;
+    gl::Texture *iblBrdfLut;
+    gl::Sampler *albedoSampler;
+    gl::Sampler *normalSampler;
+    gl::Sampler *ormSampler;
+    gl::Sampler *lutSampler;
+    gl::Sampler *cubemapSampler;
 
    public:
     MaterialBatchRenderer();

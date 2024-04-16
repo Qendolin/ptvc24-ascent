@@ -16,6 +16,7 @@ class DebugMenu;
 class Screen;
 struct Window;
 class GameController;
+class FinalizationRenderer;
 
 namespace ph {
 class Physics;
@@ -42,6 +43,8 @@ class Game {
     std::unique_ptr<DebugMenu> debugMenu_;
     // the controller which will get activated at the start of the next frame
     std::unique_ptr<GameController> queuedController_;
+    gl::Framebuffer *hdrFramebuffer_;
+    std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
 
     // Process user input
     void processInput_();

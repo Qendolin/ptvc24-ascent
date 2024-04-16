@@ -9,9 +9,12 @@
 #include "Debug/DebugMenu.h"
 #include "Debug/Direct.h"
 #include "Debug/ImGuiBackend.h"
+#include "GL/Framebuffer.h"
 #include "GL/StateManager.h"
+#include "GL/Texture.h"
 #include "Input.h"
 #include "Physics/Physics.h"
+#include "Renderer/FinalizationRenderer.h"
 #include "Tween.h"
 #include "UI/Renderer.h"
 #include "UI/Skin.h"
@@ -56,9 +59,6 @@ Game::Game(Window &window)
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
         Game::get().resize(width, height);
     });
-    int vp_width, vp_height;
-    glfwGetFramebufferSize(window, &vp_width, &vp_height);
-    Game::resize(vp_width, vp_height);
 
     ImGui::SetCurrentContext(ImGui::CreateContext());
 
@@ -66,10 +66,20 @@ Game::Game(Window &window)
     physics->setDebugDrawEnabled(true);
 
     queueController<MainMenuController>();
+
+    hdrFramebuffer_ = new gl::Framebuffer();
+    hdrFramebuffer_->setDebugLabel("hdr_fbo");
+
+    // at the end
+    int vp_width, vp_height;
+    glfwGetFramebufferSize(window, &vp_width, &vp_height);
+    Game::resize(vp_width, vp_height);
 }
 
 Game::~Game() {
     controller->unload();
+
+    delete hdrFramebuffer_;
 
     ImGui::DestroyContext();
 }
@@ -78,17 +88,31 @@ void Game::resize(int width, int height) {
     window.size.x = width;
     window.size.y = height;
 
-    camera->setViewport(window.size.x, window.size.y);
+    camera->setViewport(width, height);
 
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     ui::set_scale(width, height, x_scale);
 
     if (ui != nullptr)
-        ui->setViewport(window.size.x, window.size.y);
+        ui->setViewport(width, height);
 
     if (imgui != nullptr)
-        imgui->setViewport(window.size.x, window.size.y);
+        imgui->setViewport(width, height);
+
+    delete hdrFramebuffer_->getTexture(0);
+    auto hdr_color_attachment = new gl::Texture(GL_TEXTURE_2D);
+    hdr_color_attachment->setDebugLabel("hdr_fbo/color");
+    hdr_color_attachment->allocate(1, GL_R11F_G11F_B10F, width, height);
+    hdrFramebuffer_->attachTexture(0, hdr_color_attachment);
+    hdrFramebuffer_->bindTargets({0});
+
+    delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
+    auto hdr_depth_attachment = new gl::Texture(GL_TEXTURE_2D);
+    hdr_depth_attachment->setDebugLabel("hdr_fbo/depth");
+    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT24, width, height);
+    hdrFramebuffer_->attachTexture(GL_DEPTH_ATTACHMENT, hdr_depth_attachment);
+    hdrFramebuffer_->check(GL_DRAW_FRAMEBUFFER);
 }
 
 void Game::load() {
@@ -107,6 +131,8 @@ void Game::load() {
 
     if (controller != nullptr)
         controller->load();
+
+    finalizationRenderer_ = std::make_unique<FinalizationRenderer>();
 }
 
 void Game::unload() {
@@ -168,10 +194,15 @@ void Game::render_() {
     gl::manager->disable(gl::Capability::ScissorTest);
     gl::manager->disable(gl::Capability::StencilTest);
 
+    hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
+
     glClearDepth(0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     controller->render();
+
+    gl::manager->bindDrawFramebuffer(0);
+    finalizationRenderer_->render(hdrFramebuffer_->getTexture(0), hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT));
 
     // Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());
