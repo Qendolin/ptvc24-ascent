@@ -10,7 +10,8 @@ class MaterialBatchRenderer;
 class SkyRenderer;
 class Camera;
 class CheckpointEntity;
-class GameLoadingScreen;
+class MainControllerLoader;
+class FadeOverlay;
 namespace loader {
 class SceneData;
 }
@@ -49,14 +50,21 @@ class MainController : public GameController {
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
-    std::unique_ptr<GameLoadingScreen> loadingScreen;
+    std::unique_ptr<MainControllerLoader> loader;
 
     /**
      * Draw the on screen hud (timer, score, etc.)
      */
-    void drawHud();
+    void drawHud_();
+
+    /**
+     * Is called after loading is finished
+     */
+    void applyLoadResult_();
 
    public:
+    std::unique_ptr<FadeOverlay> fader;
+
     RaceManager raceManager;
 
     MainController(Game &game);

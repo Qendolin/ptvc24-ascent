@@ -18,7 +18,8 @@
 #include "../Input.h"
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
-#include "../Utils.h"
+#include "../UI/Screens/Fade.h"
+#include "../Util/Log.h"
 #include "../Window.h"
 #include "Objects/Checkpoint.h"
 
@@ -77,8 +78,16 @@ void CharacterController::respawn_() {
     scene::TransformRef transform = last_checkpoint->respawnTransformation();
     glm::vec2 azimuth_elevation = quatToAzimuthElevation(transform.rotation());
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
-    camera.position = transform.position();
-    body_->SetPosition(ph::convert(camera.position));
+    setPosition_(transform.position());
+    controller.fader->fade(1.0f, 0.0f, 0.3f);
+    noMoveTimer.set(0.3f);
+}
+
+void CharacterController::setPosition_(glm::vec3 pos) {
+    camera.position = pos;
+    body_->SetPosition(ph::convert(pos));
+    cameraLerpStart_ = pos;
+    cameraLerpEnd_ = pos;
 }
 
 void CharacterController::update() {
@@ -89,6 +98,7 @@ void CharacterController::update() {
     }
 
     invulnerabilityTimer.update(input.timeDelta());
+    noMoveTimer.update(input.timeDelta());
 
     // Camera movement
     // yaw
@@ -119,8 +129,12 @@ void CharacterController::update() {
     if (input.isKeyDown(GLFW_KEY_LEFT_SHIFT)) {
         velocity_ *= SHIFT_SPEED_FACTOR;
     }
-    // Rotate the velocity vector towards look direction
 
+    if (!noMoveTimer.isZero()) {
+        velocity_ = glm::vec3(0);
+    }
+
+    // Rotate the velocity vector towards look direction
     if (!isAutoMoveEnabled)
         velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera.angles.y, {0, 1, 0})) * velocity_;
     // velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.x, {1, 0, 0})) * velocity_;
@@ -142,10 +156,10 @@ void CharacterController::postPhysicsUpdate() {
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }
 
-// calculate azimuth and elevation from quaternion. Caution: AI Generated
+// calculate azimuth and elevation from quaternion. (assuming -z forward)
 glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     // Calculate elevation
-    float sin_pitch = 2.0f * (q.y * q.z + q.w * q.x);
+    float sin_pitch = 2.0f * (q.x * q.w - q.z * q.y);
     float elevation = glm::asin(sin_pitch);
 
     // Calculate azimuth (handle gimbal lock near poles)

@@ -1,4 +1,4 @@
-#include "../Timer.h"
+#include "../Util/Timer.h"
 #include "Entity.h"
 
 #pragma region ForwardDecl
@@ -26,6 +26,7 @@ class CharacterController : public scene::Entity {
     // query flying toggle
     bool isAutoMoveEnabled = false;
     Timer invulnerabilityTimer;
+    Timer noMoveTimer;
 
     JPH::Character* body_ = nullptr;
     glm::vec3 velocity_ = {};
@@ -39,6 +40,8 @@ class CharacterController : public scene::Entity {
 
     // respawn the character at the last checkpoint
     void respawn_();
+
+    void setPosition_(glm::vec3 pos);
 
    public:
     Camera& camera;

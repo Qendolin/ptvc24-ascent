@@ -9,7 +9,7 @@
 #include <string>
 
 #include "GL/StateManager.h"
-#include "Utils.h"
+#include "Util/Log.h"
 #include "Window.h"
 
 static void APIENTRY debugCallback(

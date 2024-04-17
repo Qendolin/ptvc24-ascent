@@ -2,7 +2,7 @@
 
 #include "../Loader/Gltf.h"
 #include "../Physics/Physics.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "Entity.h"
 
 namespace scene {

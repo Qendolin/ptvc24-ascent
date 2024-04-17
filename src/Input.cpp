@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "Utils.h"
+#include "Util/Log.h"
 #include "Window.h"
 
 Input::Input(Window &window) : window_(window) {

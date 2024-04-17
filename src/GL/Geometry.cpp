@@ -1,6 +1,6 @@
 #include "Geometry.h"
 
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "StateManager.h"
 
 namespace gl {

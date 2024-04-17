@@ -1,7 +1,6 @@
 #include "MainController.h"
 
 #include <algorithm>
-#include <chrono>
 #include <glm/glm.hpp>
 
 #include "../Camera.h"
@@ -18,10 +17,11 @@
 #include "../Scene/Entity.h"
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
-#include "../UI/Screens/LevelLoading.h"
+#include "../UI/Screens/Fade.h"
 #include "../UI/UI.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "../Window.h"
+#include "MainControllerLoader.h"
 
 template <typename T>
 int32_t indexOf(const std::vector<T> &vec, const T elem) {
@@ -71,15 +71,27 @@ float RaceManager::timer() {
     return static_cast<float>(Game::get().input->time() - startTime);
 }
 
-MainController::MainController(Game &game) : GameController(game) {}
+MainController::MainController(Game &game) : GameController(game) {
+    loader = std::make_unique<MainControllerLoader>();
+    fader = std::make_unique<FadeOverlay>();
+}
 
 MainController::~MainController() = default;
 
 void MainController::load() {
-    loadingScreen = std::make_unique<GameLoadingScreen>();
-    loadingScreen->callback = [this](GameLoadingScreen::Data &data) {
-        materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
-        skyRenderer = std::make_unique<SkyRenderer>(data.environment);
+    LOG_INFO("Started loading");
+    loader->load();
+}
+
+void MainController::applyLoadResult_() {
+    LOG_INFO("Finished loading");
+    MainControllerLoader::Data data = loader->result();
+    materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
+    skyRenderer = std::make_unique<SkyRenderer>(data.environment);
+
+    if (data.gltf) {
+        LOG_INFO("Creating scene from gltf data");
+        fader->fade(1.0f, 0.0f, 0.3f);
 
         sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
         sceneData->physics.create(*game.physics);
@@ -97,7 +109,7 @@ void MainController::load() {
             return node.prop<bool>("is_first", false);
         });
         raceManager.loadCheckpoints(first_Checkpoint.entity<CheckpointEntity>());
-    };
+    }
 }
 
 void MainController::unload() {
@@ -115,10 +127,11 @@ void MainController::update() {
     }
 
     // still loading
-    if (loadingScreen) {
-        if (loadingScreen->isClosed())
-            loadingScreen = nullptr;
+    loader->update();
+    if (loader->isLoading()) {
         return;
+    } else if (loader->isDone()) {
+        applyLoadResult_();
     }
 
     // Update and step physics
@@ -133,32 +146,30 @@ void MainController::update() {
     scene->callEntityUpdate();
 }
 
-std::string formatTimeMMSS(float total_seconds) {
+std::string formatTimeRaceClock(float total_seconds) {
     std::chrono::duration<float> duration(total_seconds);
-    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
-    auto seconds = duration - minutes;
+    float minutes = std::floor(total_seconds / 60);
+    float seconds = std::floor(total_seconds - minutes * 60);
+    float millis = std::floor(1000 * (total_seconds - minutes * 60 - seconds));
 
-    return std::format("{:02}:{:02}", round(minutes.count()), round(seconds.count()));
+    return std::format("{:02}:{:02}.{:03}", round(minutes), round(seconds), round(millis));
 }
 
-void MainController::drawHud() {
+void MainController::drawHud_() {
     using namespace ui::literals;
     nk_context *nk = game.ui->context();
-    // make window transparent
-    nk->style.window.background = nk_rgba(0, 0, 0, 0);
-    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-    if (nk_begin(nk, "gui", nk_recti(0, 0, (int)100_vw, (int)100_vh), 0)) {
-        nk_style_push_color(nk, &nk->style.text.color, nk_rgb(0, 0, 0));
-        nk_layout_row_dynamic(nk, 30, 1);
-        std::chrono::duration<float> total_seconds(raceManager.timer());
-        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(total_seconds);
-        auto seconds = total_seconds - minutes;
+    // make window semi transparent
+    nk->style.window.background = nk_rgba(0, 0, 0, 120);
+    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
+    if (nk_begin(nk, "timer", nk_rect(100_vw - 180_dp, 0, 180_dp, 90_dp), 0)) {
+        nk_style_push_color(nk, &nk->style.text.color, nk_rgb(255, 255, 255));
+        nk_layout_row_dynamic(nk, 30_dp, 1);
 
-        std::string time_str = formatTimeMMSS(raceManager.timer());
+        std::string time_str = formatTimeRaceClock(raceManager.timer());
         nk_label(nk, time_str.c_str(), NK_TEXT_ALIGN_RIGHT);
 
-        nk_layout_row_dynamic(nk, 30, 1);
-        std::string penalty_str = "+" + formatTimeMMSS(raceManager.penalty());
+        nk_layout_row_dynamic(nk, 30_dp, 1);
+        std::string penalty_str = "+" + formatTimeRaceClock(raceManager.penalty());
         nk_label(nk, penalty_str.c_str(), NK_TEXT_ALIGN_RIGHT);
         nk_style_pop_color(nk);
     }
@@ -167,12 +178,13 @@ void MainController::drawHud() {
 
 void MainController::render() {
     // still loading
-    if (loadingScreen) {
-        loadingScreen->draw();
+    if (loader->isLoading()) {
+        loader->draw();
         return;
     }
 
-    drawHud();
+    drawHud_();
+    fader->draw();
 
     if (game.debugSettings.entity.debugDrawEnabled) {
         for (auto &&ent : scene->entities) ent->debugDraw();

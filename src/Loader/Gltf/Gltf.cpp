@@ -5,7 +5,7 @@
 
 #include "../../GL/Geometry.h"
 #include "../../GL/Texture.h"
-#include "../../Utils.h"
+#include "../../Util/Log.h"
 
 namespace gltf = tinygltf;
 

@@ -10,7 +10,7 @@
 #include <stb_image_write.h>
 
 #include "../GL/Texture.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 
 namespace loader {
 

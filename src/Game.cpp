@@ -19,7 +19,7 @@
 #include "UI/Renderer.h"
 #include "UI/Skin.h"
 #include "UI/UI.h"
-#include "Utils.h"
+#include "Util/Log.h"
 #include "Window.h"
 
 Game &Game::get() {
@@ -78,6 +78,8 @@ Game::Game(Window &window)
 Game::~Game() {
     controller->unload();
 
+    delete hdrFramebuffer_->getTexture(0);
+    delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     delete hdrFramebuffer_;
 
     ImGui::DestroyContext();

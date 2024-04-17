@@ -7,7 +7,7 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Input.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "../Window.h"
 
 static ImGuiKey mapGlfwKey(int key);

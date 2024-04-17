@@ -11,7 +11,7 @@
 #include "../GL/Texture.h"
 #include "../Input.h"
 #include "../Loader/Loader.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "../Window.h"
 #include "Renderer.h"
 #include "Skin.h"

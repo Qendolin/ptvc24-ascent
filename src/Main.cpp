@@ -2,7 +2,7 @@
 #include "GL/Util.h"
 #include "Game.h"
 #include "Setup.h"
-#include "Utils.h"
+#include "Util/Log.h"
 #include "Window.h"
 
 void printNotDeletedOpenGLObjects() {

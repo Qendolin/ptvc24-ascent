@@ -7,7 +7,7 @@
 #include <fstream>
 #include <vector>
 
-#include "../../Utils.h"
+#include "../../Util/Log.h"
 #include "LZ4.h"
 
 const uint32_t IBLENV_MAGIC_NUMBER = 0x78b85411;

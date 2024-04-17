@@ -6,7 +6,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 
 // calculate number of sides for a given radius
 int circleSides(float r) {

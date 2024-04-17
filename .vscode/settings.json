@@ -2,6 +2,7 @@
 	"files.associations": {
 		"*.vsh": "glsl",
 		"*.fsh": "glsl",
+		"*.essl": "glsl",
 		"*.gltf": "json",
 		"xstring": "cpp",
 		"iostream": "cpp",
@@ -89,7 +90,8 @@
 		"unordered_set": "cpp",
 		"any": "cpp",
 		"*.tcc": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"future": "cpp"
 	},
 	"git.detectSubmodules": false,
 	"git.ignoreSubmodules": true,

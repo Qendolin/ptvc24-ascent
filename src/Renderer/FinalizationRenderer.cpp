@@ -8,7 +8,7 @@
 
 FinalizationRenderer::FinalizationRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/finalization.vert"),
+        {new gl::ShaderProgram("assets/shaders/quad_uv.vert"),
          new gl::ShaderProgram("assets/shaders/finalization.frag")});
     shader->setDebugLabel("finalization_renderer/shader");
 

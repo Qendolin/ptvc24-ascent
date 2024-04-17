@@ -5,7 +5,7 @@
 #include <istream>
 #include <vector>
 
-#include "../../Utils.h"
+#include "../../Util/Log.h"
 
 // Reference: https://gist.github.com/t-mat/c47868a00c60f93682d8
 std::vector<uint8_t> decompressLz4Frames(std::istream& input) {
