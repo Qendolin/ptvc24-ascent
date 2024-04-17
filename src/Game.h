@@ -15,7 +15,7 @@ class TweenSystem;
 class DebugMenu;
 class Screen;
 struct Window;
-class GameController;
+class AbstractController;
 class FinalizationRenderer;
 
 namespace ph {
@@ -42,7 +42,7 @@ class Game {
 
     std::unique_ptr<DebugMenu> debugMenu_;
     // the controller which will get activated at the start of the next frame
-    std::unique_ptr<GameController> queuedController_;
+    std::unique_ptr<AbstractController> queuedController_;
     gl::Framebuffer *hdrFramebuffer_;
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
 
@@ -68,7 +68,7 @@ class Game {
     std::unique_ptr<Camera> camera;
     std::unique_ptr<DirectBuffer> directDraw;
 
-    std::unique_ptr<GameController> controller;
+    std::unique_ptr<AbstractController> controller;
 
     // prevent copy
     Game(Game const &) = delete;

@@ -71,7 +71,7 @@ float RaceManager::timer() {
     return static_cast<float>(Game::get().input->time() - startTime);
 }
 
-MainController::MainController(Game &game) : GameController(game) {
+MainController::MainController(Game &game) : AbstractController(game) {
     loader = std::make_unique<MainControllerLoader>();
     fader = std::make_unique<FadeOverlay>();
 }
@@ -99,7 +99,8 @@ void MainController::applyLoadResult_() {
         scene::NodeEntityFactory factory;
         scene::registerEntityTypes(factory);
         scene = std::make_unique<scene::Scene>(*sceneData, factory);
-        scene->entities.push_back(new CharacterController(scene::SceneRef(*scene), *game.camera));
+        auto character = new CharacterController(scene::SceneRef(*scene), *game.camera);
+        scene->entities.push_back(character);
         scene->callEntityInit();
 
         game.physics->system->OptimizeBroadPhase();

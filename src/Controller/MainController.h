@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "GameController.h"
+#include "AbstractController.h"
 
 #pragma region ForwardDecl
 class MaterialBatchRenderer;
@@ -43,7 +43,7 @@ class RaceManager {
     }
 };
 
-class MainController : public GameController {
+class MainController : public AbstractController {
    private:
     std::unique_ptr<MaterialBatchRenderer> materialBatchRenderer;
     std::unique_ptr<SkyRenderer> skyRenderer;

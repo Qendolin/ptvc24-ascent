@@ -54,6 +54,8 @@ void CharacterController::init() {
         [this](ph::SensorContact contact) {
             if (!contact.persistent) this->onBodyContact_(contact);
         });
+
+    respawn_();
 }
 
 void CharacterController::onBodyContact_(ph::SensorContact& contact) {
@@ -73,9 +75,16 @@ void CharacterController::onBodyContact_(ph::SensorContact& contact) {
 
 void CharacterController::respawn_() {
     MainController& controller = dynamic_cast<MainController&>(*game().controller);
+
+    scene::TransformRef transform;
+
     CheckpointEntity* last_checkpoint = controller.raceManager.getLastCheckpoint();
-    if (last_checkpoint == nullptr) return;
-    scene::TransformRef transform = last_checkpoint->respawnTransformation();
+    if (last_checkpoint != nullptr) {
+        transform = last_checkpoint->respawnTransformation();
+    } else {
+        transform = scene.find(scene.root(), "PlayerSpawn").transform();
+    }
+
     glm::vec2 azimuth_elevation = quatToAzimuthElevation(transform.rotation());
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
     setPosition_(transform.position());
