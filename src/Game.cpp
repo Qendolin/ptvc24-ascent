@@ -63,7 +63,6 @@ Game::Game(Window &window)
     ImGui::SetCurrentContext(ImGui::CreateContext());
 
     physics = std::make_unique<ph::Physics>();
-    physics->setDebugDrawEnabled(true);
 
     queueController<MainMenuController>();
 

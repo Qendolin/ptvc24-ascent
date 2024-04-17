@@ -9,6 +9,7 @@
 #include "../Debug/ImGuiBackend.h"
 #include "../Game.h"
 #include "../Input.h"
+#include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
 #include "../Physics/Physics.h"
 #include "../Renderer/MaterialBatchRenderer.h"
@@ -17,6 +18,7 @@
 #include "../Scene/Entity.h"
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
+#include "../UI/Screens/LevelLoading.h"
 #include "../UI/UI.h"
 #include "../Utils.h"
 #include "../Window.h"
@@ -74,12 +76,12 @@ MainController::MainController(Game &game) : GameController(game) {}
 MainController::~MainController() = default;
 
 void MainController::load() {
-    materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
-    skyRenderer = std::make_unique<SkyRenderer>();
+    loadingScreen = std::make_unique<GameLoadingScreen>();
+    loadingScreen->callback = [this](GameLoadingScreen::Data &data) {
+        materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
+        skyRenderer = std::make_unique<SkyRenderer>(data.environment);
 
-    if (sceneData == nullptr) {
-        const tinygltf::Model &model = loader::gltf("assets/models/test_course.glb");
-        sceneData = std::unique_ptr<loader::SceneData>(loader::scene(model));
+        sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
         sceneData->physics.create(*game.physics);
 
         scene::NodeEntityFactory factory;
@@ -95,7 +97,7 @@ void MainController::load() {
             return node.prop<bool>("is_first", false);
         });
         raceManager.loadCheckpoints(first_Checkpoint.entity<CheckpointEntity>());
-    }
+    };
 }
 
 void MainController::unload() {
@@ -110,6 +112,13 @@ void MainController::update() {
     // Release mouse
     if (game.input->isKeyPress(GLFW_KEY_ESCAPE) && game.input->isMouseCaptured()) {
         game.input->releaseMouse();
+    }
+
+    // still loading
+    if (loadingScreen) {
+        if (loadingScreen->isClosed())
+            loadingScreen = nullptr;
+        return;
     }
 
     // Update and step physics
@@ -157,6 +166,12 @@ void MainController::drawHud() {
 }
 
 void MainController::render() {
+    // still loading
+    if (loadingScreen) {
+        loadingScreen->draw();
+        return;
+    }
+
     drawHud();
 
     if (game.debugSettings.entity.debugDrawEnabled) {

@@ -2,6 +2,7 @@
 	"files.associations": {
 		"*.vsh": "glsl",
 		"*.fsh": "glsl",
+		"*.gltf": "json",
 		"xstring": "cpp",
 		"iostream": "cpp",
 		"algorithm": "cpp",

@@ -52,6 +52,6 @@ struct FloatImage {
 
 IblEnv* environment(std::string filename);
 
-FloatImage* brdfLut(std::string filename);
+FloatImage* floatImage(std::string filename);
 
 }  // namespace loader

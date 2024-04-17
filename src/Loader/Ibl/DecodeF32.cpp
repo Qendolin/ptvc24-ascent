@@ -26,7 +26,7 @@ std::vector<uint8_t> decompressLz4Frames(std::vector<uint8_t>& input);
 loader::FloatImage* decodeF32(std::ifstream& input);
 
 namespace loader {
-FloatImage* brdfLut(std::string filename) {
+FloatImage* floatImage(std::string filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         PANIC("Error opening file: " + filename);

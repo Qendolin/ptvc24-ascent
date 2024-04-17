@@ -8,7 +8,9 @@
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
 
-MaterialBatchRenderer::MaterialBatchRenderer() {
+MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env_diffuse,
+                                             std::shared_ptr<loader::IblEnv> env_specular,
+                                             std::shared_ptr<loader::FloatImage> brdf_lut) {
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/pbr.vert"),
          new gl::ShaderProgram("assets/shaders/pbr.frag")});
@@ -43,29 +45,22 @@ MaterialBatchRenderer::MaterialBatchRenderer() {
     ormSampler->anisotropicFilter(gl::manager->clampAnisotropy(8.0));
     ormSampler->lodBias(-2.0);
 
-    // TODO: dont hardcore the names
-    loader::IblEnv *env_diffuse = loader::environment("assets/textures/skybox/kloofendal_diffuse.iblenv");
     iblDiffuse = new gl::Texture(GL_TEXTURE_CUBE_MAP);
     iblDiffuse->setDebugLabel("pbr_renderer/environment/diffuse");
     iblDiffuse->allocate(1, GL_RGB16F, env_diffuse->baseSize, env_diffuse->baseSize);
     iblDiffuse->load(0, env_diffuse->baseSize, env_diffuse->baseSize, 6, GL_RGB, GL_FLOAT, env_diffuse->all().data());
-    delete env_diffuse;
 
-    loader::IblEnv *env_specular = loader::environment("assets/textures/skybox/kloofendal_specular.iblenv");
     iblSpecular = new gl::Texture(GL_TEXTURE_CUBE_MAP);
     iblSpecular->setDebugLabel("pbr_renderer/environment/diffuse");
     iblSpecular->allocate(env_specular->levels, GL_RGB16F, env_specular->baseSize, env_specular->baseSize);
     for (int lvl = 0; lvl < env_specular->levels; lvl++) {
         iblSpecular->load(lvl, env_specular->size(lvl), env_specular->size(lvl), 6, GL_RGB, GL_FLOAT, env_specular->level(lvl).data());
     }
-    delete env_specular;
 
-    loader::FloatImage *brdf_lut = loader::brdfLut("assets/textures/ibl_brdf_lut.f32");
     iblBrdfLut = new gl::Texture(GL_TEXTURE_2D);
     iblBrdfLut->setDebugLabel("pbr_renderer/environment/brdf_lut");
     iblBrdfLut->allocate(1, GL_RG32F, brdf_lut->width, brdf_lut->height);
     iblBrdfLut->load(0, brdf_lut->width, brdf_lut->height, GL_RG, GL_FLOAT, brdf_lut->data.data());
-    delete brdf_lut;
 }
 
 MaterialBatchRenderer::~MaterialBatchRenderer() {
@@ -104,8 +99,8 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
 
     graphics.bind();
     for (auto &&batch : graphics.batches) {
-        auto &material = graphics.materials[batch.material];
         auto &defaultMaterial = graphics.defaultMaterial;
+        auto &material = batch.material < 0 ? defaultMaterial : graphics.materials[batch.material];
         shader->fragmentStage()->setUniform("u_albedo_fac", material.albedoFactor);
         shader->fragmentStage()->setUniform("u_occlusion_metallic_roughness_fac", glm::vec3(1.0, material.metallicRoughnessFactor));
         if (material.albedo == nullptr) {

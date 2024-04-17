@@ -10,6 +10,7 @@ class MaterialBatchRenderer;
 class SkyRenderer;
 class Camera;
 class CheckpointEntity;
+class GameLoadingScreen;
 namespace loader {
 class SceneData;
 }
@@ -48,6 +49,7 @@ class MainController : public GameController {
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
+    std::unique_ptr<GameLoadingScreen> loadingScreen;
 
     /**
      * Draw the on screen hud (timer, score, etc.)

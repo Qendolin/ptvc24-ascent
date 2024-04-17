@@ -7,7 +7,7 @@
 #include "../GL/Texture.h"
 #include "../Loader/Environment.h"
 
-SkyRenderer::SkyRenderer() {
+SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/sky.vert"),
          new gl::ShaderProgram("assets/shaders/sky_cubemap.frag")});
@@ -29,13 +29,10 @@ SkyRenderer::SkyRenderer() {
     sampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     sampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    // TODO: dont hardcore the names
-    loader::IblEnv *env_sky = loader::environment("assets/textures/skybox/kloofendal.iblenv");
     cubemap = new gl::Texture(GL_TEXTURE_CUBE_MAP);
     cubemap->setDebugLabel("sky_renderer/cubemap");
-    cubemap->allocate(1, GL_RGB16F, env_sky->baseSize, env_sky->baseSize);
-    cubemap->load(0, env_sky->baseSize, env_sky->baseSize, 6, GL_RGB, GL_FLOAT, env_sky->all().data());
-    delete env_sky;
+    cubemap->allocate(1, GL_RGB16F, environment->baseSize, environment->baseSize);
+    cubemap->load(0, environment->baseSize, environment->baseSize, 6, GL_RGB, GL_FLOAT, environment->all().data());
 }
 
 SkyRenderer::~SkyRenderer() {
