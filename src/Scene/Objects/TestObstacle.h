@@ -21,7 +21,7 @@ class TestObstacleEntity : public scene::NodeEntity {
 
     void init() override;
 
-    void update() override;
+    void update(float time_delta) override;
 
     void debugDraw() override;
 

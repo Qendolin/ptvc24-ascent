@@ -127,7 +127,7 @@ class Scene {
 
     void callEntityInit();
 
-    void callEntityUpdate();
+    void callEntityUpdate(float time_delta);
 
     void callEntityPrePhysicsUpdate();
 

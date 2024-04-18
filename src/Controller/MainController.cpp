@@ -144,7 +144,7 @@ void MainController::update() {
     }
 
     // Update entities
-    scene->callEntityUpdate();
+    scene->callEntityUpdate(game.input->timeDelta());
 }
 
 std::string formatTimeRaceClock(float total_seconds) {

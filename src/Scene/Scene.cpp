@@ -94,9 +94,9 @@ void Scene::callEntityInit() {
     }
 }
 
-void Scene::callEntityUpdate() {
+void Scene::callEntityUpdate(float time_delta) {
     for (auto&& ent : entities) {
-        ent->update();
+        ent->update(time_delta);
     }
 }
 

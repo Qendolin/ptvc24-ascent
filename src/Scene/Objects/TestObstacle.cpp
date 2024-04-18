@@ -24,7 +24,7 @@ void TestObstacleEntity::init() {
                 .during(cycle_time * 1000);
 }
 
-void TestObstacleEntity::update() {
+void TestObstacleEntity::update(float time_delta) {
     game().tween->step(tween);
     if (tween.progress() == 0.0) {
         tween.forward();

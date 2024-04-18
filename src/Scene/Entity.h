@@ -29,7 +29,7 @@ class Entity {
     virtual void init() = 0;
 
     // Called every frame, not before physics update
-    virtual void update() = 0;
+    virtual void update(float time_delta) = 0;
 
     virtual void debugDraw(){};
 

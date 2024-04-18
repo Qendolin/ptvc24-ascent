@@ -99,15 +99,15 @@ void CharacterController::setPosition_(glm::vec3 pos) {
     cameraLerpEnd_ = pos;
 }
 
-void CharacterController::update() {
+void CharacterController::update(float time_delta) {
     Input& input = *game().input;
     if (input.isMouseReleased()) {
         velocity_ = glm::vec3(0);
         return;
     }
 
-    invulnerabilityTimer.update(input.timeDelta());
-    noMoveTimer.update(input.timeDelta());
+    invulnerabilityTimer.update(time_delta);
+    noMoveTimer.update(time_delta);
 
     // Camera movement
     // yaw

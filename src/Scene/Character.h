@@ -52,7 +52,7 @@ class CharacterController : public scene::Entity {
 
     void init() override;
 
-    void update() override;
+    void update(float time_delta) override;
 
     void prePhysicsUpdate() override;
 
