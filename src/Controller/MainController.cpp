@@ -18,10 +18,14 @@
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
 #include "../UI/Screens/Fade.h"
+#include "../UI/Screens/Score.h"
+#include "../UI/Screens/Start.h"
 #include "../UI/UI.h"
+#include "../Util/Format.h"
 #include "../Util/Log.h"
 #include "../Window.h"
 #include "MainControllerLoader.h"
+#include "MainMenuController.h"
 
 template <typename T>
 int32_t indexOf(const std::vector<T> &vec, const T elem) {
@@ -36,17 +40,30 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
     int32_t index = indexOf(checkpoints, checkpoint);
     LOG_DEBUG("Entered checkpoint '" + std::to_string(index) + "'");
 
-    // first checkpoint
-    if (startTime < 0) {
-        startTime = Game::get().input->time();
-        lastPassedCheckpoint = index;
+    if (ended) {
         return;
     }
 
+    if (!started) {
+        if (index == 0) {
+            started = true;
+            startTime = Game::get().input->time();
+            lastPassedCheckpoint = 0;
+        }
+        return;
+    }
+
+    // next checkpoint
     if (index > lastPassedCheckpoint) {
         int32_t skipped = std::max(index - lastPassedCheckpoint - 1, 0);
         penaltyTime += skipped * 5;
         lastPassedCheckpoint = index;
+    }
+
+    // last checkpoint (may also be first)
+    if (index == checkpoints.size() - 1) {
+        ended = true;
+        endTime = Game::get().input->time();
     }
 }
 
@@ -67,7 +84,8 @@ CheckpointEntity *RaceManager::getLastCheckpoint() {
 }
 
 float RaceManager::timer() {
-    if (startTime < 0) return 0;
+    if (!started) return 0;
+    if (ended) return static_cast<float>(endTime - startTime);
     return static_cast<float>(Game::get().input->time() - startTime);
 }
 
@@ -76,7 +94,15 @@ MainController::MainController(Game &game) : AbstractController(game) {
     fader = std::make_unique<FadeOverlay>();
 }
 
-MainController::~MainController() = default;
+MainController::~MainController() {
+    if (sceneData != nullptr) {
+        JPH::BodyInterface &physics = game.physics->interface();
+        for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
+            physics.RemoveBody(instance.id);
+            physics.DestroyBody(instance.id);
+        }
+    }
+}
 
 void MainController::load() {
     LOG_INFO("Started loading");
@@ -92,9 +118,15 @@ void MainController::applyLoadResult_() {
     if (data.gltf) {
         LOG_INFO("Creating scene from gltf data");
         fader->fade(1.0f, 0.0f, 0.3f);
+        startScreen = std::make_unique<StartScreen>();
 
         sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
-        sceneData->physics.create(*game.physics);
+        JPH::BodyInterface &physics = game.physics->interface();
+        for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
+            JPH::BodyID id = physics.CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
+            if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
+            instance.id = id;
+        }
 
         scene::NodeEntityFactory factory;
         scene::registerEntityTypes(factory);
@@ -117,16 +149,6 @@ void MainController::unload() {
 }
 
 void MainController::update() {
-    bool can_capture_mouse = !game.imgui->shouldShowCursor();
-    // Capture mouse
-    if (game.input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && game.input->isMouseReleased() && can_capture_mouse) {
-        game.input->captureMouse();
-    }
-    // Release mouse
-    if (game.input->isKeyPress(GLFW_KEY_ESCAPE) && game.input->isMouseCaptured()) {
-        game.input->releaseMouse();
-    }
-
     // still loading
     loader->update();
     if (loader->isLoading()) {
@@ -145,15 +167,13 @@ void MainController::update() {
 
     // Update entities
     scene->callEntityUpdate(game.input->timeDelta());
-}
 
-std::string formatTimeRaceClock(float total_seconds) {
-    std::chrono::duration<float> duration(total_seconds);
-    float minutes = std::floor(total_seconds / 60);
-    float seconds = std::floor(total_seconds - minutes * 60);
-    float millis = std::floor(1000 * (total_seconds - minutes * 60 - seconds));
-
-    return std::format("{:02}:{:02}.{:03}", round(minutes), round(seconds), round(millis));
+    if (raceManager.hasEnded() && scoreScreen == nullptr || game.input->isKeyPress(GLFW_KEY_L)) {
+        scoreScreen = std::make_unique<ScoreScreen>(ScoreScreen::Score{
+            .time = raceManager.timer(),
+            .penalty = raceManager.penalty(),
+        });
+    }
 }
 
 void MainController::drawHud_() {
@@ -162,6 +182,7 @@ void MainController::drawHud_() {
     // make window semi transparent
     nk->style.window.background = nk_rgba(0, 0, 0, 120);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
+    nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
     if (nk_begin(nk, "timer", nk_rect(100_vw - 180_dp, 0, 180_dp, 90_dp), 0)) {
         nk_style_push_color(nk, &nk->style.text.color, nk_rgb(255, 255, 255));
         nk_layout_row_dynamic(nk, 30_dp, 1);
@@ -184,8 +205,25 @@ void MainController::render() {
         return;
     }
 
-    drawHud_();
+    if (scoreScreen) {
+        scoreScreen->draw();
+        if (scoreScreen->isClosed()) {
+            game.queueController<MainMenuController>();
+            scoreScreen = nullptr;
+        }
+    } else if (startScreen) {
+        startScreen->draw();
+        if (startScreen->isClosed()) {
+            startScreen = nullptr;
+            // TODO: start flying
+        }
+    } else {
+        drawHud_();
+    }
+
     fader->draw();
+
+    game.camera->updateViewMatrix();
 
     if (game.debugSettings.entity.debugDrawEnabled) {
         for (auto &&ent : scene->entities) ent->debugDraw();

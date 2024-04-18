@@ -187,6 +187,21 @@ void Game::update_() {
 
     controller->update();
     debugMenu_->draw();
+
+    // mouse capturing & releasing
+    if (input->mouseMode() == Input::MouseMode::Capture) {
+        bool can_capture_mouse = !imgui->shouldShowCursor();
+        // Capture mouse with left click
+        if (input->isMousePress(GLFW_MOUSE_BUTTON_LEFT) && input->isMouseReleased() && can_capture_mouse) {
+            input->captureMouse();
+        }
+        // Release mouse with escape
+        if (input->isKeyPress(GLFW_KEY_ESCAPE) && input->isMouseCaptured()) {
+            input->releaseMouse();
+        }
+    } else if (input->mouseMode() == Input::MouseMode::Release && input->isMouseCaptured()) {
+        input->releaseMouse();
+    }
 }
 
 void Game::render_() {

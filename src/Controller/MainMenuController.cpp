@@ -1,6 +1,7 @@
 #include "MainMenuController.h"
 
 #include "../Game.h"
+#include "../Input.h"
 #include "../UI/Screens/MainMenu.h"
 #include "MainController.h"
 

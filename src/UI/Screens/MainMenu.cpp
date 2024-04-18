@@ -10,6 +10,7 @@
 
 MainMenuScreen::MainMenuScreen() {
     titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    Game::get().input->setMouseMode(Input::MouseMode::Release);
 }
 
 MainMenuScreen::~MainMenuScreen() {

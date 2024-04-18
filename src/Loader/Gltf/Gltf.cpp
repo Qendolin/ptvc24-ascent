@@ -83,16 +83,6 @@ PhysicsData::PhysicsData(std::vector<PhysicsInstance> &instances) : instances(st
 
 PhysicsData::~PhysicsData() = default;
 
-// TODO: move this somewhere else, should not be part of this class
-void PhysicsData::create(ph::Physics &physics) {
-    for (size_t i = 0; i < instances.size(); i++) {
-        PhysicsInstance &instance = instances[i];
-        JPH::BodyID id = physics.interface().CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
-        if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
-        instance.id = id;
-    }
-}
-
 SceneData *scene(const gltf::Model &model) {
     std::map<std::string, loader::Node> nodes = loadNodeTree(model);
     GraphicsData g = loadGraphics(model, nodes);

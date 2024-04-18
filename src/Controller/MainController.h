@@ -12,6 +12,8 @@ class Camera;
 class CheckpointEntity;
 class MainControllerLoader;
 class FadeOverlay;
+class ScoreScreen;
+class StartScreen;
 namespace loader {
 class SceneData;
 }
@@ -23,7 +25,10 @@ class Scene;
 // Handles the logic of measuring score and checkpoints
 class RaceManager {
     int lastPassedCheckpoint = -1;
+    bool started = false;
+    bool ended = false;
     double startTime = -1.0;
+    double endTime = -1.0;
     float penaltyTime = 0.0;
     std::vector<CheckpointEntity *> checkpoints;
 
@@ -41,6 +46,14 @@ class RaceManager {
     float penalty() {
         return penaltyTime;
     }
+
+    bool hasStarted() {
+        return started;
+    }
+
+    bool hasEnded() {
+        return ended;
+    }
 };
 
 class MainController : public AbstractController {
@@ -51,6 +64,9 @@ class MainController : public AbstractController {
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
     std::unique_ptr<MainControllerLoader> loader;
+
+    std::unique_ptr<ScoreScreen> scoreScreen;
+    std::unique_ptr<StartScreen> startScreen;
 
     /**
      * Draw the on screen hud (timer, score, etc.)

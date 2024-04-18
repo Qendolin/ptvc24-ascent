@@ -153,7 +153,6 @@ void CharacterController::update(float time_delta) {
     // The physics body only moves at a fixed interval (60Hz) but the camera movement needs to be smooth.
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
-    camera.updateViewMatrix();
 }
 
 void CharacterController::prePhysicsUpdate() {

@@ -44,6 +44,11 @@ class Input {
     typedef std::function<void(int key, int scancode, int action, int mods)> KeyCallback;
     typedef std::function<void(unsigned int codepoint)> CharCallback;
 
+    enum class MouseMode {
+        Release,
+        Capture
+    };
+
    private:
     template <typename T>
     struct CallbackRegistration {
@@ -79,6 +84,7 @@ class Input {
     double timeRead_ = 0;
     float timeDelta_ = 0;
     bool mouseCaptured_ = false;
+    MouseMode mouseMode_ = MouseMode::Release;
     glm::vec2 mousePosRead_ = {};
     glm::vec2 mousePosWrite_ = {};
     glm::vec2 mouseDelta_ = {};
@@ -148,9 +154,23 @@ class Input {
 
     void releaseMouse();
 
+    void setMouseMode(MouseMode mode) {
+        if (mode == MouseMode::Release && !isMouseReleased()) {
+            releaseMouse();
+        }
+        if (mode == MouseMode::Capture && !isMouseCaptured() && isWindowFocused()) {
+            captureMouse();
+        }
+        this->mouseMode_ = mode;
+    }
+
+    MouseMode mouseMode() {
+        return mouseMode_;
+    }
+
     /**
      * @return `true` if the window is focused / selected by the user
-    */
+     */
     bool isWindowFocused();
 
     /**
