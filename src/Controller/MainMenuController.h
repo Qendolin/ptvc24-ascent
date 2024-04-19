@@ -2,11 +2,11 @@
 
 #include <memory>
 
-#include "GameController.h"
+#include "AbstractController.h"
 
 class Screen;
 
-class MainMenuController : public GameController {
+class MainMenuController : public AbstractController {
    private:
     std::unique_ptr<Screen> screen;
 

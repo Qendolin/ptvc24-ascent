@@ -1,7 +1,7 @@
 #include "Shader.h"
 
 #include "../Loader/Loader.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "StateManager.h"
 
 namespace gl {

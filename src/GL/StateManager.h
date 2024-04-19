@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../Utils.h"
+#include "../Util/Log.h"
 
 #pragma once
 
@@ -359,6 +359,12 @@ class StateManager {
     void intelCubemapDsaRebindFramebuffer() {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFramebuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFramebuffer);
+    }
+
+    float clampAnisotropy(float desired) {
+        float max = env.features.maxTextureMaxAnisotropy;
+        if (desired > max) return max;
+        return desired;
     }
 };
 

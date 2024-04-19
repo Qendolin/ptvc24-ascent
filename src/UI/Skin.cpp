@@ -2,7 +2,7 @@
 
 #include "../GL/Texture.h"
 #include "../Loader/Loader.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 
 struct rect {
     int x, y, w, h;

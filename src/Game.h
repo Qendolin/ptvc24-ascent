@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "Debug/Settings.h"
+
 #pragma region ForwardDecl
 #include "GL/Declarations.h"
 class Camera;
@@ -13,7 +15,9 @@ class TweenSystem;
 class DebugMenu;
 class Screen;
 struct Window;
-class GameController;
+class AbstractController;
+class FinalizationRenderer;
+class ScoreManager;
 
 namespace ph {
 class Physics;
@@ -39,7 +43,9 @@ class Game {
 
     std::unique_ptr<DebugMenu> debugMenu_;
     // the controller which will get activated at the start of the next frame
-    std::unique_ptr<GameController> queuedController_;
+    std::unique_ptr<AbstractController> queuedController_;
+    gl::Framebuffer *hdrFramebuffer_;
+    std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
 
     // Process user input
     void processInput_();
@@ -54,6 +60,7 @@ class Game {
     static Game &get();
 
     Window &window;
+    DebugSettings debugSettings = {};
     std::unique_ptr<ph::Physics> physics;
     std::unique_ptr<ui::Backend> ui;
     std::unique_ptr<ui::ImGuiBackend> imgui;
@@ -62,7 +69,8 @@ class Game {
     std::unique_ptr<Camera> camera;
     std::unique_ptr<DirectBuffer> directDraw;
 
-    std::unique_ptr<GameController> controller;
+    std::unique_ptr<AbstractController> controller;
+    std::unique_ptr<ScoreManager> scores;
 
     // prevent copy
     Game(Game const &) = delete;

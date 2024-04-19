@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-//#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 class Camera {
@@ -19,7 +18,7 @@ class Camera {
 
    public:
     glm::vec3 position;
-    // pitch, yaw, roll
+    // pitch, yaw, roll in radians
     glm::vec3 angles;
 
     /**

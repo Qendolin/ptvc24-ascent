@@ -4,20 +4,24 @@
 
 namespace ph {
 
+bool SensorContactListener::CanLayerReceiveCallbacks_(const JPH::ObjectLayer &layer) {
+    return (layer == Layers::SENSOR || layer == Layers::MOVING);
+}
+
 void SensorContactListener::OnContactAdded(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) {
-    if (body_a.GetObjectLayer() == Layers::SENSOR) {
+    if (CanLayerReceiveCallbacks_(body_a.GetObjectLayer())) {
         RecordSensorContact(body_a.GetID(), body_b.GetID(), false);
     }
-    if (body_b.GetObjectLayer() == Layers::SENSOR) {
+    if (CanLayerReceiveCallbacks_(body_b.GetObjectLayer())) {
         RecordSensorContact(body_b.GetID(), body_a.GetID(), false);
     }
 }
 
 void SensorContactListener::OnContactPersisted(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) {
-    if (body_a.GetObjectLayer() == Layers::SENSOR) {
+    if (CanLayerReceiveCallbacks_(body_a.GetObjectLayer())) {
         RecordSensorContact(body_a.GetID(), body_b.GetID(), true);
     }
-    if (body_b.GetObjectLayer() == Layers::SENSOR) {
+    if (CanLayerReceiveCallbacks_(body_b.GetObjectLayer())) {
         RecordSensorContact(body_b.GetID(), body_a.GetID(), true);
     }
 }
@@ -29,7 +33,7 @@ void SensorContactListener::RecordSensorContact(const JPH::BodyID sensor, const 
 void SensorContactListener::DispatchCallbacks() {
     for (auto &&contact : recordedSensorContacts_) {
         if (registeredSensors_.count(contact.sensor) > 0) {
-            registeredSensors_[contact.sensor](contact);
+            registeredSensors_.at(contact.sensor)(contact);
         }
     }
 

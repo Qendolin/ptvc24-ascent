@@ -69,6 +69,8 @@ class SensorContactListener : public JPH::ContactListener {
     std::vector<SensorContact> recordedSensorContacts_ = {};
     std::unordered_map<JPH::BodyID, std::function<void(SensorContact)>> registeredSensors_ = {};
 
+    bool CanLayerReceiveCallbacks_(const JPH::ObjectLayer &layer);
+
    public:
     virtual void OnContactAdded(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) override;
 

@@ -6,12 +6,12 @@
 
 class TestObstacleEntity : public scene::NodeEntity {
    private:
-    scene::NodeRef from;
-    scene::NodeRef to;
+    scene::NodeRef fromRef;
+    scene::NodeRef toRef;
     tweeny::tween<float, float, float> tween;
 
-    scene::NodeRef collider;
-    scene::NodeRef mesh;
+    scene::NodeRef colliderRef;
+    scene::NodeRef meshRef;
 
    public:
     TestObstacleEntity(scene::SceneRef scene, scene::NodeRef node) : scene::NodeEntity(scene, node) {
@@ -21,7 +21,9 @@ class TestObstacleEntity : public scene::NodeEntity {
 
     void init() override;
 
-    void update() override;
+    void update(float time_delta) override;
+
+    void debugDraw() override;
 
     void prePhysicsUpdate() override;
 };

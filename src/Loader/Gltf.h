@@ -209,9 +209,6 @@ class PhysicsData {
 
     PhysicsData(std::vector<PhysicsInstance> &instances);
     ~PhysicsData();
-
-    // TODO: this is temporary
-    void create(ph::Physics &physics);
 };
 
 /**

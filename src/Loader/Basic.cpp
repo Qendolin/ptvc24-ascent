@@ -1,4 +1,4 @@
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "Loader.h"
 
 namespace loader {
@@ -39,10 +39,8 @@ std::vector<uint8_t> binary(std::string filename) {
     file.seekg(0, std::ios::beg);
 
     std::vector<uint8_t> vec;
-    vec.reserve(size);
-    vec.insert(vec.begin(),
-               std::istream_iterator<uint8_t>(file),
-               std::istream_iterator<uint8_t>());
+    vec.resize(size);
+    file.read(reinterpret_cast<char*>(vec.data()), vec.size());
     return vec;
 }
 }  // namespace loader

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "../Utils.h"
+#include "../Util/Log.h"
 #include "StateManager.h"
 
 namespace gl {

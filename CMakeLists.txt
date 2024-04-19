@@ -57,16 +57,29 @@ target_include_directories(imgui PUBLIC ${IMGUI_INCLUDE_DIR})
 # set(IMGUI_USER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/UI/imconfig.h")
 # target_compile_definitions(imgui INTERFACE "-DIMGUI_USER_CONFIG=<${IMGUI_USER_CONFIG}>")
 
+# Include LZ4
+FetchContent_Declare(
+    lz4
+    GIT_REPOSITORY "https://github.com/lz4/lz4"
+    GIT_TAG "v1.9.4"
+)
+FetchContent_MakeAvailable(lz4)
+file(GLOB lz4_SOURCES ${lz4_SOURCE_DIR}/lib/*.c)
+add_library(lz4 STATIC ${lz4_SOURCES})
+include_directories(${lz4_SOURCE_DIR}/lib)
+
 set(LINK_LIBRARIES
     debug glfw3d optimized glfw3
     debug glew32sd optimized glew32s
     OpenGL::GL
     Jolt
     imgui
+    lz4
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${lz4_SOURCE_DIR}/lib)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBRARY_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBRARIES})
 

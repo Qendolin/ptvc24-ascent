@@ -1,8 +1,14 @@
 #pragma once
 
+#include <memory>
+
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
 class Camera;
+namespace loader {
+class IblEnv;
+struct FloatImage;
+}  // namespace loader
 #pragma endregion
 
 class SkyRenderer {
@@ -10,9 +16,11 @@ class SkyRenderer {
     gl::ShaderPipeline *shader;
     // A quad with dimensions(-1, -1) to(1, 1)
     gl::VertexArray *quad;
+    gl::Sampler *sampler;
+    gl::Texture *cubemap;
 
    public:
-    SkyRenderer();
+    SkyRenderer(std::shared_ptr<loader::IblEnv> environment);
     ~SkyRenderer();
 
     void render(Camera &camera);

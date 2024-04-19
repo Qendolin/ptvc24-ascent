@@ -7,20 +7,27 @@
 #include <Jolt/Physics/Character/Character.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
 #include "../Camera.h"
+#include "../Controller/MainController.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../Physics/Physics.h"
 #include "../Physics/Shapes.h"
+#include "../UI/Screens/Fade.h"
+#include "../Util/Log.h"
 #include "../Window.h"
+#include "Objects/Checkpoint.h"
 
 using namespace scene;
 
-CharacterController::CharacterController(Camera& camera) : camera(camera) {
+glm::vec2 quatToAzimuthElevation(const glm::quat& q);
+
+CharacterController::CharacterController(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
 }
 
 CharacterController::~CharacterController() {
@@ -41,7 +48,48 @@ void CharacterController::init() {
     body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics().system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
-    setPosition_({0,200,0});
+
+    physics().contactListener->RegisterCallback(
+        body_->GetBodyID(),
+        [this](ph::SensorContact contact) {
+            if (!contact.persistent) this->onBodyContact_(contact);
+        });
+
+    respawn_();
+}
+
+void CharacterController::onBodyContact_(ph::SensorContact& contact) {
+    NodeRef contactNode = scene.byPhysicsBody(contact.other);
+    // The contact node should always have physics
+    if (!contactNode.hasPhysics()) {
+        LOG_WARN("Contact node did not have physics?!?");
+        return;
+    }
+    // can't collide with triggers
+    if (contactNode.physics().hasTrigger()) return;
+
+    if (!invulnerabilityTimer.isZero()) return;
+    invulnerabilityTimer = 2.0;
+    respawn_();
+}
+
+void CharacterController::respawn_() {
+    MainController& controller = dynamic_cast<MainController&>(*game().controller);
+
+    scene::TransformRef transform;
+
+    CheckpointEntity* last_checkpoint = controller.raceManager.getLastCheckpoint();
+    if (last_checkpoint != nullptr) {
+        transform = last_checkpoint->respawnTransformation();
+    } else {
+        transform = scene.find(scene.root(), "PlayerSpawn").transform();
+    }
+
+    glm::vec2 azimuth_elevation = quatToAzimuthElevation(transform.rotation());
+    camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
+    setPosition_(transform.position());
+    controller.fader->fade(1.0f, 0.0f, 0.3f);
+    noMoveTimer.set(0.3f);
 }
 
 void CharacterController::setPosition_(glm::vec3 pos) {
@@ -51,11 +99,15 @@ void CharacterController::setPosition_(glm::vec3 pos) {
     cameraLerpEnd_ = pos;
 }
 
-void CharacterController::update() {
+void CharacterController::update(float time_delta) {
     Input& input = *game().input;
     if (input.isMouseReleased()) {
+        velocity_ = glm::vec3(0);
         return;
     }
+
+    invulnerabilityTimer.update(time_delta);
+    noMoveTimer.update(time_delta);
 
     // Camera movement
     // yaw
@@ -90,17 +142,21 @@ void CharacterController::update() {
     if (input.isKeyDown(GLFW_KEY_LEFT_SHIFT)) {
         velocity_ *= SHIFT_SPEED_FACTOR;
     }
-    // Rotate the velocity vector towards look direction
 
-    //velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.y, {0, 1, 0})) * velocity_;
-    //velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.x, {1, 0, 0})) * velocity_;
-    // The calculated velocity is used later during the physics update.
+    if (!noMoveTimer.isZero()) {
+        velocity_ = glm::vec3(0);
+    }
+
+    // Rotate the velocity vector towards look direction
+    if (!isAutoMoveEnabled)
+        velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera.angles.y, {0, 1, 0})) * velocity_;
+    // velocity_ = glm::mat3(glm::rotate(glm::mat4(1.0), camera->angles.x, {1, 0, 0})) * velocity_;
+    //  The calculated velocity is used later during the physics update.
 
     // Interpolate the camera position from the previous physics body position to the current one.
     // The physics body only moves at a fixed interval (60Hz) but the camera movement needs to be smooth.
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
-    camera.updateViewMatrix();
 }
 
 void CharacterController::prePhysicsUpdate() {
@@ -144,4 +200,20 @@ void CharacterController::velocityUpdate(float deltatime) {
         velocity_.x *= 1.0 - 0.01 * deltatime;
         velocity_.y *= 1.0 - 0.01 * deltatime;
         velocity_.z *= 1.0 - 0.01 * deltatime;
+}
+// calculate azimuth and elevation from quaternion. (assuming -z forward)
+glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
+    // Calculate elevation
+    float sin_pitch = 2.0f * (q.x * q.w - q.z * q.y);
+    float elevation = glm::asin(sin_pitch);
+
+    // Calculate azimuth (handle gimbal lock near poles)
+    float azimuth;
+    if (glm::epsilonEqual(glm::abs(sin_pitch), 1.0f, glm::epsilon<float>())) {
+        azimuth = 0.0f;
+    } else {
+        azimuth = glm::atan(q.y * q.w - q.z * q.x, 0.5f - q.x * q.x - q.y * q.y);
+    }
+
+    return glm::vec2(azimuth, elevation);
 }

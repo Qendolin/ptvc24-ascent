@@ -9,7 +9,7 @@
 #include <string>
 
 #include "GL/StateManager.h"
-#include "Utils.h"
+#include "Util/Log.h"
 #include "Window.h"
 
 static void APIENTRY debugCallback(
@@ -125,6 +125,18 @@ static void APIENTRY debugCallback(
     std::cout << err << std::endl;
 }
 
+void placeWindowInCenter(GLFWwindow *window) {
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    int monitor_x, monitor_y;
+    glfwGetMonitorPos(monitor, &monitor_x, &monitor_y);
+    const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
+    glfwSetWindowPos(window,
+                     monitor_x + (video_mode->width - window_width) / 2,
+                     monitor_y + (video_mode->height - window_height) / 2);
+}
+
 Window createOpenGLContext(bool enableCompatibilityProfile) {
     LOG_INFO("Initializing GLFW");
     if (glfwInit() != GLFW_TRUE) {
@@ -159,6 +171,7 @@ Window createOpenGLContext(bool enableCompatibilityProfile) {
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(win, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
+    placeWindowInCenter(win);
     return Window(win);
 }
 

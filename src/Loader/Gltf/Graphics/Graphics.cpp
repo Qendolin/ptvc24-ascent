@@ -54,6 +54,21 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
 }
 
 void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
+    // Sorting the attributes ensures (I think) that the draw command base instance and count work properly
+    int32_t attrib_index = 0;
+    std::vector<InstanceAttributes> sorted_attributes;
+    for (Mesh &mesh : context.meshes) {
+        for (int32_t i : mesh.instances) {
+            Instance &instance = context.instances[i];
+            int32_t old_attrib_index = instance.attributes;
+            InstanceAttributes &attribs = context.attributes[old_attrib_index];
+            sorted_attributes.emplace_back(attribs);
+            instance.attributes = attrib_index;
+            attrib_index++;
+        }
+    }
+    context.attributes = std::move(sorted_attributes);
+
     context.instanceAttributes = new gl::Buffer();
     context.instanceAttributes->setDebugLabel("gltf/vbo/instance_attributes");
     context.instanceAttributes->allocate(context.attributes.data(), context.attributes.size() * sizeof(InstanceAttributes), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);

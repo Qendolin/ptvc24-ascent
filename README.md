@@ -73,3 +73,14 @@ Used for menus and ui
 https://github.com/ocornut/imgui
 
 Used for debug ui
+
+### AgX display mapping (tone mapping)
+https://www.shadertoy.com/view/dtSGD1  
+https://www.shadertoy.com/view/cd3XWr  
+https://github.com/sobotka/AgX  
+
+Also used by blender (4.0+).
+
+## Development
+
+When adding .cpp or .h files run `./make rebuild` to rebuild the cmake configuration.

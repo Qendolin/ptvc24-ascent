@@ -4,7 +4,7 @@
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
-#include "../Utils.h"
+#include "../Util/Log.h"
 
 namespace ui {
 

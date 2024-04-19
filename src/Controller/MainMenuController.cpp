@@ -1,10 +1,11 @@
 #include "MainMenuController.h"
 
 #include "../Game.h"
+#include "../Input.h"
 #include "../UI/Screens/MainMenu.h"
 #include "MainController.h"
 
-MainMenuController::MainMenuController(Game &game) : GameController(game) {}
+MainMenuController::MainMenuController(Game &game) : AbstractController(game) {}
 
 MainMenuController::~MainMenuController() = default;
 

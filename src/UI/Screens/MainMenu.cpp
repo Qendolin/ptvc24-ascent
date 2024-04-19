@@ -4,12 +4,13 @@
 #include "../../Game.h"
 #include "../../Input.h"
 #include "../../Loader/Loader.h"
-#include "../../Utils.h"
+#include "../../Util/Log.h"
 #include "../../Window.h"
 #include "../UI.h"
 
 MainMenuScreen::MainMenuScreen() {
     titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    Game::get().input->setMouseMode(Input::MouseMode::Release);
 }
 
 MainMenuScreen::~MainMenuScreen() {
