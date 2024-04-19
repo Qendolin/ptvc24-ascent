@@ -4,6 +4,7 @@
 #include <functional>
 #include <thread>
 #include <utility>
+#include <string>
 
 class TaskCompletionView {
    public:
