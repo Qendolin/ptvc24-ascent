@@ -1,15 +1,13 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include "AbstractController.h"
+#include "RaceManager.h"
 
 #pragma region ForwardDecl
 class MaterialBatchRenderer;
 class SkyRenderer;
-class Camera;
-class CheckpointEntity;
 class MainControllerLoader;
 class FadeOverlay;
 class ScoreScreen;
@@ -21,40 +19,6 @@ namespace scene {
 class Scene;
 }
 #pragma endregion
-
-// Handles the logic of measuring score and checkpoints
-class RaceManager {
-    int lastPassedCheckpoint = -1;
-    bool started = false;
-    bool ended = false;
-    double startTime = -1.0;
-    double endTime = -1.0;
-    float penaltyTime = 0.0;
-    std::vector<CheckpointEntity *> checkpoints;
-
-   public:
-    void onCheckpointEntered(CheckpointEntity *checkpoint);
-
-    void loadCheckpoints(CheckpointEntity *start);
-
-    CheckpointEntity *getLastCheckpoint();
-
-    // @return timer time in seconds
-    float timer();
-
-    // @return penalty time in seconds
-    float penalty() {
-        return penaltyTime;
-    }
-
-    bool hasStarted() {
-        return started;
-    }
-
-    bool hasEnded() {
-        return ended;
-    }
-};
 
 class MainController : public AbstractController {
    private:

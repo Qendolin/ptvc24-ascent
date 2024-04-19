@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../ScoreManager.h"
 #include "../../Tween.h"
 #include "../Screen.h"
 
@@ -16,14 +17,9 @@ class ScoreScreen : public Screen {
     // clang-format on
 
    public:
-    struct Score {
-        float time;
-        float penalty;
-    };
+    ScoreEntry score;
 
-    Score score;
-
-    ScoreScreen(Score score);
+    ScoreScreen(ScoreEntry score);
     virtual ~ScoreScreen();
 
     void draw() override;

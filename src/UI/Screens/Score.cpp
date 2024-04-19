@@ -8,7 +8,7 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-ScoreScreen::ScoreScreen(Score score) : score(score) {
+ScoreScreen::ScoreScreen(ScoreEntry score) : score(score) {
     Game::get().input->setMouseMode(Input::MouseMode::Release);
 }
 
@@ -49,7 +49,7 @@ void ScoreScreen::draw() {
 
             nk_style_push_color(nk, &nk->style.text.color, nk_rgba_f(1, 1, 1, appearOpacity.peek()));
             nk_label(nk, "Time", NK_TEXT_ALIGN_RIGHT);
-            std::string time_str = formatTimeRaceClock(score.time);
+            std::string time_str = formatTimeRaceClock(score.flight);
             nk_label(nk, time_str.c_str(), NK_TEXT_ALIGN_LEFT);
             nk_style_pop_color(nk);
 
@@ -64,7 +64,7 @@ void ScoreScreen::draw() {
 
             nk_style_push_color(nk, &nk->style.text.color, nk_rgba_f(1, 1, 1, appearOpacity.peek() - 3));
             nk_label(nk, "Total", NK_TEXT_ALIGN_RIGHT);
-            std::string total_str = formatTimeRaceClock(score.time + score.penalty);
+            std::string total_str = formatTimeRaceClock(score.total);
             nk_label(nk, total_str.c_str(), NK_TEXT_ALIGN_LEFT);
             nk_style_pop_color(nk);
 

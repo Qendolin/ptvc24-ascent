@@ -27,68 +27,6 @@
 #include "MainControllerLoader.h"
 #include "MainMenuController.h"
 
-template <typename T>
-int32_t indexOf(const std::vector<T> &vec, const T elem) {
-    auto it = std::find(vec.cbegin(), vec.cend(), elem);
-    if (it == vec.end()) {
-        return -1;
-    }
-    return static_cast<int32_t>(std::distance(vec.cbegin(), it));
-}
-
-void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
-    int32_t index = indexOf(checkpoints, checkpoint);
-    LOG_DEBUG("Entered checkpoint '" + std::to_string(index) + "'");
-
-    if (ended) {
-        return;
-    }
-
-    if (!started) {
-        if (index == 0) {
-            started = true;
-            startTime = Game::get().input->time();
-            lastPassedCheckpoint = 0;
-        }
-        return;
-    }
-
-    // next checkpoint
-    if (index > lastPassedCheckpoint) {
-        int32_t skipped = std::max(index - lastPassedCheckpoint - 1, 0);
-        penaltyTime += skipped * 5;
-        lastPassedCheckpoint = index;
-    }
-
-    // last checkpoint (may also be first)
-    if (index == checkpoints.size() - 1) {
-        ended = true;
-        endTime = Game::get().input->time();
-    }
-}
-
-void RaceManager::loadCheckpoints(CheckpointEntity *start) {
-    checkpoints.clear();
-    checkpoints.push_back(start);
-    CheckpointEntity *current = start;
-    while (current->hasNextCheckpoint()) {
-        CheckpointEntity *next = current->nextCheckpoint();
-        checkpoints.push_back(next);
-        current = next;
-    }
-}
-
-CheckpointEntity *RaceManager::getLastCheckpoint() {
-    if (lastPassedCheckpoint < 0) return nullptr;
-    return checkpoints[lastPassedCheckpoint];
-}
-
-float RaceManager::timer() {
-    if (!started) return 0;
-    if (ended) return static_cast<float>(endTime - startTime);
-    return static_cast<float>(Game::get().input->time() - startTime);
-}
-
 MainController::MainController(Game &game) : AbstractController(game) {
     loader = std::make_unique<MainControllerLoader>();
     fader = std::make_unique<FadeOverlay>();
@@ -141,6 +79,7 @@ void MainController::applyLoadResult_() {
         scene::NodeRef first_Checkpoint = sceneRef.find(sceneRef.root(), [](scene::NodeRef &node) {
             return node.prop<bool>("is_first", false);
         });
+        raceManager = RaceManager(data.gltf->scenes[data.gltf->defaultScene].name);
         raceManager.loadCheckpoints(first_Checkpoint.entity<CheckpointEntity>());
     }
 }
@@ -168,11 +107,11 @@ void MainController::update() {
     // Update entities
     scene->callEntityUpdate(game.input->timeDelta());
 
-    if (raceManager.hasEnded() && scoreScreen == nullptr || game.input->isKeyPress(GLFW_KEY_L)) {
-        scoreScreen = std::make_unique<ScoreScreen>(ScoreScreen::Score{
-            .time = raceManager.timer(),
-            .penalty = raceManager.penalty(),
-        });
+    if (raceManager.hasEnded() && scoreScreen == nullptr) {
+        ScoreEntry score = raceManager.score();
+        game.scores->add(score);
+        game.scores->save();
+        scoreScreen = std::make_unique<ScoreScreen>(score);
     }
 }
 

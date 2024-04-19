@@ -91,3 +91,4 @@ Tools/**/*.cache
 
 # local files
 local/
+ascent_data/

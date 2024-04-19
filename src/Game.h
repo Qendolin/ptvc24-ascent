@@ -17,6 +17,7 @@ class Screen;
 struct Window;
 class AbstractController;
 class FinalizationRenderer;
+class ScoreManager;
 
 namespace ph {
 class Physics;
@@ -69,6 +70,7 @@ class Game {
     std::unique_ptr<DirectBuffer> directDraw;
 
     std::unique_ptr<AbstractController> controller;
+    std::unique_ptr<ScoreManager> scores;
 
     // prevent copy
     Game(Game const &) = delete;

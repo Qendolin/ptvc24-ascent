@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 
+#include <filesystem>
 #include <glm/glm.hpp>
 
 #include "Camera.h"
@@ -15,6 +16,7 @@
 #include "Input.h"
 #include "Physics/Physics.h"
 #include "Renderer/FinalizationRenderer.h"
+#include "ScoreManager.h"
 #include "Tween.h"
 #include "UI/Renderer.h"
 #include "UI/Skin.h"
@@ -68,6 +70,13 @@ Game::Game(Window &window)
 
     hdrFramebuffer_ = new gl::Framebuffer();
     hdrFramebuffer_->setDebugLabel("hdr_fbo");
+
+    if (!std::filesystem::exists("ascent_data")) {
+        LOG_INFO("Creating game data directory 'ascent_data'");
+        std::filesystem::create_directory("ascent_data");
+    }
+
+    scores = std::make_unique<ScoreManager>("ascent_data/scores.ini");
 
     // at the end
     int vp_width, vp_height;
