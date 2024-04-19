@@ -104,5 +104,6 @@
 		"**/.DS_Store": true,
 		"**/Thumbs.db": true,
 		"build": true
-	}
+	},
+	"C_Cpp.errorSquiggles": "disabled"
 }

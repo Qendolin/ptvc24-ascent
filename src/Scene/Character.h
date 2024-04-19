@@ -42,4 +42,8 @@ class CharacterController : public scene::Entity {
     void prePhysicsUpdate() override;
 
     void postPhysicsUpdate() override;
+
+    void velocityUpdate(float deltaTime);
+
+    void setPosition_(glm::vec3 pos);
 };

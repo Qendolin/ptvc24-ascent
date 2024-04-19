@@ -41,6 +41,14 @@ void CharacterController::init() {
     body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics().system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
+    setPosition_({0,200,0});
+}
+
+void CharacterController::setPosition_(glm::vec3 pos) {
+    camera.position = pos;
+    body_->SetPosition(ph::convert(pos));
+    cameraLerpStart_ = pos;
+    cameraLerpEnd_ = pos;
 }
 
 void CharacterController::update() {
@@ -58,7 +66,6 @@ void CharacterController::update() {
     camera.angles.x -= input.mouseDelta().y * glm::radians(LOOK_SENSITIVITY);
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
-    
     //query the input GLFW_KEY_F for flying toggle
     if (input.isKeyPress(GLFW_KEY_F)){
         isAutoMoveEnabled = !isAutoMoveEnabled;
@@ -66,7 +73,10 @@ void CharacterController::update() {
 
     if (isAutoMoveEnabled){
         glm::vec3 moveDirection_ = camera.rotationMatrix() * glm::vec3(0,0,-1);
-        velocity_ = moveDirection_ * AUTO_MOVE_SPEED;
+        //velocity_ = moveDirection_ * AUTO_MOVE_SPEED;
+        velocityUpdate(input.timeDelta() * 20);
+        //velocity_ *= 20.0 * input.timeDelta();
+        std:: cout<< "velocity would be (" << velocity_.x <<", " << velocity_.y <<", " << velocity_.z <<")" << std::endl;
     } else velocity_ = glm::vec3{0,0,0};
 
   
@@ -100,4 +110,38 @@ void CharacterController::prePhysicsUpdate() {
 
 void CharacterController::postPhysicsUpdate() {
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
+}
+
+void CharacterController::velocityUpdate(float deltatime) {
+    glm::vec3 lookAt = camera.rotationMatrix() * glm::vec3(0,0,-1);
+    double pitchCos = glm::cos(-camera.angles.x);
+    double pitchSin = glm::sin(-camera.angles.x);
+    double hLook = pitchCos;
+    double sqrPitchCos = pitchCos * pitchCos;
+    velocity_.y += 0.5 *  (sqrPitchCos * 0.75 - 1) * deltatime;
+    double hvel = glm::sqrt(velocity_.x * velocity_.x + velocity_.z * velocity_.z);
+
+    if (velocity_.y < 0 && hLook > 0)
+	    {
+		double yacc = velocity_.y * -0.1 * sqrPitchCos * deltatime;
+		velocity_.y += yacc;
+		velocity_.x += lookAt.x * yacc / hLook;
+		velocity_.z += lookAt.z * yacc / hLook;
+	}
+	if (camera.angles.x > 0 && hLook > 0)
+	    {
+		double yacc = hvel * -pitchSin * 0.04 * deltatime;
+		velocity_.y += yacc * 3.5;
+		velocity_.x -= lookAt.x * yacc / hLook;
+		velocity_.z -= lookAt.z * yacc / hLook;
+	}
+	if (hLook > 0)
+	    {
+		velocity_.x += (lookAt.x / hLook * hvel - velocity_.x) * 0.1 * deltatime;
+		velocity_.z += (lookAt.z / hLook * hvel - velocity_.z) * 0.1 * deltatime;
+	}
+
+        velocity_.x *= 1.0 - 0.01 * deltatime;
+        velocity_.y *= 1.0 - 0.01 * deltatime;
+        velocity_.z *= 1.0 - 0.01 * deltatime;
 }
