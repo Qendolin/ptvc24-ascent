@@ -62,7 +62,6 @@ class Game {
 
     Window &window;
     DebugSettings debugSettings = {};
-    Settings settings = {};
     std::unique_ptr<ph::Physics> physics;
     std::unique_ptr<ui::Backend> ui;
     std::unique_ptr<ui::ImGuiBackend> imgui;
@@ -73,6 +72,7 @@ class Game {
 
     std::unique_ptr<AbstractController> controller;
     std::unique_ptr<ScoreManager> scores;
+    SettingsManager settings = SettingsManager("ascent_data/settings.ini");
 
     // prevent copy
     Game(Game const &) = delete;

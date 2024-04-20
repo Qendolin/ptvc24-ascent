@@ -1,6 +1,5 @@
 #include "Pause.h"
 
-#include "../../Controller/MainMenuController.h"
 #include "../../Game.h"
 #include "../../Input.h"
 #include "../../Window.h"

@@ -97,6 +97,7 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
 
 void CharacterEntity::update(float time_delta) {
     Input& input = *game().input;
+    Settings settings = game().settings.get();
 
     respawnInvulnerability.update(time_delta);
     respawnFreeze.update(time_delta);
@@ -105,11 +106,11 @@ void CharacterEntity::update(float time_delta) {
     }
     // Camera movement
     // yaw
-    camera.angles.y -= input.mouseDelta().x * glm::radians(LOOK_SENSITIVITY);
+    camera.angles.y -= input.mouseDelta().x * glm::radians(settings.lookSensitivity);
     camera.angles.y = glm::wrapAngle(camera.angles.y);
 
     // pitch
-    camera.angles.x -= input.mouseDelta().y * glm::radians(LOOK_SENSITIVITY);
+    camera.angles.x -= input.mouseDelta().y * glm::radians(settings.lookSensitivity);
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
     // Interpolate the camera position from the previous physics body position to the current one.
@@ -135,7 +136,7 @@ void CharacterEntity::update(float time_delta) {
     }
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
-    camera.setFov(glm::radians(game().settings.fov + boostDynamicFov_));
+    camera.setFov(glm::radians(settings.fov + boostDynamicFov_));
 }
 
 void CharacterEntity::prePhysicsUpdate() {

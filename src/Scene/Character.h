@@ -18,7 +18,7 @@ class CharacterEntity : public scene::Entity {
     // Flying speed factor
     inline static const float SPEED = 10.0f;
     // Controls the break decceleration
-    inline static const float BREAK_FACTOR = 0.7f;
+    inline static const float BREAK_FACTOR = 1.0f;
     // Controls the fall speed
     inline static const float GRAVITY_ACCELERATION = 9.81f;
     inline static const float BOOST_ACCELERATION = 5;
@@ -30,8 +30,6 @@ class CharacterEntity : public scene::Entity {
     inline static const float BOOST_DYN_FOV_CHANGE = 15;
     // Controls how quicky the velocity matches the horizontal look direction
     inline static const float TURN_FACTOR = 6.0f;
-    // How much the camera turns when moving the mouse. The unit is Degrees / Pixel.
-    inline static const float LOOK_SENSITIVITY = 0.333f;
 
     Timer respawnInvulnerability;
     Timer respawnFreeze;

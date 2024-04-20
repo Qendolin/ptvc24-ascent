@@ -4,11 +4,13 @@
 
 #include "AbstractController.h"
 
-class Screen;
+class MainMenuScreen;
+class SettingsScreen;
 
 class MainMenuController : public AbstractController {
    private:
-    std::unique_ptr<Screen> screen;
+    std::unique_ptr<MainMenuScreen> menuScreen;
+    std::unique_ptr<SettingsScreen> settingsScreen;
 
    public:
     MainMenuController(Game &game);

@@ -5,7 +5,6 @@
 #include "../../Input.h"
 #include "../../Loader/Loader.h"
 #include "../../Util/Log.h"
-#include "../../Window.h"
 #include "../UI.h"
 
 MainMenuScreen::MainMenuScreen() {
@@ -53,14 +52,16 @@ void MainMenuScreen::draw() {
             nk_layout_row_dynamic(nk, 60_dp, 1);
             nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
             if (nk_button_label(nk, "Play")) {
-                game.input->captureMouse();
+                action = Action::Play;
                 close();
             }
             if (nk_button_label(nk, "Settings")) {
-                LOG_INFO("Settings pressed");
+                action = Action::Settings;
+                close();
             }
             if (nk_button_label(nk, "Quit")) {
-                glfwSetWindowShouldClose(game.window, true);
+                action = Action::Quit;
+                close();
             }
 
             nk_style_pop_float(nk);  // row sapcing

@@ -55,7 +55,7 @@ Game::Game(Window &window)
     });
 
     // Create camera with a 100° vertical FOV
-    camera = std::make_unique<Camera>(glm::radians(settings.fov), 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
+    camera = std::make_unique<Camera>(glm::radians(settings.get().fov), 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
@@ -77,6 +77,8 @@ Game::Game(Window &window)
     }
 
     scores = std::make_unique<ScoreManager>("ascent_data/scores.ini");
+    settings.load();
+    settings.save();
 
     // at the end
     int vp_width, vp_height;
