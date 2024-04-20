@@ -101,8 +101,6 @@ struct PhysicsSetupConfig {
 
 class Physics {
    private:
-    inline static const float UPDATE_INTERVAL = 1.0f / 60.0f;
-
     float updateTimer_ = 0;
     bool updateEnabled_ = true;
 
@@ -117,6 +115,8 @@ class Physics {
 #endif
 
    public:
+    inline static const float UPDATE_INTERVAL = 1.0f / 60.0f;
+
     JPH::PhysicsSystem *system = nullptr;
     SensorContactListener *contactListener = nullptr;
 

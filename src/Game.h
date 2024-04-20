@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Debug/Settings.h"
+#include "Settings.h"
 
 #pragma region ForwardDecl
 #include "GL/Declarations.h"
@@ -61,6 +62,7 @@ class Game {
 
     Window &window;
     DebugSettings debugSettings = {};
+    Settings settings = {};
     std::unique_ptr<ph::Physics> physics;
     std::unique_ptr<ui::Backend> ui;
     std::unique_ptr<ui::ImGuiBackend> imgui;

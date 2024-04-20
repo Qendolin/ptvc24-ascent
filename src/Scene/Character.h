@@ -13,17 +13,38 @@ struct SensorContact;
 
 // The character controller handles movement and mouse look.
 // It links the character physics body to the camera.
-class CharacterController : public scene::Entity {
+class CharacterEntity : public scene::Entity {
    private:
-    // Walking speed in m/s
+    // Flying speed factor
     inline static const float SPEED = 10.0f;
+    // Controls the break decceleration
+    inline static const float BREAK_FACTOR = 0.7f;
+    // Controls the fall speed
+    inline static const float GRAVITY_ACCELERATION = 9.81f;
+    inline static const float BOOST_ACCELERATION = 5;
+    // Consumption per second when boost is active
+    inline static const float BOOST_CONSUME = 1.0f / 2.0f;
+    // Regeneration per second when boost is inactive
+    inline static const float BOOST_REGEN = 1.0f / 10.0f;
+    inline static const float BOOST_DYN_FOV_MAX = 10;
+    inline static const float BOOST_DYN_FOV_CHANGE = 15;
+    // Controls how quicky the velocity matches the horizontal look direction
+    inline static const float TURN_FACTOR = 6.0f;
     // How much the camera turns when moving the mouse. The unit is Degrees / Pixel.
     inline static const float LOOK_SENSITIVITY = 0.333f;
-    Timer invulnerabilityTimer;
-    Timer noMoveTimer;
+
+    Timer respawnInvulnerability;
+    Timer respawnFreeze;
 
     JPH::Character* body_ = nullptr;
     glm::vec3 velocity_ = {};
+    // Set when should apply air break
+    bool breakFlag_ = false;
+    // Set when should apply boost
+    bool boostFlag_ = false;
+    // how much boost is available
+    float boostMeter_ = 1.0;
+    float boostDynamicFov_ = 0.0;
 
     // The start and end position of the camera interpolation
     glm::vec3 cameraLerpStart_ = {};
@@ -32,17 +53,20 @@ class CharacterController : public scene::Entity {
     // called as a callback by the physics engine
     void onBodyContact_(ph::SensorContact& contact);
 
-    // respawn the character at the last checkpoint
-    void respawn_();
-
     void setPosition_(glm::vec3 pos);
+
+    // called in physics update
+    glm::vec3 calculateVelocity_(float time_delta);
 
    public:
     Camera& camera;
 
-    CharacterController(scene::SceneRef scene, Camera& camera);
+    CharacterEntity(scene::SceneRef scene, Camera& camera);
 
-    virtual ~CharacterController();
+    virtual ~CharacterEntity();
+
+    // respawn the character at the last checkpoint
+    void respawn();
 
     void init() override;
 
@@ -52,5 +76,11 @@ class CharacterController : public scene::Entity {
 
     void postPhysicsUpdate() override;
 
-    void velocityUpdate(float deltaTime);
+    glm::vec3 velocity() const {
+        return velocity_;
+    }
+
+    float boostMeter() const {
+        return boostMeter_;
+    }
 };

@@ -29,6 +29,7 @@ void CheckpointEntity::init() {
 }
 
 void CheckpointEntity::onTriggerActivated() {
+    // FIXME: doesn't check if triggered by player
     Trigger trigger = sensorRef_.physics().trigger();
 
     MainController& controller = dynamic_cast<MainController&>(*game().controller);

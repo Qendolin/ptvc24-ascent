@@ -27,25 +27,25 @@ using namespace scene;
 
 glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
-CharacterController::CharacterController(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
+CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
 }
 
-CharacterController::~CharacterController() {
+CharacterEntity::~CharacterEntity() {
     if (body_ != nullptr) {
         body_->RemoveFromPhysicsSystem();
     }
     delete body_;
 }
 
-void CharacterController::init() {
+void CharacterEntity::init() {
     JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
     settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
     settings->mLayer = ph::Layers::MOVING;
-    settings->mShape = new JPH::SphereShape(0.5f);
+    settings->mShape = new JPH::SphereShape(0.25f);
     settings->mFriction = 0.0f;
     settings->mGravityFactor = 0.0f;
 
-    body_ = new JPH::Character(settings, JPH::RVec3(0.0, 1.5, 2.0), JPH::Quat::sIdentity(), 0, physics().system);
+    body_ = new JPH::Character(settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
 
@@ -54,11 +54,9 @@ void CharacterController::init() {
         [this](ph::SensorContact contact) {
             if (!contact.persistent) this->onBodyContact_(contact);
         });
-
-    respawn_();
 }
 
-void CharacterController::onBodyContact_(ph::SensorContact& contact) {
+void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     NodeRef contactNode = scene.byPhysicsBody(contact.other);
     // The contact node should always have physics
     if (!contactNode.hasPhysics()) {
@@ -68,44 +66,41 @@ void CharacterController::onBodyContact_(ph::SensorContact& contact) {
     // can't collide with triggers
     if (contactNode.physics().hasTrigger()) return;
 
-    if (!invulnerabilityTimer.isZero()) return;
-    invulnerabilityTimer = 2.0;
-    respawn_();
+    if (!respawnInvulnerability.isZero()) return;
+    respawnInvulnerability = 1.0;
+    respawn();
 }
 
-void CharacterController::respawn_() {
+void CharacterEntity::respawn() {
     MainController& controller = dynamic_cast<MainController&>(*game().controller);
 
-    scene::TransformRef transform;
+    RaceManager::RespawnPoint respawn_point = controller.raceManager.respawnPoint();
 
-    CheckpointEntity* last_checkpoint = controller.raceManager.getLastCheckpoint();
-    if (last_checkpoint != nullptr) {
-        transform = last_checkpoint->respawnTransformation();
-    } else {
-        transform = scene.find(scene.root(), "PlayerSpawn").transform();
-    }
-
-    glm::vec2 azimuth_elevation = quatToAzimuthElevation(transform.rotation());
+    glm::quat rotation = glm::quat_cast(respawn_point.transform);
+    glm::vec2 azimuth_elevation = quatToAzimuthElevation(rotation);
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
-    setPosition_(transform.position());
+
+    setPosition_(respawn_point.transform[3]);
     controller.fader->fade(1.0f, 0.0f, 0.3f);
-    noMoveTimer.set(0.3f);
-    velocity_ = transform.rotation() * glm::vec3(0, 0, -SPEED / 2);
+    respawnFreeze = 0.3f;
+
+    float speed = std::max(5.0f, respawn_point.speed * 0.75f);
+    velocity_ = rotation * glm::vec3(0, 0, -speed);
 }
 
-void CharacterController::setPosition_(glm::vec3 pos) {
+void CharacterEntity::setPosition_(glm::vec3 pos) {
     camera.position = pos;
     body_->SetPosition(ph::convert(pos));
     cameraLerpStart_ = pos;
     cameraLerpEnd_ = pos;
 }
 
-void CharacterController::update(float time_delta) {
+void CharacterEntity::update(float time_delta) {
     Input& input = *game().input;
 
-    invulnerabilityTimer.update(time_delta);
-    noMoveTimer.update(time_delta);
-    if (!noMoveTimer.isZero()) {
+    respawnInvulnerability.update(time_delta);
+    respawnFreeze.update(time_delta);
+    if (!respawnFreeze.isZero()) {
         return;
     }
     // Camera movement
@@ -117,58 +112,109 @@ void CharacterController::update(float time_delta) {
     camera.angles.x -= input.mouseDelta().y * glm::radians(LOOK_SENSITIVITY);
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
-    //  The calculated velocity is used later during the physics update.
-    velocityUpdate(input.timeDelta());
-
     // Interpolate the camera position from the previous physics body position to the current one.
     // The physics body only moves at a fixed interval (60Hz) but the camera movement needs to be smooth.
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
+
+    if (input.isKeyDown(GLFW_KEY_SPACE) || input.isKeyDown(GLFW_KEY_S)) {
+        breakFlag_ = true;
+    }
+
+    if (input.isKeyDown(GLFW_KEY_LEFT_SHIFT) || input.isKeyDown(GLFW_KEY_W)) {
+        boostFlag_ = true;
+
+    } else {
+        boostMeter_ = std::min(boostMeter_ + BOOST_REGEN * time_delta, 1.0f);
+    }
+
+    if (boostFlag_ && boostMeter_ > 0) {
+        boostDynamicFov_ += BOOST_DYN_FOV_CHANGE * time_delta;
+    } else {
+        boostDynamicFov_ -= BOOST_DYN_FOV_CHANGE * time_delta;
+    }
+    boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
+
+    camera.setFov(glm::radians(game().settings.fov + boostDynamicFov_));
 }
 
-void CharacterController::prePhysicsUpdate() {
-    if (!noMoveTimer.isZero()) {
+void CharacterEntity::prePhysicsUpdate() {
+    if (!respawnFreeze.isZero()) {
         body_->SetLinearVelocity(ph::convert(glm::vec3{0, 0, 0}));
         return;
     }
+
+    // the vlocity update has to use a fixed time step, else it becomes unstable
+    velocity_ = calculateVelocity_(ph::Physics::UPDATE_INTERVAL);
+
     cameraLerpStart_ = ph::convert(body_->GetPosition());
     body_->SetLinearVelocity(ph::convert(velocity_));
 }
 
-void CharacterController::postPhysicsUpdate() {
+void CharacterEntity::postPhysicsUpdate() {
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }
 
-void CharacterController::velocityUpdate(float deltatime) {
-    glm::vec3 lookAt = camera.rotationMatrix() * glm::vec3(0, 0, -1);
-    float pitchCos = glm::cos(-camera.angles.x);
-    float pitchSin = glm::sin(-camera.angles.x);
-    float hLook = pitchCos;
-    float sqrPitchCos = pitchCos * pitchCos;
-    velocity_.y += 0.5f * (sqrPitchCos * 0.75f - 1) * deltatime * SPEED;
-    float hvel = glm::sqrt(velocity_.x * velocity_.x + velocity_.z * velocity_.z);
+glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
+    glm::vec3 looking = camera.rotationMatrix() * glm::vec3(0, 0, -1);
 
-    if (velocity_.y < 0 && hLook > 0) {
-        float yacc = velocity_.y * -0.1f * sqrPitchCos * deltatime * SPEED;
-        velocity_.y += yacc;
-        velocity_.x += lookAt.x * yacc / hLook;
-        velocity_.z += lookAt.z * yacc / hLook;
-    }
-    if (camera.angles.x > 0 && hLook > 0) {
-        float yacc = hvel * -pitchSin * 0.04f * deltatime * SPEED;
-        velocity_.y += yacc * 3.5f;
-        velocity_.x -= lookAt.x * yacc / hLook;
-        velocity_.z -= lookAt.z * yacc / hLook;
-    }
-    if (hLook > 0) {
-        velocity_.x += (lookAt.x / hLook * hvel - velocity_.x) * 0.1f * deltatime * SPEED;
-        velocity_.z += (lookAt.z / hLook * hvel - velocity_.z) * 0.1f * deltatime * SPEED;
+    const glm::vec3 velocity = velocity_;
+    glm::vec3 result = velocity;
+
+    float pitch_cos = glm::cos(camera.angles.x);  // up, down = 0, horizontal = 1
+    float pitch_sin = glm::sin(camera.angles.x);  // down = -1, horizontal = 0, up = 1
+    float pitch_cos_sqr = pitch_cos * pitch_cos;
+    float horizontal_speed = glm::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+
+    if (boostFlag_) {
+        boostFlag_ = false;
+        float boost_want = BOOST_CONSUME * time_delta;
+        float boost_used = std::min(boost_want, boostMeter_);
+        boostMeter_ -= boost_used;
+        float factor = boost_used / boost_want;  // 1, execpt if meter is empty
+        result += factor * looking * BOOST_ACCELERATION * time_delta;
     }
 
-    velocity_.x *= 1.0f - 0.01f * deltatime;
-    velocity_.y *= 1.0f - 0.02f * deltatime;
-    velocity_.z *= 1.0f - 0.01f * deltatime;
+    // Looking straight ahead cancles 75% of gravity due to aerodynamic drag
+    float down_accel = (pitch_cos_sqr * 0.75f - 1) * GRAVITY_ACCELERATION;
+    result.y += down_accel * time_delta;
+
+    // Looking straight up or down would divide by zero
+    if (pitch_cos > glm::epsilon<float>()) {
+        // convert vertical to horizontal velocity
+        if (velocity.y < 0) {
+            float lift = velocity.y * -0.1f * pitch_cos_sqr * time_delta * SPEED;
+            result.y += lift;
+            result.x += looking.x * lift / pitch_cos;
+            result.z += looking.z * lift / pitch_cos;
+        }
+        // convert horizontal to vertical velocity
+        if (camera.angles.x > 0) {
+            float lift = horizontal_speed * pitch_sin * 0.04f * time_delta * SPEED;
+            result.y += lift * 3.5f;
+            result.x -= looking.x * lift / pitch_cos;
+            result.z -= looking.z * lift / pitch_cos;
+        }
+
+        // steering / turning
+        result.x += (looking.x / pitch_cos * horizontal_speed - velocity.x) * TURN_FACTOR * time_delta;
+        result.z += (looking.z / pitch_cos * horizontal_speed - velocity.z) * TURN_FACTOR * time_delta;
+    }
+
+    float break_drag = 0.02f;
+    if (breakFlag_) {
+        break_drag = BREAK_FACTOR;
+        breakFlag_ = false;
+    }
+
+    // air drag
+    result.x *= 1 - break_drag * time_delta;
+    result.y *= 1 - 2 * break_drag * time_delta;
+    result.z *= 1 - break_drag * time_delta;
+
+    return result;
 }
+
 // calculate azimuth and elevation from quaternion. (assuming -z forward)
 glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     // Calculate elevation

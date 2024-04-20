@@ -54,8 +54,8 @@ Game::Game(Window &window)
         Game::get().input->invalidate();
     });
 
-    // Create camera with a 90° vertical FOV
-    camera = std::make_unique<Camera>(glm::radians(90.0f), 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
+    // Create camera with a 100° vertical FOV
+    camera = std::make_unique<Camera>(glm::radians(settings.fov), 0.1f, glm::vec3{0, 1, 1}, glm::vec3{});
 
     // window / viewport size
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {

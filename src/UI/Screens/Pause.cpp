@@ -8,6 +8,7 @@
 
 PauseScreen::PauseScreen() {
     Game::get().input->setMouseMode(Input::MouseMode::Release);
+    Game::get().input->centerMouse();
 }
 
 PauseScreen::~PauseScreen() {
@@ -56,8 +57,12 @@ void PauseScreen::draw() {
             if (nk_button_label(nk, "Resume")) {
                 close();
             }
+            if (nk_button_label(nk, "Respawn")) {
+                action = Action::Respawn;
+                close();
+            }
             if (nk_button_label(nk, "Exit")) {
-                game.queueController<MainMenuController>();
+                action = Action::Exit;
                 close();
             }
 

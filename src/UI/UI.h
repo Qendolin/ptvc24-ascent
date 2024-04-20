@@ -112,6 +112,10 @@ class Backend {
         return fontAtlas_;
     }
 
+    const Skin* skin() const {
+        return skin_;
+    }
+
     void setViewport(int width, int height);
 
     void render();

@@ -54,6 +54,9 @@ void Skin::apply(nk_context* nk) {
     nk->style.button.text_normal = buttonNormalText;
     nk->style.button.text_hover = buttonHoverText;
     nk->style.button.text_active = buttonActiveText;
+
+    nk->style.progress.normal = nk_style_item_nine_slice(progressNormalBackground);
+    nk->style.progress.cursor_normal = nk_style_item_nine_slice(progressNormalBackground);
 }
 
 Skin* loadSkin() {
@@ -68,6 +71,9 @@ Skin* loadSkin() {
 	skin->buttonNormalText = rgb(255, 255, 255);
     skin->buttonHoverText  = rgb(255, 255, 255);
     skin->buttonActiveText = rgb(100, 100, 100);
+
+    skin->progressNormalBackground = nine_slice(widgets, 16, {3, 0 * 3, 3, 3}, {1, 1, 1, 1});
+    skin->progressNormalCursor     = nine_slice(widgets, 16, {3, 5 * 3, 3, 3}, {1, 1, 1, 1});
     // clang-format on
 
     return skin;

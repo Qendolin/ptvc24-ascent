@@ -88,6 +88,12 @@ void Input::releaseMouse() {
     mouseCaptured_ = false;
 }
 
+void Input::centerMouse() {
+    int w, h;
+    glfwGetWindowSize(window_, &w, &h);
+    glfwSetCursorPos(window_, w / 2, h / 2);
+}
+
 bool Input::isWindowFocused() {
     return glfwGetWindowAttrib(window_, GLFW_FOCUSED) == GLFW_TRUE;
 }

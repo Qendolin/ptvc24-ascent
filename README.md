@@ -10,14 +10,13 @@ Click to focus the window. Escape to release the focus.
 WASD to fly horizontally. Space & Ctrl to fly vertically. Shift to speed up.  
 Use mouse to look.  
 
-| Key                | Action               |
-| ------------------ | -------------------- |
-| `W`, `A`, `S`, `D` | Move horizontally    |
-| `Space`, `Ctrl`    | Move vertically      |
-| `Shift`            | Move faster          |
-| `F3`               | Toggle debug menu    |
-| `F5`               | Reload assets        |
-| `ESC`              | Release mouse cursor |
+| Key          | Action            |
+| ------------ | ----------------- |
+| `Shift`, `W` | Boost             |
+| `Space`, `S` | Air Break         |
+| `ESC`        | Pause Menu        |
+| `F3`         | Toggle debug menu |
+| `F5`         | Reload assets     |
 
 ## Arguments
 - `--enable-compatibility-profile`  

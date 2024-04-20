@@ -5,6 +5,14 @@
 class PauseScreen : public Screen {
    private:
    public:
+    enum class Action {
+        None,
+        Respawn,
+        Exit
+    };
+
+    Action action = Action::None;
+
     PauseScreen();
     virtual ~PauseScreen();
 

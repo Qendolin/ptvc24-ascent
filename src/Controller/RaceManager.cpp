@@ -5,6 +5,7 @@
 
 #include "../Game.h"
 #include "../Input.h"
+#include "../Scene/Character.h"
 #include "../Scene/Objects/Checkpoint.h"
 #include "../Util/Log.h"
 
@@ -28,7 +29,6 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
     if (!started) {
         if (index == 0) {
             started = true;
-            startTime = Game::get().input->time();
             lastPassedCheckpoint = 0;
         }
         return;
@@ -44,12 +44,19 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
         }
 
         lastPassedCheckpoint = index;
+        respawnPoint_.transform = checkpoint->respawnTransformation().matrix();
+        respawnPoint_.speed = glm::length(character_->velocity());
     }
 
     // last checkpoint (may also be first)
     if (index == checkpoints.size() - 1) {
         ended = true;
-        endTime = Game::get().input->time();
+    }
+}
+
+void RaceManager::update(float delta_time) {
+    if (started && !ended) {
+        flightTime += delta_time;
     }
 }
 
@@ -65,24 +72,13 @@ void RaceManager::loadCheckpoints(CheckpointEntity *start) {
     splits.resize(checkpoints.size());
 }
 
-CheckpointEntity *RaceManager::getLastCheckpoint() {
-    if (lastPassedCheckpoint < 0) return nullptr;
-    return checkpoints[lastPassedCheckpoint];
-}
-
-float RaceManager::timer() {
-    if (!started) return 0;
-    if (ended) return static_cast<float>(endTime - startTime);
-    return static_cast<float>(Game::get().input->time() - startTime);
-}
-
-float RaceManager::splitTimer() {
+float RaceManager::splitTimer() const {
     if (!started) return 0;
     ScoreEntry best = Game::get().scores->highScore();
     if (!best.valid) return 0;
     float time = timer();
     if (ended) return time - best.flight;
-    int index = std::min(lastPassedCheckpoint, static_cast<int>(best.splits.size() - 1));
+    int index = std::min(lastPassedCheckpoint + 1, static_cast<int>(best.splits.size() - 1));
     if (index < 0) return 0;
     return time - best.splits[index];
 }

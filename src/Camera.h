@@ -58,6 +58,13 @@ class Camera {
         updateProjectionMatrix_();
     }
 
+    /**
+     * @return the vertical fov in rad
+     */
+    float fov() const {
+        return fov_;
+    }
+
     glm::mat4 projectionMatrix() const {
         return projectionMatrix_;
     }

@@ -168,6 +168,8 @@ class Input {
         return mouseMode_;
     }
 
+    void centerMouse();
+
     /**
      * @return `true` if the window is focused / selected by the user
      */

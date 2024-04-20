@@ -21,6 +21,7 @@
 #include "../UI/Screens/Pause.h"
 #include "../UI/Screens/Score.h"
 #include "../UI/Screens/Start.h"
+#include "../UI/Skin.h"
 #include "../UI/UI.h"
 #include "../Util/Format.h"
 #include "../Util/Log.h"
@@ -70,18 +71,25 @@ void MainController::applyLoadResult_() {
         scene::NodeEntityFactory factory;
         scene::registerEntityTypes(factory);
         scene = std::make_unique<scene::Scene>(*sceneData, factory);
-        auto character = new CharacterController(scene::SceneRef(*scene), *game.camera);
+        character = new CharacterEntity(scene::SceneRef(*scene), *game.camera);
         scene->entities.push_back(character);
         scene->callEntityInit();
 
         game.physics->system->OptimizeBroadPhase();
 
-        scene::SceneRef sceneRef(*scene);
-        scene::NodeRef first_Checkpoint = sceneRef.find(sceneRef.root(), [](scene::NodeRef &node) {
+        scene::SceneRef scene_ref(*scene);
+        scene::NodeRef first_checkpoint = scene_ref.find(scene_ref.root(), [](scene::NodeRef &node) {
             return node.prop<bool>("is_first", false);
         });
-        raceManager = RaceManager(data.gltf->scenes[data.gltf->defaultScene].name);
-        raceManager.loadCheckpoints(first_Checkpoint.entity<CheckpointEntity>());
+        scene::NodeRef player_spawn = scene_ref.find(scene_ref.root(), "PlayerSpawn");
+        RaceManager::RespawnPoint spawn = {
+            .transform = player_spawn.transform().matrix(),
+            .speed = player_spawn.prop("speed", 5.0f),
+        };
+        raceManager = RaceManager(character, data.gltf->scenes[data.gltf->defaultScene].name, spawn);
+        raceManager.loadCheckpoints(first_checkpoint.entity<CheckpointEntity>());
+
+        character->respawn();
     }
 }
 
@@ -102,16 +110,29 @@ void MainController::update() {
         if (pauseScreen == nullptr)
             pauseScreen = std::make_unique<PauseScreen>();
     }
-    if (pauseScreen && pauseScreen->isClosed())
+
+    if (pauseScreen && pauseScreen->isClosed()) {
+        switch (pauseScreen->action) {
+            case PauseScreen::Action::Exit:
+                game.queueController<MainMenuController>();
+                break;
+            case PauseScreen::Action::Respawn:
+                character->respawn();
+                break;
+        }
         pauseScreen = nullptr;
+    }
 
     // dont update the game while a screen is up
     if (pauseScreen != nullptr || startScreen != nullptr || scoreScreen != nullptr) {
         return;
     }
 
+    float time_delta = game.input->timeDelta();
+    raceManager.update(time_delta);
+
     // Update and step physics
-    game.physics->update(game.input->timeDelta());
+    game.physics->update(time_delta);
     if (game.physics->isNextStepDue()) {
         scene->callEntityPrePhysicsUpdate();
         game.physics->step();
@@ -119,7 +140,7 @@ void MainController::update() {
     }
 
     // Update entities
-    scene->callEntityUpdate(game.input->timeDelta());
+    scene->callEntityUpdate(time_delta);
 
     if (raceManager.hasEnded() && scoreScreen == nullptr) {
         ScoreEntry score = raceManager.score();
@@ -140,10 +161,11 @@ void MainController::drawHud_() {
     nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
     nk->style.text.color = nk_rgb(255, 255, 255);
     if (nk_begin(nk, "hud", nk_rect(0, 0, 100_vw, 100_vh), NK_WINDOW_NO_SCROLLBAR)) {
-        nk_layout_space_begin(nk, NK_STATIC, 90_dp, 1);
+        nk_layout_space_begin(nk, NK_STATIC, 100_vh, 2);
         auto bounds = nk_layout_space_bounds(nk);
-        nk_layout_space_push(nk, nk_rect(bounds.w - 180_dp, 0, 180_dp, bounds.h));
 
+        // timer
+        nk_layout_space_push(nk, nk_rect(bounds.w - 180_dp, 0, 180_dp, 90_dp));
         nk->style.window.background = nk_rgba(0, 0, 0, 120);
         nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
         nk_style_push_vec2(nk, &nk->style.window.group_padding, nk_vec2(14, 4));
@@ -159,9 +181,34 @@ void MainController::drawHud_() {
             std::string split_str = (split_time < 0 ? "-" : "+") + formatTimeRaceClock(split_time);
             nk_label(nk, split_str.c_str(), NK_TEXT_ALIGN_RIGHT);
 
+            // TODO: show last split for a little longer
+
             nk_group_end(nk);
         }
-        nk_style_pop_vec2(nk);
+        nk_style_pop_vec2(nk);  // group padding
+
+        // boost meter
+        const float boost_meter_height = 180_dp;
+        const float boost_meter_width = 30_dp;
+        nk_layout_space_push(nk, nk_rect(bounds.w / 2 + bounds.w / 10, bounds.h / 2 - boost_meter_height / 2, boost_meter_width, boost_meter_height));
+        nk->style.window.background = nk_rgba(0, 0, 0, 0);
+        nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
+        if (nk_group_begin(nk, "boost", NK_WINDOW_NO_SCROLLBAR)) {
+            auto canvas_space = nk_window_get_content_region(nk);
+            nk_layout_row_dynamic(nk, boost_meter_height, 1);
+            auto canvas = nk_window_get_canvas(nk);
+            // note: don't use _dp here, I think
+            auto meter_space = nk_rect(canvas_space.x + 5, canvas_space.y + 8, canvas_space.w - 10, canvas_space.h - 8 * 2);
+
+            const ui::Skin &skin = *game.ui->skin();
+            // background
+            nk_draw_nine_slice(canvas, nk_rect(canvas_space.x, canvas_space.y, canvas_space.w, canvas_space.h), &skin.progressNormalBackground, nk_rgba_f(1, 1, 1, 1));
+            // meter
+            float meter_height = meter_space.h * character->boostMeter();
+            nk_fill_rect(canvas, nk_rect(meter_space.x, meter_space.y + (meter_space.h - meter_height), meter_space.w, meter_height), 0, nk_rgba_f(1, 1, 1, 0.7f));
+
+            nk_group_end(nk);
+        }
         nk_layout_space_end(nk);
     }
     nk_style_pop_vec2(nk);

@@ -15,6 +15,9 @@ struct Skin {
     // all opengl resources that need to be destroyed when the skin is deleted
     std::vector<gl::GLObject*> resources;
 
+    struct nk_nine_slice progressNormalBackground;
+    struct nk_nine_slice progressNormalCursor;
+
     struct nk_nine_slice buttonNormalBackground;
     struct nk_nine_slice buttonHoverBackground;
     struct nk_nine_slice buttonActiveBackground;
