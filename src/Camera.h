@@ -73,11 +73,4 @@ class Camera {
     glm::mat4 viewProjectionMatrix() const {
         return projectionMatrix_ * viewMatrix_;
     }
-
-    glm::vec3 returnVelocity() {
-        double pitchCos = glm::cos(angles.x);
-        double hLook = pitchCos;
-        double sqrtPitchCos = pitchCos * pitchCos;
-        
-    }
 };
