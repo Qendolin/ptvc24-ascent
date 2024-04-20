@@ -5,6 +5,7 @@
 #include <string>
 
 static std::string formatTimeRaceClock(float total_seconds) {
+    total_seconds = std::abs(total_seconds);
     float minutes = std::floor(total_seconds / 60);
     float seconds = std::floor(total_seconds - minutes * 60);
     float millis = std::floor(1000 * (total_seconds - minutes * 60 - seconds));

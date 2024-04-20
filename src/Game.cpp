@@ -129,7 +129,7 @@ void Game::load() {
     directDraw = std::make_unique<DirectBuffer>();
 
     auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
-                                     {{"menu_sm", 20}, {"menu_md", 38}, {"menu_lg", 70}}}},
+                                     {{"menu_ty", 20}, {"menu_sm", 30}, {"menu_md", 38}, {"menu_lg", 70}}}},
                                    "menu_md");
     auto skin = ui::loadSkin();
     ui = std::make_unique<ui::Backend>(fonts, skin, new ui::Renderer());

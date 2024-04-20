@@ -26,7 +26,7 @@ void LoadingScreen::draw() {
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
 
-    if (nk_begin(nk, "level_loading", {15_vw, 80_vh, 70_vw, 20_vh}, 0)) {
+    if (nk_begin(nk, "level_loading", {15_vw, 80_vh, 70_vw, 20_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_layout_row_dynamic(nk, 30_dp, 1);
         int time = (int)std::round(Game::get().input->time() - startTime_);
         std::string text = "Loading Level" + std::string(time, '.');

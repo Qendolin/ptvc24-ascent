@@ -27,7 +27,7 @@ ScoreManager::ScoreManager(std::string filename) : filename(filename) {
 struct ScoreManager::Helper {
     static ScoreEntry parseScore_(const tortellini::ini::section& section) {
         ScoreEntry entry = {
-            .invalid = false,
+            .valid = true,
             .timestamp = section["timestamp"] | 0ULL,
             .course = section["course"] | "",
             .flight = section["flight"] | 0.0f,
@@ -62,9 +62,7 @@ void ScoreManager::read_(std::istream& input) {
     input >> ini;
 
     recentScores_.clear();
-    lastScore_ = ScoreEntry();
     highScores_.clear();
-    highScore_ = ScoreEntry{};
 
     int version = ini["info"]["version"] | 0;
     if (version == 0) {
@@ -81,9 +79,6 @@ void ScoreManager::read_(std::istream& input) {
         const auto& section = ini["recent_entry_" + std::to_string(i)];
         ScoreEntry entry = Helper::parseScore_(section);
         recentScores_.push_back(entry);
-        if (lastScore_.invalid || entry.timestamp > lastScore_.timestamp) {
-            lastScore_ = entry;
-        }
     }
 
     int high_entry_count = ini["info"]["high_entry_count"] | 0;
@@ -91,29 +86,32 @@ void ScoreManager::read_(std::istream& input) {
         const auto& section = ini["high_entry_" + std::to_string(i)];
         ScoreEntry entry = Helper::parseScore_(section);
         highScores_.push_back(entry);
-
-        if (highScore_.invalid || entry.total < highScore_.total) {
-            highScore_ = entry;
-        }
     }
+
+    sort_();
 }
 
-void ScoreManager::write_(std::ostream& output) {
-    tortellini::ini ini;
-
+void ScoreManager::sort_() {
     // sort scores by decending timestamp (recent scores first)
     std::sort(recentScores_.begin(), recentScores_.end(), [](const ScoreEntry& a, const ScoreEntry& b) {
         return a.timestamp > b.timestamp;
     });
-    // keep only the 100 most recent scores
-    if (recentScores_.size() > 100) {
-        recentScores_.resize(100);
-    }
 
     // sort scores by decending timestamp (best scores first)
     std::sort(highScores_.begin(), highScores_.end(), [](const ScoreEntry& a, const ScoreEntry& b) {
         return a.total < b.total;
     });
+}
+
+void ScoreManager::write_(std::ostream& output) {
+    tortellini::ini ini;
+
+    sort_();
+    // keep only the 100 most recent scores
+    if (recentScores_.size() > 100) {
+        recentScores_.resize(100);
+    }
+
     // keep only the 100 best scores
     if (highScores_.size() > 100) {
         highScores_.resize(100);

@@ -102,10 +102,6 @@ void CharacterController::setPosition_(glm::vec3 pos) {
 
 void CharacterController::update(float time_delta) {
     Input& input = *game().input;
-    if (input.isMouseReleased()) {
-        velocity_ = glm::vec3(0);
-        return;
-    }
 
     invulnerabilityTimer.update(time_delta);
     noMoveTimer.update(time_delta);
@@ -121,13 +117,8 @@ void CharacterController::update(float time_delta) {
     camera.angles.x -= input.mouseDelta().y * glm::radians(LOOK_SENSITIVITY);
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
-    velocityUpdate(input.timeDelta());
-
-    // if (!noMoveTimer.isZero()) {
-    //     velocity_ = glm::vec3(0);
-    // }
-
     //  The calculated velocity is used later during the physics update.
+    velocityUpdate(input.timeDelta());
 
     // Interpolate the camera position from the previous physics body position to the current one.
     // The physics body only moves at a fixed interval (60Hz) but the camera movement needs to be smooth.

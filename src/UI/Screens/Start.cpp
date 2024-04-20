@@ -23,7 +23,7 @@ void StartScreen::draw() {
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
     nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
 
-    if (nk_begin(nk, "start_screen", {0_vw, 60_vh, 100_vw, 80_dp}, 0)) {
+    if (nk_begin(nk, "start_screen", {0_vw, 60_vh, 100_vw, 80_dp}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_lg")->handle);
         nk_layout_row_dynamic(nk, 80_dp, 1);
 

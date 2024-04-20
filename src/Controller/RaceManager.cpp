@@ -38,8 +38,12 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
     if (index > lastPassedCheckpoint) {
         int32_t skipped = std::max(index - lastPassedCheckpoint - 1, 0);
         penaltyTime += skipped * 5;
-        lastPassedCheckpoint = index;
         splits[index] = timer();
+        for (int i = 0; i < skipped; i++) {
+            splits[index - i] = splits[index];
+        }
+
+        lastPassedCheckpoint = index;
     }
 
     // last checkpoint (may also be first)
@@ -72,10 +76,21 @@ float RaceManager::timer() {
     return static_cast<float>(Game::get().input->time() - startTime);
 }
 
+float RaceManager::splitTimer() {
+    if (!started) return 0;
+    ScoreEntry best = Game::get().scores->highScore();
+    if (!best.valid) return 0;
+    float time = timer();
+    if (ended) return time - best.flight;
+    int index = std::min(lastPassedCheckpoint, static_cast<int>(best.splits.size() - 1));
+    if (index < 0) return 0;
+    return time - best.splits[index];
+}
+
 ScoreEntry RaceManager::score() {
     uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     return {
-        .invalid = !ended,
+        .valid = ended,
         .timestamp = timestamp,
         .course = courseName,
         .flight = timer(),

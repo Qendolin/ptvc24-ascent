@@ -14,7 +14,12 @@ class ScoreScreen : public Screen {
             .to(2.0f).during(300)
             .to(3.0f).during(300)
             .to(4.0f).during(300);
+    tweeny::tween<float> graphProgress = 
+        tweeny::from(0.0f)
+            .to(1.0).during(750).via(tweeny::easing::quadraticIn);
     // clang-format on
+
+    void drawPerformance_();
 
    public:
     ScoreEntry score;

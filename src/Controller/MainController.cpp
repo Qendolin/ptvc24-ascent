@@ -18,6 +18,7 @@
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
 #include "../UI/Screens/Fade.h"
+#include "../UI/Screens/Pause.h"
 #include "../UI/Screens/Score.h"
 #include "../UI/Screens/Start.h"
 #include "../UI/UI.h"
@@ -96,6 +97,19 @@ void MainController::update() {
         applyLoadResult_();
     }
 
+    // pausing
+    if (!game.input->isWindowFocused() || (game.input->isMouseReleased() && game.input->mouseMode() == Input::MouseMode::Capture)) {
+        if (pauseScreen == nullptr)
+            pauseScreen = std::make_unique<PauseScreen>();
+    }
+    if (pauseScreen && pauseScreen->isClosed())
+        pauseScreen = nullptr;
+
+    // dont update the game while a screen is up
+    if (pauseScreen != nullptr || startScreen != nullptr || scoreScreen != nullptr) {
+        return;
+    }
+
     // Update and step physics
     game.physics->update(game.input->timeDelta());
     if (game.physics->isNextStepDue()) {
@@ -119,21 +133,38 @@ void MainController::drawHud_() {
     using namespace ui::literals;
     nk_context *nk = game.ui->context();
     // make window semi transparent
-    nk->style.window.background = nk_rgba(0, 0, 0, 120);
-    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
+    nk->style.window.background = nk_rgba(0, 0, 0, 0);
+    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
+
+    nk_style_push_vec2(nk, &nk->style.window.padding, nk_vec2(0, 0));
     nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
-    if (nk_begin(nk, "timer", nk_rect(100_vw - 180_dp, 0, 180_dp, 90_dp), 0)) {
-        nk_style_push_color(nk, &nk->style.text.color, nk_rgb(255, 255, 255));
-        nk_layout_row_dynamic(nk, 30_dp, 1);
+    nk->style.text.color = nk_rgb(255, 255, 255);
+    if (nk_begin(nk, "hud", nk_rect(0, 0, 100_vw, 100_vh), NK_WINDOW_NO_SCROLLBAR)) {
+        nk_layout_space_begin(nk, NK_STATIC, 90_dp, 1);
+        auto bounds = nk_layout_space_bounds(nk);
+        nk_layout_space_push(nk, nk_rect(bounds.w - 180_dp, 0, 180_dp, bounds.h));
 
-        std::string time_str = formatTimeRaceClock(raceManager.timer());
-        nk_label(nk, time_str.c_str(), NK_TEXT_ALIGN_RIGHT);
+        nk->style.window.background = nk_rgba(0, 0, 0, 120);
+        nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
+        nk_style_push_vec2(nk, &nk->style.window.group_padding, nk_vec2(14, 4));
+        if (nk_group_begin(nk, "timer", NK_WINDOW_NO_SCROLLBAR)) {
+            nk_layout_row_dynamic(nk, 30_dp, 1);
 
-        nk_layout_row_dynamic(nk, 30_dp, 1);
-        std::string penalty_str = "+" + formatTimeRaceClock(raceManager.penalty());
-        nk_label(nk, penalty_str.c_str(), NK_TEXT_ALIGN_RIGHT);
-        nk_style_pop_color(nk);
+            std::string time_str = formatTimeRaceClock(raceManager.timer());
+            nk_label(nk, time_str.c_str(), NK_TEXT_ALIGN_RIGHT);
+
+            nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
+            nk_layout_row_dynamic(nk, 30_dp, 1);
+            float split_time = raceManager.splitTimer();
+            std::string split_str = (split_time < 0 ? "-" : "+") + formatTimeRaceClock(split_time);
+            nk_label(nk, split_str.c_str(), NK_TEXT_ALIGN_RIGHT);
+
+            nk_group_end(nk);
+        }
+        nk_style_pop_vec2(nk);
+        nk_layout_space_end(nk);
     }
+    nk_style_pop_vec2(nk);
     nk_end(nk);
 }
 
@@ -156,6 +187,8 @@ void MainController::render() {
             startScreen = nullptr;
             // TODO: start flying
         }
+    } else if (pauseScreen) {
+        pauseScreen->draw();
     } else {
         drawHud_();
     }

@@ -14,7 +14,7 @@ class Screen {
 
     virtual void draw() = 0;
 
-    void close() {
+    virtual void close() {
         closed_ = true;
     }
 

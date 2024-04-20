@@ -34,6 +34,9 @@ class RaceManager {
     // @return timer time in seconds
     float timer();
 
+    // @return time difference to best split
+    float splitTimer();
+
     // @return penalty time in seconds
     float penalty() {
         return penaltyTime;

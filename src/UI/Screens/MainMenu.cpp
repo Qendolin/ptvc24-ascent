@@ -34,7 +34,7 @@ void MainMenuScreen::draw() {
         nk_image_color(nk, nk_image_id(titleImage->id()), nk_rgba_f(1.0, 1.0, 1.0, titleOpacity.peek()));
         game.tween->step(titleOpacity);
 
-        // vertil spacer
+        // vertical spacer
         nk_layout_row_dynamic(nk, img_height / 2, 1);
 
         // prepare sublayout for buttons
@@ -64,7 +64,9 @@ void MainMenuScreen::draw() {
             }
 
             nk_style_pop_float(nk);  // row sapcing
+            nk_group_end(nk);
         }
+        nk_layout_row_end(nk);
     }
 
     nk_end(nk);

@@ -5,7 +5,7 @@
 #include <vector>
 
 struct ScoreEntry {
-    bool invalid = true;
+    bool valid = false;
     uint64_t timestamp = 0;
     std::string course = "";
     float flight = 0;
@@ -23,8 +23,6 @@ class ScoreManager {
 
     std::vector<ScoreEntry> highScores_ = {};
     std::vector<ScoreEntry> recentScores_ = {};
-    ScoreEntry highScore_ = {};
-    ScoreEntry lastScore_ = {};  // most recent score
 
     std::string filename;
 
@@ -32,15 +30,27 @@ class ScoreManager {
 
     void write_(std::ostream& output);
 
-   public:
-    ScoreManager(std::string filename);
+    void sort_();
 
+   public:
+    // FIXME: Need scores per course, not just a single one
+    ScoreManager(std::string filename);
     ScoreEntry highScore() const {
-        return highScore_;
+        return highScores_.empty() ? ScoreEntry{.valid = false} : highScores_[0];
     }
 
-    ScoreEntry lastScore() const {
-        return lastScore_;
+    ScoreEntry lastHighScore() const {
+        if (highScores_.empty()) return {.valid = false};
+        if (recentScores_.empty() || highScores_[0].timestamp != recentScores_[0].timestamp) {
+            // hi score is same as the current score
+            return highScores_[0];
+        }
+        return highScores_.size() < 2 ? ScoreEntry{.valid = false} : highScores_[1];
+    }
+
+    ScoreEntry
+    lastScore() const {
+        return recentScores_.empty() ? ScoreEntry{.valid = false} : recentScores_[0];
     }
 
     const std::vector<ScoreEntry>& highScores() const {
@@ -55,10 +65,7 @@ class ScoreManager {
 
     void add(ScoreEntry score) {
         highScores_.push_back(score);
-        if (score.total < highScore_.total)
-            highScore_ = score;
         recentScores_.push_back(score);
-        if (score.timestamp > lastScore_.timestamp)
-            lastScore_ = score;
+        sort_();
     }
 };

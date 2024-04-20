@@ -12,6 +12,7 @@ class MainControllerLoader;
 class FadeOverlay;
 class ScoreScreen;
 class StartScreen;
+class PauseScreen;
 namespace loader {
 class SceneData;
 }
@@ -31,6 +32,7 @@ class MainController : public AbstractController {
 
     std::unique_ptr<ScoreScreen> scoreScreen;
     std::unique_ptr<StartScreen> startScreen;
+    std::unique_ptr<PauseScreen> pauseScreen;
 
     /**
      * Draw the on screen hud (timer, score, etc.)
