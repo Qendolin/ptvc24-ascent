@@ -61,6 +61,15 @@ void DebugMenu::drawDebugWindow_() {
         PopID();
     }
 
+    // Rendering
+    if (CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen)) {
+        PushID("rendering");
+        Indent();
+        Checkbox("Normal Mapping", &settings.rendering.normalMapsEnabled);
+        Unindent();
+        PopID();
+    }
+
     End();
 }
 

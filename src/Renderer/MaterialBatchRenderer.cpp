@@ -5,6 +5,7 @@
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
+#include "../Game.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
 
@@ -103,7 +104,12 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
         auto &material = batch.material < 0 ? defaultMaterial : graphics.materials[batch.material];
         shader->fragmentStage()->setUniform("u_albedo_fac", material.albedoFactor);
         shader->fragmentStage()->setUniform("u_occlusion_metallic_roughness_fac", glm::vec3(1.0, material.metallicRoughnessFactor));
-        shader->fragmentStage()->setUniform("u_normal_fac", material.normalFactor);
+        if (Game::get().debugSettings.rendering.normalMapsEnabled) {
+            shader->fragmentStage()->setUniform("u_normal_fac", material.normalFactor);
+        } else {
+            shader->fragmentStage()->setUniform("u_normal_fac", 0.0f);
+        }
+
         if (material.albedo == nullptr) {
             defaultMaterial.albedo->bind(0);
         } else {

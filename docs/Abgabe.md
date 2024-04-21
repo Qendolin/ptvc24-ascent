@@ -143,16 +143,18 @@ Implementation is based upon
 and [learnopengl](https://learnopengl.com/PBR/IBL/Diffuse-irradiance).
 
 - Physically Based Shading  
-Note: Wendelin has implemented this in ECG before
-
+Note: Wendelin has implemented this in ECG before  
 Based on [learnopengl](https://learnopengl.com/PBR/Theory)
+
+- Simple Normal Mapping  
+Using tangents and normal maps from the glTF file.  
+Open the debug menu (F3) to toggle it on and off.
 
 ## Planned "Effects" Features
 
 - Shadow Map with PCF
 - GPU Particle System using Compute Shader
 - Tessellation from Height Map
-- Simple Normal Mapping
 - PB Bloom/Glow
 - Ambient Occlusion (maybe)
 - Motion Blur (maybe)
