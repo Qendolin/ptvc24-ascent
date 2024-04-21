@@ -5,15 +5,14 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-PauseScreen::PauseScreen() {
+void PauseScreen::open() {
+    opened_ = true;
     Game::get().input->setMouseMode(Input::MouseMode::Release);
     Game::get().input->centerMouse();
+    action = Action::None;
 }
 
-PauseScreen::~PauseScreen() {
-}
-
-void PauseScreen::draw() {
+void PauseScreen::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();

@@ -4,11 +4,14 @@
 #include "../Screen.h"
 
 class SettingsScreen : public Screen {
+   private:
+    Settings settings_ = {};
+
+    void draw_() override;
+
    public:
-    Settings settings;
+    SettingsScreen() = default;
+    virtual ~SettingsScreen() = default;
 
-    SettingsScreen(Settings score);
-    virtual ~SettingsScreen();
-
-    void draw() override;
+    void open(Settings settings);
 };

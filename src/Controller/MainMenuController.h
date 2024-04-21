@@ -9,13 +9,13 @@ class SettingsScreen;
 
 class MainMenuController : public AbstractController {
    private:
-    std::unique_ptr<MainMenuScreen> menuScreen;
-    std::unique_ptr<SettingsScreen> settingsScreen;
+    const std::unique_ptr<MainMenuScreen> menuScreen;
+    const std::unique_ptr<SettingsScreen> settingsScreen;
 
    public:
     MainMenuController(Game &game);
 
-    virtual ~MainMenuController();
+    virtual ~MainMenuController() = default;
 
     void load() override;
 

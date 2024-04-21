@@ -334,8 +334,11 @@ void StateManager::bindTextureUnit(int unit, GLuint texture) {
             return;
         }
         if (intelTextureBindingTargets.count(texture) == 0) {
-            // This shouldn't happen
-            std::string label = getObjectLabel(GL_TEXTURE, texture);
+            // This can happen if a texture was deleted and then bound
+            std::string label = "<erro-not-a-texture>";
+            if (glIsTexture(texture)) {
+                label = getObjectLabel(GL_TEXTURE, texture);
+            }
             LOG_WARN("Texture id=" + std::to_string(texture) + ", label=" + label + " is not in intelTextureBindingTargets!");
         } else {
             glBindTexture(intelTextureBindingTargets[texture], texture);

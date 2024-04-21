@@ -10,11 +10,15 @@ class LoadingScreen : public Screen {
    private:
     double startTime_;
 
+    void draw_() override;
+
    public:
-    TaskCompletionView &task;
+    TaskCompletionView *task;
 
-    LoadingScreen(TaskCompletionView &task);
-    virtual ~LoadingScreen();
+    LoadingScreen() = default;
+    virtual ~LoadingScreen() = default;
 
-    void draw() override;
+    void open(TaskCompletionView *task);
+
+
 };

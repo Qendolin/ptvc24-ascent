@@ -1,8 +1,11 @@
 #pragma once
 
 class Screen {
-   private:
-    bool closed_ = false;
+   protected:
+    bool opened_ = false;
+    bool flag_ = false;
+
+    virtual void draw_() = 0;
 
    public:
     // prevent copy
@@ -12,13 +15,37 @@ class Screen {
     Screen() {}
     virtual ~Screen() {}
 
-    virtual void draw() = 0;
-
     virtual void close() {
-        closed_ = true;
+        opened_ = false;
+        flag_ = true;
     }
 
-    bool isClosed() {
-        return closed_;
+    /**
+     * Set when the screen is closed until it is reset
+     */
+    bool flagged() {
+        return flag_;
+    }
+
+    /**
+     * Clears the flag and returns its previous value
+     */
+    bool resetFlag() {
+        bool value = flag_;
+        flag_ = false;
+        return value;
+    }
+
+    void draw() {
+        if (opened_)
+            draw_();
+    }
+
+    bool closed() {
+        return !opened_;
+    }
+
+    bool opened() {
+        return opened_;
     }
 };

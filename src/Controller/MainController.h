@@ -31,9 +31,9 @@ class MainController : public AbstractController {
     std::unique_ptr<scene::Scene> scene;
     std::unique_ptr<MainControllerLoader> loader;
 
-    std::unique_ptr<ScoreScreen> scoreScreen;
-    std::unique_ptr<StartScreen> startScreen;
-    std::unique_ptr<PauseScreen> pauseScreen;
+    const std::unique_ptr<ScoreScreen> scoreScreen;
+    const std::unique_ptr<StartScreen> startScreen;
+    const std::unique_ptr<PauseScreen> pauseScreen;
 
     CharacterEntity *character;
 
@@ -48,7 +48,7 @@ class MainController : public AbstractController {
     void applyLoadResult_();
 
    public:
-    std::unique_ptr<FadeOverlay> fader;
+    const std::unique_ptr<FadeOverlay> fader;
 
     RaceManager raceManager;
 

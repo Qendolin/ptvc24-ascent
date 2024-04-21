@@ -29,9 +29,14 @@
 #include "MainControllerLoader.h"
 #include "MainMenuController.h"
 
-MainController::MainController(Game &game) : AbstractController(game) {
+MainController::MainController(Game &game)
+    : AbstractController(game),
+      scoreScreen(std::make_unique<ScoreScreen>()),
+      startScreen(std::make_unique<StartScreen>()),
+      pauseScreen(std::make_unique<PauseScreen>()),
+      fader(std::make_unique<FadeOverlay>())  //
+{
     loader = std::make_unique<MainControllerLoader>();
-    fader = std::make_unique<FadeOverlay>();
 }
 
 MainController::~MainController() {
@@ -58,7 +63,7 @@ void MainController::applyLoadResult_() {
     if (data.gltf) {
         LOG_INFO("Creating scene from gltf data");
         fader->fade(1.0f, 0.0f, 0.3f);
-        startScreen = std::make_unique<StartScreen>();
+        startScreen->open();
 
         sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
         JPH::BodyInterface &physics = game.physics->interface();
@@ -107,11 +112,11 @@ void MainController::update() {
 
     // pausing
     if (!game.input->isWindowFocused() || (game.input->isMouseReleased() && game.input->mouseMode() == Input::MouseMode::Capture)) {
-        if (pauseScreen == nullptr)
-            pauseScreen = std::make_unique<PauseScreen>();
+        if (pauseScreen->closed())
+            pauseScreen->open();
     }
 
-    if (pauseScreen && pauseScreen->isClosed()) {
+    if (pauseScreen->resetFlag()) {
         switch (pauseScreen->action) {
             case PauseScreen::Action::Exit:
                 game.queueController<MainMenuController>();
@@ -120,11 +125,10 @@ void MainController::update() {
                 character->respawn();
                 break;
         }
-        pauseScreen = nullptr;
     }
 
     // dont update the game while a screen is up
-    if (pauseScreen != nullptr || startScreen != nullptr || scoreScreen != nullptr) {
+    if (pauseScreen->opened() || startScreen->opened() || scoreScreen->opened()) {
         return;
     }
 
@@ -142,11 +146,11 @@ void MainController::update() {
     // Update entities
     scene->callEntityUpdate(time_delta);
 
-    if (raceManager.hasEnded() && scoreScreen == nullptr) {
+    if (raceManager.hasEnded() && !scoreScreen->opened()) {
         ScoreEntry score = raceManager.score();
         game.scores->add(score);
         game.scores->save();
-        scoreScreen = std::make_unique<ScoreScreen>(score);
+        scoreScreen->open(score);
     }
 }
 
@@ -222,19 +226,14 @@ void MainController::render() {
         return;
     }
 
-    if (scoreScreen) {
+    if (scoreScreen->opened()) {
         scoreScreen->draw();
-        if (scoreScreen->isClosed()) {
+        if (scoreScreen->resetFlag()) {
             game.queueController<MainMenuController>();
-            scoreScreen = nullptr;
         }
-    } else if (startScreen) {
+    } else if (startScreen->opened()) {
         startScreen->draw();
-        if (startScreen->isClosed()) {
-            startScreen = nullptr;
-            // TODO: start flying
-        }
-    } else if (pauseScreen) {
+    } else if (pauseScreen->opened()) {
         pauseScreen->draw();
     } else {
         drawHud_();

@@ -8,15 +8,21 @@
 #include "../UI.h"
 
 MainMenuScreen::MainMenuScreen() {
-    titleImage = loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    titleImage_ = loader::texture("assets/textures/ui/title.png", {.srgb = true});
     Game::get().input->setMouseMode(Input::MouseMode::Release);
 }
 
 MainMenuScreen::~MainMenuScreen() {
-    delete titleImage;
+    delete titleImage_;
 }
 
-void MainMenuScreen::draw() {
+void MainMenuScreen::open() {
+    opened_ = true;
+    titleOpacity_.seek(0, true);
+    action = Action::None;
+}
+
+void MainMenuScreen::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();
@@ -28,10 +34,10 @@ void MainMenuScreen::draw() {
 
     if (nk_begin(nk, "main_menu", {30_vw, 10_vh, 40_vw, 80_vh}, 0)) {
         // draw title image
-        float img_height = 40_vw * titleImage->height() / titleImage->width();
+        float img_height = 40_vw * titleImage_->height() / titleImage_->width();
         nk_layout_row_dynamic(nk, img_height, 1);
-        nk_image_color(nk, nk_image_id(titleImage->id()), nk_rgba_f(1.0, 1.0, 1.0, titleOpacity.peek()));
-        game.tween->step(titleOpacity);
+        nk_image_color(nk, nk_image_id(titleImage_->id()), nk_rgba_f(1.0, 1.0, 1.0, titleOpacity_.peek()));
+        game.tween->step(titleOpacity_);
 
         // vertical spacer
         nk_layout_row_dynamic(nk, img_height / 2, 1);

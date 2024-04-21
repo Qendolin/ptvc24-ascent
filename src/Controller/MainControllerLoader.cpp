@@ -5,6 +5,10 @@
 #include "../Loader/Gltf.h"
 #include "../Util/Log.h"
 
+MainControllerLoader::MainControllerLoader() {
+    screen_ = std::make_unique<LoadingScreen>();
+}
+
 void MainControllerLoader::load_(Data& out, bool load_gltf) {
     if (load_gltf) {
         out.gltf = std::make_shared<tinygltf::Model>(
@@ -25,7 +29,7 @@ void MainControllerLoader::load() {
     task_ = std::make_unique<Task<Data>>(load_, firstTime_);
     loading_ = true;
     if (firstTime_) {
-        screen_ = std::make_unique<LoadingScreen>(*task_);
+        screen_->open(task_.get());
         task_->runAsync();
     } else {
         task_->runSync();
@@ -34,7 +38,7 @@ void MainControllerLoader::load() {
 }
 
 void MainControllerLoader::draw() {
-    if (screen_ == nullptr || task_ == nullptr) {
+    if (task_ == nullptr) {
         return;
     }
     screen_->draw();
@@ -43,6 +47,6 @@ void MainControllerLoader::draw() {
 MainControllerLoader::Data MainControllerLoader::result() {
     Data data = task_->result();
     task_.reset();
-    screen_.reset();
+    screen_->close();
     return data;
 }

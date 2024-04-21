@@ -9,14 +9,13 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-LoadingScreen::LoadingScreen(TaskCompletionView& task) : task(task) {
+void LoadingScreen::open(TaskCompletionView* task) {
+    opened_ = true;
     startTime_ = Game::get().input->time();
+    this->task = task;
 }
 
-LoadingScreen::~LoadingScreen() {
-}
-
-void LoadingScreen::draw() {
+void LoadingScreen::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();
@@ -33,7 +32,7 @@ void LoadingScreen::draw() {
         nk_label(nk, text.c_str(), NK_TEXT_ALIGN_LEFT);
     }
 
-    if (task.isFinished()) {
+    if (task->isFinished()) {
         close();
     }
 

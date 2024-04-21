@@ -4,6 +4,8 @@
 
 class PauseScreen : public Screen {
    private:
+    void draw_() override;
+
    public:
     enum class Action {
         None,
@@ -13,10 +15,10 @@ class PauseScreen : public Screen {
 
     Action action = Action::None;
 
-    PauseScreen();
-    virtual ~PauseScreen();
+    PauseScreen() = default;
+    virtual ~PauseScreen() = default;
 
-    void draw() override;
+    void open();
 
     void close() override;
 };

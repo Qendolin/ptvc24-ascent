@@ -5,14 +5,12 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-StartScreen::StartScreen() {
+void StartScreen::open() {
+    opened_ = true;
     Game::get().input->setMouseMode(Input::MouseMode::Capture);
 }
 
-StartScreen::~StartScreen() {
-}
-
-void StartScreen::draw() {
+void StartScreen::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();

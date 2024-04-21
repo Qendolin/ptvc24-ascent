@@ -34,6 +34,9 @@ class MainControllerLoader {
     static void load_(Data& out, bool load_gltf);
 
    public:
+    MainControllerLoader();
+    ~MainControllerLoader() = default;
+
     void load();
 
     void update() {

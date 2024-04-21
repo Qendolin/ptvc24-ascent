@@ -9,10 +9,6 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-FadeOverlay::FadeOverlay() = default;
-
-FadeOverlay::~FadeOverlay() = default;
-
 void FadeOverlay::fade(float from, float to, float duration) {
     from_ = from;
     to_ = to;
@@ -20,7 +16,7 @@ void FadeOverlay::fade(float from, float to, float duration) {
     startTime_ = Game::get().input->time();
 }
 
-void FadeOverlay::draw() {
+void FadeOverlay::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();

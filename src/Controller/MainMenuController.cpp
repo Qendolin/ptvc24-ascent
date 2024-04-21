@@ -7,43 +7,43 @@
 #include "../Window.h"
 #include "MainController.h"
 
-MainMenuController::MainMenuController(Game &game) : AbstractController(game) {}
-
-MainMenuController::~MainMenuController() = default;
+MainMenuController::MainMenuController(Game &game)
+    : AbstractController(game),
+      menuScreen(std::make_unique<MainMenuScreen>()),
+      settingsScreen(std::make_unique<SettingsScreen>())  //
+{
+}
 
 void MainMenuController::load() {
-    menuScreen = std::make_unique<MainMenuScreen>();
+    if (menuScreen->closed())
+        menuScreen->open();
 }
 
 void MainMenuController::unload() {
 }
 
 void MainMenuController::update() {
-    if (menuScreen && menuScreen->isClosed()) {
+    if (menuScreen->resetFlag()) {
         switch (menuScreen->action) {
             case MainMenuScreen::Action::Play:
                 game.input->captureMouse();
                 game.queueController<MainController>();
                 break;
             case MainMenuScreen::Action::Settings:
-                settingsScreen = std::make_unique<SettingsScreen>(game.settings.get());
+                settingsScreen->open(game.settings.get());
                 break;
             case MainMenuScreen::Action::Quit:
                 glfwSetWindowShouldClose(game.window, true);
                 break;
         }
-
-        menuScreen = nullptr;
     }
-    if (settingsScreen && settingsScreen->isClosed()) {
-        menuScreen = std::make_unique<MainMenuScreen>();
-        settingsScreen = nullptr;
+
+    if (settingsScreen->resetFlag()) {
+        menuScreen->open();
     }
 }
 
 void MainMenuController::render() {
-    if (menuScreen)
-        menuScreen->draw();
-    if (settingsScreen)
-        settingsScreen->draw();
+    menuScreen->draw();
+    settingsScreen->draw();
 }

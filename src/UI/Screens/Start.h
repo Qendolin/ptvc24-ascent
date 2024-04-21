@@ -3,10 +3,12 @@
 #include "../Screen.h"
 
 class StartScreen : public Screen {
-   private:
-   public:
-    StartScreen();
-    virtual ~StartScreen();
+    private:
+    void draw_() override;
 
-    void draw() override;
+   public:
+    StartScreen() = default;
+    virtual ~StartScreen() = default;
+
+    void open();
 };

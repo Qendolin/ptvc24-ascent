@@ -5,13 +5,12 @@
 #include "../../Window.h"
 #include "../UI.h"
 
-SettingsScreen::SettingsScreen(Settings settings) : settings(settings) {
+void SettingsScreen::open(Settings settings) {
+    opened_ = true;
+    settings_ = settings;
 }
 
-SettingsScreen::~SettingsScreen() {
-}
-
-void SettingsScreen::draw() {
+void SettingsScreen::draw_() {
     using namespace ui::literals;
 
     Game& game = Game::get();
@@ -51,15 +50,15 @@ void SettingsScreen::draw() {
 
             nk_style_set_font(nk, font_md);
             nk_label(nk, "FOV", NK_TEXT_ALIGN_LEFT);
-            nk_slider_float(nk, 70, &settings.fov, 130, 5);
+            nk_slider_float(nk, 70, &settings_.fov, 130, 5);
             nk_style_set_font(nk, font_sm);
-            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f", settings.fov);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f", settings_.fov);
 
             nk_style_set_font(nk, font_md);
             nk_label(nk, "Sensitivity", NK_TEXT_ALIGN_LEFT);
-            nk_slider_float(nk, 0.05f, &settings.lookSensitivity, 0.666f, 0.001f);
+            nk_slider_float(nk, 0.05f, &settings_.lookSensitivity, 0.666f, 0.001f);
             nk_style_set_font(nk, font_sm);
-            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.3f", settings.lookSensitivity);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.3f", settings_.lookSensitivity);
 
             nk_group_end(nk);
         }
@@ -75,7 +74,7 @@ void SettingsScreen::draw() {
         }
         nk_spacer(nk);
         if (nk_button_label(nk, "Apply")) {
-            game.settings.set(settings);
+            game.settings.set(settings_);
             game.settings.save();
             close();
         }
