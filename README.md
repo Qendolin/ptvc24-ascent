@@ -1,5 +1,14 @@
 # ptvc24-ascent
 
+When extracting the assets.zip archive make sure the directory strucucture is as follows:
+
+/Ascent.exe
+/README.md
+/assets/fonts/...
+/assets/models/...
+/assets/shaders/...
+/assets/textures/...
+
 ## Requirements
 
 Opengl 4.5
