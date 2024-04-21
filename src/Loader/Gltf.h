@@ -56,6 +56,8 @@ struct Material {
     glm::vec3 albedoFactor = {1, 1, 1};
     // a multipicative factor for metallness and roughness
     glm::vec2 metallicRoughnessFactor = {0, 1};
+    // scale normal x and y in tangent space, affects the intensity of the normal map
+    float normalFactor = 1;
 
     ~Material();
 };

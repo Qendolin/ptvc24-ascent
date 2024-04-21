@@ -96,6 +96,7 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
 }
 
 void CharacterEntity::update(float time_delta) {
+    if (!enabled) return;
     Input& input = *game().input;
     Settings settings = game().settings.get();
 
@@ -140,7 +141,7 @@ void CharacterEntity::update(float time_delta) {
 }
 
 void CharacterEntity::prePhysicsUpdate() {
-    if (!respawnFreeze.isZero()) {
+    if (!respawnFreeze.isZero() || !enabled) {
         body_->SetLinearVelocity(ph::convert(glm::vec3{0, 0, 0}));
         return;
     }
@@ -153,6 +154,8 @@ void CharacterEntity::prePhysicsUpdate() {
 }
 
 void CharacterEntity::postPhysicsUpdate() {
+    if (!enabled) return;
+
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
 }
 

@@ -25,6 +25,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
 
         int position_access_ref = -1;
         int normal_access_ref = -1;
+        int tangent_access_ref = -1;
         int texcoord_access_ref = -1;
 
         for (auto &attrib : primitive.attributes) {
@@ -34,18 +35,21 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
                 position_access_ref = attrib.second;
             } else if (attrib.first.compare("NORMAL") == 0) {
                 normal_access_ref = attrib.second;
+            } else if (attrib.first.compare("TANGENT") == 0) {
+                tangent_access_ref = attrib.second;
             } else if (attrib.first.compare("TEXCOORD_0") == 0) {
                 texcoord_access_ref = attrib.second;
             }
         }
 
-        if (position_access_ref < 0 || normal_access_ref < 0 || texcoord_access_ref < 0) {
+        if (position_access_ref < 0 || normal_access_ref < 0 || texcoord_access_ref < 0 || tangent_access_ref < 0) {
             LOG_WARN("Primitive is missing a required attribute");
             continue;
         }
 
         const gltf::Accessor &position_access = model.accessors[position_access_ref];
         const gltf::Accessor &normal_access = model.accessors[normal_access_ref];
+        const gltf::Accessor &tangent_access = model.accessors[tangent_access_ref];
         const gltf::Accessor &texcoord_access = model.accessors[texcoord_access_ref];
         const gltf::Accessor &index_access = model.accessors[primitive.indices];
 
@@ -55,6 +59,10 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         }
         if (normal_access.componentType != GL_FLOAT || normal_access.type != TINYGLTF_TYPE_VEC3 || normal_access.sparse.isSparse || normal_access.bufferView < 0) {
             LOG_WARN("Primitive normal attribute has invalid access");
+            continue;
+        }
+        if (tangent_access.componentType != GL_FLOAT || tangent_access.type != TINYGLTF_TYPE_VEC4 || tangent_access.sparse.isSparse || tangent_access.bufferView < 0) {
+            LOG_WARN("Primitive tangent attribute has invalid access");
             continue;
         }
         if (texcoord_access.componentType != GL_FLOAT || texcoord_access.type != TINYGLTF_TYPE_VEC2 || texcoord_access.sparse.isSparse || texcoord_access.bufferView < 0) {
@@ -72,6 +80,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
 
         const gltf::BufferView &position_view = model.bufferViews[position_access.bufferView];
         const gltf::BufferView &normal_view = model.bufferViews[normal_access.bufferView];
+        const gltf::BufferView &tangent_view = model.bufferViews[tangent_access.bufferView];
         const gltf::BufferView &texcoord_view = model.bufferViews[texcoord_access.bufferView];
         const gltf::BufferView &index_view = model.bufferViews[index_access.bufferView];
 
@@ -81,6 +90,10 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         }
         if (normal_view.target != GL_ARRAY_BUFFER || normal_view.byteStride != 0) {
             LOG_WARN("Primitive normal attribute has invalid view");
+            continue;
+        }
+        if (tangent_view.target != GL_ARRAY_BUFFER || tangent_view.byteStride != 0) {
+            LOG_WARN("Primitive tangent attribute has invalid view");
             continue;
         }
         if (texcoord_view.target != GL_ARRAY_BUFFER || texcoord_view.byteStride != 0) {
@@ -104,6 +117,7 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
 
         const gltf::Buffer &position_buffer = model.buffers[position_view.buffer];
         const gltf::Buffer &normal_buffer = model.buffers[normal_view.buffer];
+        const gltf::Buffer &tangent_buffer = model.buffers[tangent_view.buffer];
         const gltf::Buffer &texcoord_buffer = model.buffers[texcoord_view.buffer];
         const gltf::Buffer &index_buffer = model.buffers[index_view.buffer];
 
@@ -115,6 +129,8 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         chunk.positionLength = position_view.byteLength;
         chunk.normalPtr = &normal_buffer.data.at(0) + normal_view.byteOffset;
         chunk.normalLength = normal_view.byteLength;
+        chunk.tangentPtr = &tangent_buffer.data.at(0) + tangent_view.byteOffset;
+        chunk.tangentLength = tangent_view.byteLength;
         chunk.texcoordPtr = &texcoord_buffer.data.at(0) + texcoord_view.byteOffset;
         chunk.texcoordLength = texcoord_view.byteLength;
         chunk.indexPtr = &index_buffer.data.at(0) + index_view.byteOffset;

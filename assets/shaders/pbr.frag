@@ -1,8 +1,8 @@
 #version 450 core
 
 layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec3 in_normal;
-layout(location = 2) in vec2 in_uv;
+layout(location = 1) in vec2 in_uv;
+layout(location = 2) in mat3 in_tbn;
 
 layout(location = 0) out vec4 out_color;
 
@@ -17,8 +17,26 @@ layout(binding = 5) uniform sampler2D u_ibl_brdf_lut;
 uniform vec3 u_camera_pos;
 uniform vec3 u_albedo_fac;
 uniform vec3 u_occlusion_metallic_roughness_fac;
+uniform float u_normal_fac;
 
 const float PI = 3.14159265359;
+
+vec3 transformNormal(vec3 tangent_normal) {
+    return normalize(in_tbn * tangent_normal);
+}
+
+// Based on https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v32.pdf page 92
+float adjustRoughness(vec3 tangent_normal, float roughness) {
+    float r = length(tangent_normal);
+    if (r < 1.0) {
+        float kappa = (3.0 * r - r * r * r) / (1.0 - r * r);
+        float variance = 1.0 / kappa;
+        // Why is it ok for the roughness to be > 1 ?
+        return sqrt(roughness * roughness + variance);
+    }
+    return roughness;
+}
+
 
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -92,7 +110,11 @@ void main()
     float metallic  = omr.y;
     float roughness = omr.z;
 
-    vec3 N = normalize(in_normal);
+    vec3 tN = texture(u_normal_tex, in_uv).xyz * 2.0 - 1.0;
+    tN = normalize(tN * vec3(u_normal_fac, u_normal_fac, 1.0)); // increase intensity
+    roughness = adjustRoughness(tN, roughness);
+
+    vec3 N = transformNormal(tN);
     vec3 P = in_position;
     vec3 V = normalize(u_camera_pos - P);
     vec3 R = reflect(-V, N);

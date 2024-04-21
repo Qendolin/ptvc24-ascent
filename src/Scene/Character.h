@@ -58,6 +58,7 @@ class CharacterEntity : public scene::Entity {
 
    public:
     Camera& camera;
+    bool enabled = true;
 
     CharacterEntity(scene::SceneRef scene, Camera& camera);
 

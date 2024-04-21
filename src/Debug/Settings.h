@@ -5,4 +5,5 @@ struct DebugSettings {
         bool debugDrawEnabled = false;
     };
     Entity entity;
+    bool freeCam = false;
 };

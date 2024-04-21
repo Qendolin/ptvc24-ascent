@@ -15,6 +15,7 @@
 #include "../Renderer/SkyRenderer.h"
 #include "../Scene/Character.h"
 #include "../Scene/Entity.h"
+#include "../Scene/FreeCam.h"
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
 #include "../UI/Screens/Fade.h"
@@ -37,6 +38,7 @@ MainController::MainController(Game &game)
       fader(std::make_unique<FadeOverlay>())  //
 {
     loader = std::make_unique<MainControllerLoader>();
+    freeCam = std::make_unique<FreeCamEntity>(*game.camera);
 }
 
 MainController::~MainController() {
@@ -134,6 +136,12 @@ void MainController::update() {
 
     float time_delta = game.input->timeDelta();
     raceManager.update(time_delta);
+
+    // Free Cam
+    if (game.debugSettings.freeCam) {
+        freeCam->update(time_delta);
+    }
+    character->enabled = !game.debugSettings.freeCam;
 
     // Update and step physics
     game.physics->update(time_delta);

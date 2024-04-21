@@ -14,6 +14,7 @@ class ScoreScreen;
 class StartScreen;
 class PauseScreen;
 class CharacterEntity;
+class FreeCamEntity;
 namespace loader {
 class SceneData;
 }
@@ -35,7 +36,8 @@ class MainController : public AbstractController {
     const std::unique_ptr<StartScreen> startScreen;
     const std::unique_ptr<PauseScreen> pauseScreen;
 
-    CharacterEntity *character;
+    CharacterEntity* character = nullptr;
+    std::unique_ptr<FreeCamEntity> freeCam;
 
     /**
      * Draw the on screen hud (timer, score, etc.)
@@ -52,7 +54,7 @@ class MainController : public AbstractController {
 
     RaceManager raceManager;
 
-    MainController(Game &game);
+    MainController(Game& game);
 
     virtual ~MainController();
 

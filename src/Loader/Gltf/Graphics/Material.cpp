@@ -51,6 +51,7 @@ Material &loadMaterial(GraphicsLoadingContext &context, const gltf::Material &ma
         material.pbrMetallicRoughness.metallicFactor,
         material.pbrMetallicRoughness.roughnessFactor,
     };
+    result.normalFactor = static_cast<float>(material.normalTexture.scale);
 
     result.albedo = loadTexture(context, material.pbrMetallicRoughness.baseColorTexture, GL_SRGB8_ALPHA8);
     if (result.albedo != nullptr) result.albedo->setDebugLabel("gltf/texture/albedo");
@@ -68,8 +69,9 @@ Material &loadMaterial(GraphicsLoadingContext &context, const gltf::Material &ma
 Material &loadDefaultMaterial(GraphicsLoadingContext &context) {
     Material &result = context.newMaterial();
     result.name = "Default";
-    result.albedoFactor = glm::vec4(1.0);
-    result.metallicRoughnessFactor = glm::vec2(0.0, 1.0);
+    result.albedoFactor = glm::vec4(1.0f);
+    result.metallicRoughnessFactor = glm::vec2(0.0f, 1.0f);
+    result.normalFactor = 1.0f;
     result.albedo = loader::texture("assets/textures/default_albedo.png", {.srgb = true});
     result.albedo->setDebugLabel("gltf/texture/default_albedo");
     result.occlusionMetallicRoughness = loader::texture("assets/textures/default_orm.png");

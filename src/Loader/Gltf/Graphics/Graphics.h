@@ -18,6 +18,10 @@ struct Chunk {
     const void *normalPtr = nullptr;
     // the length of the normal data in bytes
     size_t normalLength = 0;
+    // pointer into the gltf data (vector of four floats)
+    const void *tangentPtr = nullptr;
+    // the length of the tangent data in bytes
+    size_t tangentLength = 0;
     // pointer into the gltf data (vector of two floats)
     const void *texcoordPtr = nullptr;
     // the length of the texcoord data in bytes
@@ -92,6 +96,8 @@ class GraphicsLoadingContext {
     gl::Buffer *position = nullptr;
     // the vertex normal buffer owen by the vao
     gl::Buffer *normal = nullptr;
+    // the vertex tangent buffer owen by the vao
+    gl::Buffer *tangent = nullptr;
     // the vertex uv texture coordinate buffer owen by the vao
     gl::Buffer *uv = nullptr;
     // the element index buffer owen by the vao

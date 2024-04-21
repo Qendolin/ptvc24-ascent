@@ -103,6 +103,7 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
         auto &material = batch.material < 0 ? defaultMaterial : graphics.materials[batch.material];
         shader->fragmentStage()->setUniform("u_albedo_fac", material.albedoFactor);
         shader->fragmentStage()->setUniform("u_occlusion_metallic_roughness_fac", glm::vec3(1.0, material.metallicRoughnessFactor));
+        shader->fragmentStage()->setUniform("u_normal_fac", material.normalFactor);
         if (material.albedo == nullptr) {
             defaultMaterial.albedo->bind(0);
         } else {

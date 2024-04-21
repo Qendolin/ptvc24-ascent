@@ -33,14 +33,24 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
     context.vao->bindBuffer(1, *normal_buffer, 0, sizeof(glm::vec3));
     context.vao->own(normal_buffer);
 
+    // tangents
+    auto tangent_buffer = new gl::Buffer();
+    context.tangent = tangent_buffer;
+    tangent_buffer->setDebugLabel("gltf/vbo/tangent");
+    tangent_buffer->allocateEmpty(vertex_count * sizeof(glm::vec4), GL_DYNAMIC_STORAGE_BIT);
+
+    context.vao->layout(2, 2, 4, GL_FLOAT, GL_FALSE, 0);
+    context.vao->bindBuffer(2, *tangent_buffer, 0, sizeof(glm::vec4));
+    context.vao->own(tangent_buffer);
+
     // uvs
     auto uv_buffer = new gl::Buffer();
     context.uv = uv_buffer;
     uv_buffer->setDebugLabel("gltf/vbo/uv");
     uv_buffer->allocateEmpty(vertex_count * sizeof(glm::vec2), GL_DYNAMIC_STORAGE_BIT);
 
-    context.vao->layout(2, 2, 2, GL_FLOAT, GL_FALSE, 0);
-    context.vao->bindBuffer(2, *uv_buffer, 0, sizeof(glm::vec2));
+    context.vao->layout(3, 3, 2, GL_FLOAT, GL_FALSE, 0);
+    context.vao->bindBuffer(3, *uv_buffer, 0, sizeof(glm::vec2));
     context.vao->own(uv_buffer);
 
     // element indices
@@ -76,12 +86,12 @@ void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
 
     // instance attribute layout
     // 4 attributes for the 4 columns of the transformation matrix
-    context.vao->layout(3, 3, 4, GL_FLOAT, GL_FALSE, 0 * sizeof(glm::vec4));
-    context.vao->layout(3, 4, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(glm::vec4));
-    context.vao->layout(3, 5, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4));
-    context.vao->layout(3, 6, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4));
-    context.vao->attribDivisor(3, 1);
-    context.vao->bindBuffer(3, *context.instanceAttributes, 0, sizeof(InstanceAttributes));
+    context.vao->layout(4, 4, 4, GL_FLOAT, GL_FALSE, 0 * sizeof(glm::vec4));
+    context.vao->layout(4, 5, 4, GL_FLOAT, GL_FALSE, 1 * sizeof(glm::vec4));
+    context.vao->layout(4, 6, 4, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec4));
+    context.vao->layout(4, 7, 4, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec4));
+    context.vao->attribDivisor(4, 1);
+    context.vao->bindBuffer(4, *context.instanceAttributes, 0, sizeof(InstanceAttributes));
     context.vao->own(context.instanceAttributes);
 }
 
@@ -100,6 +110,7 @@ void createBatches(GraphicsLoadingContext &context) {
     for (auto &&chunk : context.chunks) {
         context.position->write(base_vertex * sizeof(glm::vec3), chunk.positionPtr, chunk.positionLength);
         context.normal->write(base_vertex * sizeof(glm::vec3), chunk.normalPtr, chunk.normalLength);
+        context.tangent->write(base_vertex * sizeof(glm::vec4), chunk.tangentPtr, chunk.tangentLength);
         context.uv->write(base_vertex * sizeof(glm::vec2), chunk.texcoordPtr, chunk.texcoordLength);
         context.element->write(base_index * chunk.indexSize, chunk.indexPtr, chunk.indexLength);
 

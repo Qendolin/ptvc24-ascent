@@ -32,6 +32,10 @@ void DebugMenu::drawDebugWindow_() {
 
     ph::Physics& physics = *Game::get().physics;
     Begin("Debug Menu", nullptr, 0);
+
+    // Misc
+    Checkbox("Free Cam", &settings.freeCam);
+
     // Physics
     if (CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
         PushID("physics");
