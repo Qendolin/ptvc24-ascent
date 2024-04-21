@@ -42,6 +42,9 @@
 # Assets
 *.blend1
 
+# Pdf
+docs/*.pdf
+
 # Prebuild files and assets
 lib/
 include/GL/**
