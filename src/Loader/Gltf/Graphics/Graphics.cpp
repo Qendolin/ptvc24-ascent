@@ -71,6 +71,7 @@ void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
 
     context.instanceAttributes = new gl::Buffer();
     context.instanceAttributes->setDebugLabel("gltf/vbo/instance_attributes");
+    // FIXME: mapped buffer doesn't use synchronization. This *could* cause issues.
     context.instanceAttributes->allocate(context.attributes.data(), context.attributes.size() * sizeof(InstanceAttributes), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
     // instance attribute layout

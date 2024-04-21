@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "Util.h"
+
 namespace gl {
 
 Environment createEnvironment() {
@@ -331,7 +333,13 @@ void StateManager::bindTextureUnit(int unit, GLuint texture) {
             textureUnits[unit] = texture;
             return;
         }
-        glBindTexture(intelTextureBindingTargets[texture], texture);
+        if (intelTextureBindingTargets.count(texture) == 0) {
+            // This shouldn't happen
+            std::string label = getObjectLabel(GL_TEXTURE, texture);
+            LOG_WARN("Texture id=" + std::to_string(texture) + ", label=" + label + " is not in intelTextureBindingTargets!");
+        } else {
+            glBindTexture(intelTextureBindingTargets[texture], texture);
+        }
         textureUnits[unit] = texture;
         return;
     }

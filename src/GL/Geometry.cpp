@@ -89,6 +89,7 @@ bool Buffer::grow(size_t size) {
 }
 
 void warnAllocationSize(size_t size) {
+#ifndef NDEBUG
     int lower_limit = 1024 * 4;
     int upper_limit = 1024 * 1000 * 1000;
     if (size < lower_limit) {
@@ -98,14 +99,17 @@ void warnAllocationSize(size_t size) {
         std::string msg = "Large buffer allocation: " + std::to_string(size) + " > " + std::to_string(upper_limit) + " bytes";
         glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PERFORMANCE, 1, GL_DEBUG_SEVERITY_NOTIFICATION, -1, msg.c_str());
     }
+#endif
 }
 
 bool warnAllocationSizeZero(size_t size) {
     if (size != 0) {
         return false;
     }
+#ifndef NDEBUG
     std::string msg = "Zero size buffer allocation";
     glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 1, GL_DEBUG_SEVERITY_MEDIUM, -1, msg.c_str());
+#endif
     return true;
 }
 

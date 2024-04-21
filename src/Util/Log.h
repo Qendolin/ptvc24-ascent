@@ -12,7 +12,7 @@
     std::cout << "[LOG " << __FILENAME__ << ":" << __LINE__ << "]: " << msg << std::endl
 
 #define LOG_WARN(msg) \
-    std::cout << "[WRN " << __FILENAME__ << ":" << __LINE__ << "]: " << msg << std::endl
+    std::cout << "[\u001B[33mWRN\u001B[0m " << __FILENAME__ << ":" << __LINE__ << "]: " << msg << std::endl
 
 // LOG_DEBUG is removed in release builds
 #ifndef NDEBUG

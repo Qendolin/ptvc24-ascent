@@ -9,4 +9,5 @@ class ShaderProgram;
 class ShaderPipeline;
 class Texture;
 class Sampler;
+class Sync;
 }  // namespace gl

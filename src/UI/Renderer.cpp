@@ -3,6 +3,7 @@
 #include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
+#include "../GL/Sync.h"
 #include "../GL/Texture.h"
 #include "../Util/Log.h"
 
@@ -46,29 +47,48 @@ Renderer::Renderer(int max_vertices, int max_indices) {
     vao_->layout(0, 2, 4, GL_UNSIGNED_BYTE, true, offsetof(struct Vertex, color));
 
     GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-    vbo_ = new gl::Buffer();
-    vbo_->setDebugLabel("nk/vbo");
     size_t vbo_size = sizeof(Vertex) * max_vertices;
-    vbo_->allocateEmpty(vbo_size, flags);
-    vao_->bindBuffer(0, *vbo_, 0, sizeof(Vertex));
-    Vertex *mapped_vbo = vbo_->mapRange<Vertex>(flags);
-    vertices_ = {mapped_vbo, vbo_size};
-
-    ebo_ = new gl::Buffer();
-    ebo_->setDebugLabel("nk/ebo");
     size_t ebo_size = sizeof(uint16_t) * max_indices;
-    ebo_->allocateEmpty(ebo_size, flags);
-    vao_->bindElementBuffer(*ebo_);
-    uint16_t *mapped_ebo = ebo_->mapRange<uint16_t>(flags);
-    indices_ = {mapped_ebo, ebo_size};
+
+    vboActive_ = new gl::Buffer();
+    vboActive_->setDebugLabel("nk/vbo/a");
+    vboActive_->allocateEmpty(vbo_size, flags);
+    Vertex *mapped_vbo_write = vboActive_->mapRange<Vertex>(flags);
+    verticesActive_ = {mapped_vbo_write, vbo_size};
+
+    vboPassive_ = new gl::Buffer();
+    vboPassive_->setDebugLabel("nk/vbo/b");
+    vboPassive_->allocateEmpty(vbo_size, flags);
+    Vertex *mapped_vbo_read = vboPassive_->mapRange<Vertex>(flags);
+    verticesPassive_ = {mapped_vbo_read, vbo_size};
+
+    eboActive_ = new gl::Buffer();
+    eboActive_->setDebugLabel("nk/ebo/a");
+    eboActive_->allocateEmpty(ebo_size, flags);
+    uint16_t *mapped_ebo_write = eboActive_->mapRange<uint16_t>(flags);
+    indicesActive_ = {mapped_ebo_write, ebo_size};
+
+    eboPassive_ = new gl::Buffer();
+    eboPassive_->setDebugLabel("nk/ebo/b");
+    eboPassive_->allocateEmpty(ebo_size, flags);
+    uint16_t *mapped_ebo_read = eboPassive_->mapRange<uint16_t>(flags);
+    indicesPassive_ = {mapped_ebo_read, ebo_size};
+
+    vao_->bindBuffer(0, *vboActive_, 0, sizeof(Vertex));
+    vao_->bindElementBuffer(*eboActive_);
+
+    syncActive_ = new gl::Sync();
+    syncPassive_ = new gl::Sync();
 }
 
 Renderer::~Renderer() {
     delete shader_;
     delete sampler_;
     delete vao_;
-    delete vbo_;
-    delete ebo_;
+    delete vboActive_;
+    delete vboPassive_;
+    delete eboActive_;
+    delete eboPassive_;
 }
 
 void Renderer::setViewport(int width, int height) {
@@ -91,10 +111,38 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
 
     gl::pushDebugGroup("Nuklear::Draw");
 
-    struct nk_buffer vertex_buffer = {}, element_buffer = {};
-    nk_buffer_init_fixed(&vertex_buffer, vertices_.data(), vertices_.size_bytes());
-    nk_buffer_init_fixed(&element_buffer, indices_.data(), indices_.size_bytes());
-    nk_convert(context, commands, &vertex_buffer, &element_buffer, &CONVERT_CONFIG);
+    bool can_update = true;
+    // Check to see which buffer can be written to. When the `clientWait` call returns `true`
+    // we know that the buffer is not currently in use. If it returns `false` we have to try with the other buffer.
+    // This ensures that a buffer is not being written while it's being read on the gpu.
+    if (syncActive_->clientWait(0)) {
+        // the draw command has finished, we can just write to "active" again
+    } else {
+        if (syncPassive_->clientWait(0)) {
+            // the draw command hasn't finished, we cannnot write to current "active" ("active" is still in use)
+            // Swap "passive" and "active", the passive buffer will become active and can be written to (it is not in use)
+            std::swap(verticesActive_, verticesPassive_);
+            std::swap(indicesActive_, indicesPassive_);
+            std::swap(vboActive_, vboPassive_);
+            std::swap(eboActive_, eboPassive_);
+            std::swap(syncActive_, syncPassive_);
+            vao_->bindBuffer(0, *vboActive_, 0, sizeof(Vertex));
+            vao_->bindElementBuffer(*eboActive_);
+        } else {
+            // "passive" is also still in use, the pipeline is stalled, can't update either of them now
+            // But "passive" is sure to become signaled at some point, so it's not a problem.
+            // On the other hand "active" will get it's fence renewd every frame, so it might never
+            // be available. For this reason double buffering is used.
+            can_update = false;
+        }
+    }
+
+    if (can_update) {
+        struct nk_buffer vertex_buffer = {}, element_buffer = {};
+        nk_buffer_init_fixed(&vertex_buffer, verticesActive_.data(), verticesActive_.size_bytes());
+        nk_buffer_init_fixed(&element_buffer, indicesActive_.data(), indicesActive_.size_bytes());
+        nk_convert(context, commands, &vertex_buffer, &element_buffer, &CONVERT_CONFIG);
+    }
 
     gl::manager->setEnabled({gl::Capability::Blend, gl::Capability::ScissorTest});
     gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
@@ -122,6 +170,8 @@ void Renderer::render(struct nk_context *context, struct nk_buffer *commands) {
         glDrawElements(GL_TRIANGLES, cmd->elem_count, GL_UNSIGNED_SHORT, offset);
         offset += cmd->elem_count;
     }
+
+    syncActive_->fence();
 
     gl::manager->bindSampler(0, 0);
 

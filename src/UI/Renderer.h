@@ -27,12 +27,19 @@ class Renderer {
     gl::ShaderPipeline* shader_ = nullptr;
     gl::Sampler* sampler_ = nullptr;
     gl::VertexArray* vao_ = nullptr;
-    gl::Buffer* vbo_ = nullptr;
+    // Use double buffering.
+    gl::Buffer* vboActive_ = nullptr;
+    gl::Buffer* vboPassive_ = nullptr;
     // points into the vbo using glMapNamedBufferRange
-    std::span<Vertex> vertices_ = {};
-    gl::Buffer* ebo_ = nullptr;
+    std::span<Vertex> verticesActive_ = {};
+    std::span<Vertex> verticesPassive_ = {};
+    gl::Buffer* eboActive_ = nullptr;
+    gl::Buffer* eboPassive_ = nullptr;
     // points into the ebo using glMapNamedBufferRange
-    std::span<uint16_t> indices_ = {};
+    std::span<uint16_t> indicesActive_ = {};
+    std::span<uint16_t> indicesPassive_ = {};
+    gl::Sync* syncActive_ = nullptr;
+    gl::Sync* syncPassive_ = nullptr;
 
     glm::mat4 projectionMatrix_ = glm::mat4(1.0);
     glm::ivec2 viewport_ = glm::ivec2(0, 0);
