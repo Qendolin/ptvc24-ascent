@@ -13,11 +13,12 @@ class FinalizationRenderer {
     gl::ShaderPipeline *shader;
     // A quad with dimensions(-1, -1) to(1, 1)
     gl::VertexArray *quad;
-    gl::Sampler *sampler;
+    gl::Sampler *fboSampler;
+    gl::Sampler *bloomSampler;
 
    public:
     FinalizationRenderer();
     ~FinalizationRenderer();
 
-    void render(gl::Texture *hrd_color, gl::Texture *depth);
+    void render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom);
 };

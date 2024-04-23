@@ -15,6 +15,7 @@
 #include "GL/Texture.h"
 #include "Input.h"
 #include "Physics/Physics.h"
+#include "Renderer/BloomRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
 #include "ScoreManager.h"
 #include "Tween.h"
@@ -125,6 +126,9 @@ void Game::resize(int width, int height) {
     hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT24, width, height);
     hdrFramebuffer_->attachTexture(GL_DEPTH_ATTACHMENT, hdr_depth_attachment);
     hdrFramebuffer_->check(GL_DRAW_FRAMEBUFFER);
+
+    if (bloomRenderer_ != nullptr)
+        bloomRenderer_->setViewport(width, height);
 }
 
 void Game::load() {
@@ -145,6 +149,8 @@ void Game::load() {
         controller->load();
 
     finalizationRenderer_ = std::make_unique<FinalizationRenderer>();
+    bloomRenderer_ = std::make_unique<BloomRenderer>();
+    bloomRenderer_->setViewport(window.size.x, window.size.y);
 }
 
 void Game::unload() {
@@ -221,15 +227,25 @@ void Game::render_() {
     gl::manager->disable(gl::Capability::ScissorTest);
     gl::manager->disable(gl::Capability::StencilTest);
 
-    hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
+    if (controller->useHdr()) {
+        hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
+    } else {
+        gl::manager->bindDrawFramebuffer(0);
+    }
 
     glClearDepth(0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     controller->render();
 
-    gl::manager->bindDrawFramebuffer(0);
-    finalizationRenderer_->render(hdrFramebuffer_->getTexture(0), hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT));
+    if (controller->useHdr()) {
+        bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
+        gl::manager->bindDrawFramebuffer(0);
+        finalizationRenderer_->render(
+            hdrFramebuffer_->getTexture(0),
+            hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),
+            bloomRenderer_->result());
+    }
 
     // Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());

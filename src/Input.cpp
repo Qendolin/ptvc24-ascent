@@ -99,6 +99,7 @@ bool Input::isWindowFocused() {
 }
 
 void Input::onKey(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (key < 0 || key >= keysWrite_.size()) return;  // special keys, e.g.: mute sound
     if (action == GLFW_PRESS) {
         // set the pressed and down bit
         keysWrite_[key] |= State::PressedBit;

@@ -5,6 +5,7 @@
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
+#include "../Game.h"
 
 FinalizationRenderer::FinalizationRenderer() {
     shader = new gl::ShaderPipeline(
@@ -23,19 +24,25 @@ FinalizationRenderer::FinalizationRenderer() {
     quad->bindBuffer(0, *vbo, 0, 2 * 4);
     quad->own(vbo);
 
-    sampler = new gl::Sampler();
-    sampler->setDebugLabel("finalization_renderer/sampler");
-    sampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
-    sampler->filterMode(GL_NEAREST, GL_NEAREST);
+    fboSampler = new gl::Sampler();
+    fboSampler->setDebugLabel("finalization_renderer/fbo_sampler");
+    fboSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
+    fboSampler->filterMode(GL_NEAREST, GL_NEAREST);
+
+    bloomSampler = new gl::Sampler();
+    bloomSampler->setDebugLabel("finalization_renderer/bloom_sampler");
+    bloomSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
+    bloomSampler->filterMode(GL_LINEAR, GL_LINEAR);
 }
 
 FinalizationRenderer::~FinalizationRenderer() {
     delete shader;
     delete quad;
-    delete sampler;
+    delete fboSampler;
+    delete bloomSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth) {
+void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
     gl::manager->setEnabled({gl::Capability::DepthTest});
@@ -45,11 +52,15 @@ void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth) {
     quad->bind();
     shader->bind();
 
-    sampler->bind(0);
-    sampler->bind(1);
+    fboSampler->bind(0);
+    fboSampler->bind(1);
+    bloomSampler->bind(2);
 
     hrd_color->bind(0);
     depth->bind(1);
+    bloom->bind(2);
+
+    shader->fragmentStage()->setUniform("u_bloom_fac", Game::get().debugSettings.rendering.bloom.factor);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     gl::popDebugGroup();

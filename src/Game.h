@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -18,6 +17,7 @@ class Screen;
 struct Window;
 class AbstractController;
 class FinalizationRenderer;
+class BloomRenderer;
 class ScoreManager;
 
 namespace ph {
@@ -45,8 +45,9 @@ class Game {
     std::unique_ptr<DebugMenu> debugMenu_;
     // the controller which will get activated at the start of the next frame
     std::unique_ptr<AbstractController> queuedController_;
-    gl::Framebuffer *hdrFramebuffer_;
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
+    std::unique_ptr<BloomRenderer> bloomRenderer_;
+    gl::Framebuffer *hdrFramebuffer_;
 
     // Process user input
     void processInput_();

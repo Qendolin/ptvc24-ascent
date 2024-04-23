@@ -32,6 +32,12 @@ ShaderProgram::ShaderProgram(std::string filename, std::map<std::string, std::st
         stage_ = GL_VERTEX_SHADER;
     } else if (ext == "frag") {
         stage_ = GL_FRAGMENT_SHADER;
+    } else if (ext == "comp") {
+        stage_ = GL_COMPUTE_SHADER;
+    } else if (ext == "tesc") {
+        stage_ = GL_TESS_CONTROL_SHADER;
+    } else if (ext == "tese") {
+        stage_ = GL_TESS_EVALUATION_SHADER;
     } else {
         PANIC("Invalid file extension ." + ext);
     }

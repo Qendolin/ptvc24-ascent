@@ -1,0 +1,108 @@
+#version 450 core
+
+// The local work group size should be a multiple of 32 (NVIDIA) or 64 (AMD).
+// A group size of 1 would waste 31 compute units.
+// Anything bigger than that will slightly decrease performance.
+// It's better to have as many invocations as possible for maximum parallelism, from what I have read. 
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r11f_g11f_b10f, binding = 0) uniform writeonly restrict image2D out_color;
+layout(binding = 0) uniform sampler2D in_color;
+
+uniform vec4 u_threshold;
+uniform int u_first_pass;
+
+float luminance(vec4 v)
+{
+    return dot(v, vec4(0.2126, 0.7152, 0.0722, 0.0));
+}
+
+float karisAverage(vec4 col)
+{
+    float luma = luminance(col);
+    if(isinf(luma)) return 1.0;
+    return 1.0 / (1.0 + luma);
+}
+
+// Better, temporally stable box filtering
+// [Jimenez14] https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+// . . . . . . .
+// . A . B . C .
+// . . D . E . .
+// . F . G . H .
+// . . I . J . .
+// . K . L . M .
+// . . . . . . .
+vec4 sampleBox13Tap(vec2 tex_coord, vec2 texel_size) {
+    vec4 a = texture(in_color, vec2(tex_coord + ivec2(-1, -1)) * texel_size);
+    vec4 b = texture(in_color, vec2(tex_coord + ivec2( 0, -1)) * texel_size);
+    vec4 c = texture(in_color, vec2(tex_coord + ivec2( 1, -1)) * texel_size);
+    vec4 d = texture(in_color, vec2(tex_coord + ivec2(-0, -0)) * texel_size);
+    vec4 e = texture(in_color, vec2(tex_coord + ivec2( 0, -0)) * texel_size);
+    vec4 f = texture(in_color, vec2(tex_coord + ivec2(-1,  0)) * texel_size);
+    vec4 g = texture(in_color, vec2(tex_coord + ivec2( 0,  0)) * texel_size);
+    vec4 h = texture(in_color, vec2(tex_coord + ivec2( 1,  0)) * texel_size);
+    vec4 i = texture(in_color, vec2(tex_coord + ivec2(-0,  0)) * texel_size);
+    vec4 j = texture(in_color, vec2(tex_coord + ivec2( 0,  0)) * texel_size);
+    vec4 k = texture(in_color, vec2(tex_coord + ivec2(-1,  1)) * texel_size);
+    vec4 l = texture(in_color, vec2(tex_coord + ivec2( 0,  1)) * texel_size);
+    vec4 m = texture(in_color, vec2(tex_coord + ivec2( 1,  1)) * texel_size);
+
+    if (u_first_pass == 0) {
+        vec4 result = (d + e + i + j) * 0.25 * 0.5;
+        result += (a + b + g + f) * 0.25 * 0.125;
+        result += (b + c + h + g) * 0.25 * 0.125;
+        result += (f + g + l + k) * 0.25 * 0.125;
+        result += (g + h + m + l) * 0.25 * 0.125;
+        return result;
+    }
+
+    // Note: This is the correct way to apply the karis average
+    // The implementation by https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom is incorrect
+    // as it is not energy preserving
+    vec4 result0 = (d + e + i + j) * 0.25 * 4.0;
+    vec4 result1 = (a + b + g + f) * 0.25;
+    vec4 result2 = (b + c + h + g) * 0.25;
+    vec4 result3 = (f + g + l + k) * 0.25;
+    vec4 result4 = (g + h + m + l) * 0.25;
+
+    float weight0 = karisAverage(result0);
+    float weight1 = karisAverage(result1);
+    float weight2 = karisAverage(result2);
+    float weight3 = karisAverage(result3);
+    float weight4 = karisAverage(result4);
+
+    return ( 
+        result0 * weight0 + 
+        result1 * weight1 + 
+        result2 * weight2 + 
+        result3 * weight3 + 
+        result4 * weight4) / (
+            weight0 + weight1 + weight2 + weight3 + weight4
+        );
+}
+
+vec4 quadraticThreshold(vec4 color, float threshold, vec3 curve) {
+	// Pixel brightness
+    float br = max(color.r, max(color.g, color.b));
+
+    // Under-threshold part: quadratic curve
+    float rq = clamp(br - curve.x, 0.0, curve.y);
+    rq = curve.z * rq * rq;
+
+    // Combine and apply the brightness response curve
+    color *= max(rq, br - threshold) / max(br, 1.0e-4);
+
+    return color;
+}
+
+void main() {
+	ivec2 tex_coord = ivec2(gl_GlobalInvocationID.xy);
+
+	vec4 color = sampleBox13Tap(vec2(tex_coord * 2 + 1), vec2(1.0) / textureSize(in_color, 0));
+	if(u_first_pass == 1) {
+        color = min(color, 512.0); // clamp infinities
+		color = quadraticThreshold(color, u_threshold.x, u_threshold.yzw);
+	}
+	imageStore(out_color, tex_coord, color);
+}

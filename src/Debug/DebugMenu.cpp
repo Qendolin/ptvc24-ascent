@@ -66,6 +66,17 @@ void DebugMenu::drawDebugWindow_() {
         PushID("rendering");
         Indent();
         Checkbox("Normal Mapping", &settings.rendering.normalMapsEnabled);
+
+        Separator();
+
+        SliderFloat("Bloom", &settings.rendering.bloom.factor, 0.0f, 1.0f);
+        SliderFloat("Bloom Threshold", &settings.rendering.bloom.threshold, 0.0f, 5.0f);
+        SliderFloat("Bloom Knee", &settings.rendering.bloom.thresholdKnee, 0.0f, 1.0f);
+
+        for (int i = 0; i < settings.rendering.bloom.levels.size(); i++) {
+            SliderFloat(("Level " + std::to_string(i)).c_str(), &settings.rendering.bloom.levels[i], 0.0f, 1.0f);
+        }
+
         Unindent();
         PopID();
     }

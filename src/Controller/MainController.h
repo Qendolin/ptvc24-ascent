@@ -65,4 +65,6 @@ class MainController : public AbstractController {
     void update() override;
 
     void render() override;
+
+    bool useHdr() override;
 };

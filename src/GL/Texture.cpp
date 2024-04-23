@@ -77,7 +77,7 @@ Texture* Texture::createView(GLenum type, GLenum internal_format, int min_level,
     GLuint viewId;
     glGenTextures(1, &viewId);
     glTextureView(viewId, type, id_, internal_format, min_level, max_level - min_level + 1, min_layer, max_layer - min_layer + 1);
-    manager->intelTextureBindingSetTarget(id_, type);
+    manager->intelTextureBindingSetTarget(viewId, type);
     return new Texture(type, viewId);
 }
 

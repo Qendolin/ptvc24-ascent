@@ -1,0 +1,43 @@
+#version 450 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r11f_g11f_b10f, binding = 0) uniform readonly restrict image2D in_new_color; // upper level (blurred result of the downsampling)
+layout(r11f_g11f_b10f, binding = 1) uniform writeonly restrict image2D out_color; // upper level
+layout(binding = 0) uniform sampler2D in_prev_color; // lower level (summed result of previous up iteration, has 1/2 of the size)
+
+uniform vec2 u_factor; // lower and upper level factors
+
+// 9-tap bilinear upsampler (tent filter)
+// . . . . . . .
+// . A . B . C .
+// . . . . . . .
+// . D . E . F .
+// . . . . . . .
+// . G . H . I .
+// . . . . . . .
+vec4 sampleTent(vec2 tex_coord, vec2 texel_size) {
+	vec4 a = texture(in_prev_color, vec2(tex_coord + ivec2(-1, -1)) * texel_size);
+	vec4 b = texture(in_prev_color, vec2(tex_coord + ivec2( 0, -1)) * texel_size);
+	vec4 c = texture(in_prev_color, vec2(tex_coord + ivec2( 1, -1)) * texel_size);
+	vec4 d = texture(in_prev_color, vec2(tex_coord + ivec2(-1,  0)) * texel_size);
+	vec4 e = texture(in_prev_color, vec2(tex_coord + ivec2( 0,  0)) * texel_size);
+	vec4 f = texture(in_prev_color, vec2(tex_coord + ivec2( 1,  0)) * texel_size);
+	vec4 g = texture(in_prev_color, vec2(tex_coord + ivec2(-1,  1)) * texel_size);
+	vec4 h = texture(in_prev_color, vec2(tex_coord + ivec2( 0,  1)) * texel_size);
+	vec4 i = texture(in_prev_color, vec2(tex_coord + ivec2(-1,  1)) * texel_size);
+
+    vec4 result = 1*a + 2*b + 1*c;
+    result +=     2*d + 4*e + 2*f;
+    result +=     1*g + 2*h + 1*i;
+
+    return result * (1.0 / 16.0);
+}
+
+void main() {
+	ivec2 tex_coord = ivec2(gl_GlobalInvocationID.xy );
+
+	vec4 bloom = sampleTent(vec2((tex_coord + ivec2(1)) / 2), vec2(1.0) / textureSize(in_prev_color, 0));
+	vec4 color = u_factor.x * bloom + u_factor.y * imageLoad(in_new_color, tex_coord);
+	imageStore(out_color, tex_coord, color);
+}

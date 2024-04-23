@@ -18,6 +18,7 @@ if(MSVC)
 endif()
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
@@ -47,12 +48,9 @@ FetchContent_Declare(
     GIT_TAG v1.90.4
 )
 FetchContent_MakeAvailable(imgui)
-include_directories(${imgui_SOURCE_DIR}/)
-set(IMGUI_INCLUDE_DIR ${imgui_SOURCE_DIR}/)
 file(GLOB IMGUI_SOURCES ${imgui_SOURCE_DIR}/*.cpp)
-file(GLOB IMGUI_HEADERS ${imgui_SOURCE_DIR}/*.h)
 add_library(imgui STATIC ${IMGUI_SOURCES})
-target_include_directories(imgui PUBLIC ${IMGUI_INCLUDE_DIR})
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 # Maybe I can get this to work, but it's not really needed right now
 # set(IMGUI_USER_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/src/UI/imconfig.h")
 # target_compile_definitions(imgui INTERFACE "-DIMGUI_USER_CONFIG=<${IMGUI_USER_CONFIG}>")
@@ -66,7 +64,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(lz4)
 file(GLOB lz4_SOURCES ${lz4_SOURCE_DIR}/lib/*.c)
 add_library(lz4 STATIC ${lz4_SOURCES})
-include_directories(${lz4_SOURCE_DIR}/lib)
+target_include_directories(lz4 PUBLIC ${lz4_SOURCE_DIR}/lib)
 
 set(LINK_LIBRARIES
     debug glfw3d optimized glfw3
@@ -79,7 +77,6 @@ set(LINK_LIBRARIES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${lz4_SOURCE_DIR}/lib)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBRARY_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBRARIES})
 
@@ -105,7 +102,7 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 if(MSVC)
     # enable warnings except: 
     # 'size_t' possible loss of data, 'identifier' hides class member,  unused parameter
-    # diable warnings in external includes
+    # disable warnings in external includes
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4267 /wd4458 /wd4100 /external:anglebrackets /external:W0)
 endif()
 

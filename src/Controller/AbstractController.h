@@ -31,4 +31,8 @@ class AbstractController {
      * Called every frame after `update`
      */
     virtual void render() = 0;
+
+    virtual bool useHdr() {
+        return false;
+    }
 };

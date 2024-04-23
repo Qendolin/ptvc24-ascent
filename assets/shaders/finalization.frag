@@ -7,6 +7,9 @@ layout(location = 0) out vec4 out_color;
 
 layout(binding = 0) uniform sampler2D u_color_tex;
 layout(binding = 1) uniform sampler2D u_depth_tex;
+layout(binding = 2) uniform sampler2D u_bloom_tex;
+
+uniform float u_bloom_fac;
 
 // dither matrix, use as dither_matrix[y][x] / 256.0
 const float dither_matrix[16][16] = {
@@ -117,6 +120,11 @@ vec3 dither(vec3 col) {
 
 void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
+
+    // Bloom
+    color += texture(u_bloom_tex, in_uv).rgb * u_bloom_fac;
+
+    // TODO: Flares
 
     // Tonemapping
     color = tonemapAgX(color);

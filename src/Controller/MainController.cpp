@@ -56,6 +56,10 @@ void MainController::load() {
     loader->load();
 }
 
+bool MainController::useHdr() {
+    return !loader->isLoading();
+}
+
 void MainController::applyLoadResult_() {
     LOG_INFO("Finished loading");
     MainControllerLoader::Data data = loader->result();
