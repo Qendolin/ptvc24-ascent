@@ -18,7 +18,6 @@ Opengl 4.5
 ## Controls
 
 Click to focus the window. Escape to release the focus.  
-WASD to fly horizontally. Space & Ctrl to fly vertically. Shift to speed up.  
 Use mouse to look.  
 
 | Key          | Action            |
@@ -28,6 +27,8 @@ Use mouse to look.
 | `ESC`        | Pause Menu        |
 | `F3`         | Toggle debug menu |
 | `F5`         | Reload assets     |
+
+The FreeCam™ mode uses WASD movement and the scrolling to change speed.
 
 ## Arguments
 - `--enable-compatibility-profile`  
