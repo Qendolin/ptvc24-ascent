@@ -150,12 +150,19 @@ Based on [learnopengl](https://learnopengl.com/PBR/Theory)
 Using tangents and normal maps from the glTF file.  
 Open the debug menu (F3) to toggle it on and off.
 
+- PB Bloom/Glow  
+Configurable in the debug menu (F3).
+
+## Debug Menu
+Open / Close with F3.  
+On first open the peformance menu will overlap the debug menu.  
+Window placement is not saved in release builds.  
+
 ## Planned "Effects" Features
 
 - Shadow Map with PCF
 - GPU Particle System using Compute Shader
 - Tessellation from Height Map
-- PB Bloom/Glow
 - Ambient Occlusion (maybe)
 - Motion Blur (maybe)
 
