@@ -64,6 +64,8 @@ class CharacterEntity : public scene::Entity {
 
     virtual ~CharacterEntity();
 
+    // FIXME: respawn doesn't store boost meter
+    // FIXME: increase respawn freeze
     // respawn the character at the last checkpoint
     void respawn();
 

@@ -32,7 +32,7 @@ void MainMenuScreen::draw_() {
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
 
-    if (nk_begin(nk, "main_menu", {30_vw, 10_vh, 40_vw, 80_vh}, 0)) {
+    if (nk_begin(nk, "main_menu", {30_vw, 10_vh, 40_vw, 80_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         // draw title image
         float img_height = 40_vw * titleImage_->height() / titleImage_->width();
         nk_layout_row_dynamic(nk, img_height, 1);
@@ -51,7 +51,7 @@ void MainMenuScreen::draw_() {
         nk_layout_row_push(nk, 240_dp);
 
         // draw menu buttons
-        if (nk_group_begin(nk, "menu_buttons", 0)) {
+        if (nk_group_begin(nk, "menu_buttons", NK_WINDOW_NO_SCROLLBAR)) {
             // row spacing
             nk_style_push_float(nk, &nk->style.window.spacing.y, 50_dp);
 
