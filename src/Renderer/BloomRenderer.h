@@ -5,11 +5,14 @@
 
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
-class Camera;
-namespace loader {
-class GraphicsData;
-}  // namespace loader
 #pragma endregion
+
+// References:
+// https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
+// https://www.froyok.fr/blog/2021-12-ue4-custom-bloom/
+// https://www.youtube.com/watch?v=tI70-HIc5ro (goot explanation but not actually used)
+// https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom (they make some mistakes)
+// https://github.com/Unity-Technologies/Graphics/blob/master/com.unity.postprocessing/PostProcessing/Shaders/Builtins/Bloom.shader
 
 class BloomRenderer {
    private:
@@ -44,5 +47,13 @@ class BloomRenderer {
 
     gl::Texture *result() {
         return upViews[0];
+    }
+
+    gl::Texture *downLevel(int level) {
+        return downViews[level];
+    }
+
+    gl::Texture *upLevel(int level) {
+        return upViews[level];
     }
 };

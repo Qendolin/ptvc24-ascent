@@ -92,10 +92,6 @@ void BloomRenderer::createTextures_() {
 //	Down[0] + up(Up[2]) -> Up[1]
 //	up(Up[1]) -> Up[0]
 
-// https://www.froyok.fr/blog/2021-12-ue4-custom-bloom/
-// https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/
-// https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom Note: Incorrect
-
 // integer divide x / y but round up instead of truncate
 #define DIV_CEIL(x, y) ((x + y - 1) / y)
 
@@ -119,7 +115,7 @@ void BloomRenderer::render(gl::Texture* hrd_color) {
     glBindImageTexture(0, downTexture->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R11F_G11F_B10F);
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);  // not sure if this is the correct barrier
     glDispatchCompute(DIV_CEIL(w, 8), DIV_CEIL(h, 8), 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);  // Maybe also GL_TEXTURE_FETCH_BARRIER_BIT the documentation is really unclear ?
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);  // Maybe also GL_TEXTURE_FETCH_BARRIER_BIT, the documentation is really unclear ?
 
     downShader->get(GL_COMPUTE_SHADER)->setUniform("u_first_pass", 0);
     for (int i = 0; i < LEVELS - 1; i++) {
@@ -154,7 +150,7 @@ void BloomRenderer::render(gl::Texture* hrd_color) {
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         lower_view = upViews[i];
     }
-    glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);  // I have no clue
+    glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);  // I have no clue
 
     gl::popDebugGroup();
 }

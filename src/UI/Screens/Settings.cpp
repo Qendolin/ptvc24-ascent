@@ -56,7 +56,7 @@ void SettingsScreen::draw_() {
 
             nk_style_set_font(nk, font_md);
             nk_label(nk, "Sensitivity", NK_TEXT_ALIGN_LEFT);
-            nk_slider_float(nk, 0.05f, &settings_.lookSensitivity, 0.666f, 0.001f);
+            nk_slider_float(nk, 0.005f, &settings_.lookSensitivity, 0.7f, 0.001f);
             nk_style_set_font(nk, font_sm);
             nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.3f", settings_.lookSensitivity);
 

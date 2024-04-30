@@ -18,6 +18,7 @@ struct Window;
 class AbstractController;
 class FinalizationRenderer;
 class BloomRenderer;
+class LensEffectsRenderer;
 class ScoreManager;
 
 namespace ph {
@@ -47,6 +48,7 @@ class Game {
     std::unique_ptr<AbstractController> queuedController_;
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
     std::unique_ptr<BloomRenderer> bloomRenderer_;
+    std::unique_ptr<LensEffectsRenderer> lensEffectsRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
 
     // Process user input

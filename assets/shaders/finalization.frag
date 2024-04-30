@@ -8,8 +8,13 @@ layout(location = 0) out vec4 out_color;
 layout(binding = 0) uniform sampler2D u_color_tex;
 layout(binding = 1) uniform sampler2D u_depth_tex;
 layout(binding = 2) uniform sampler2D u_bloom_tex;
+layout(binding = 3) uniform sampler2D u_flares_tex;
+layout(binding = 4) uniform sampler2D u_glare_tex;
 
 uniform float u_bloom_fac;
+uniform float u_flares_fac;
+// factor, inner radius, outer radius, sharpness
+uniform vec4 u_vignette_params;
 
 // dither matrix, use as dither_matrix[y][x] / 256.0
 const float dither_matrix[16][16] = {
@@ -118,16 +123,34 @@ vec3 dither(vec3 col) {
     return col + value * rgb_normalization;
 }
 
+// https://www.shadertoy.com/view/tt2cDK
+float vignette(vec2 uv) {
+    float inner = u_vignette_params.y;
+    float outer = u_vignette_params.z;
+    float sharpness = u_vignette_params.w;
+
+    vec2 curve = pow(abs(uv * 2.0 - 1.0), vec2(sharpness));
+    float edge = pow(length(curve), 1.0 / sharpness);
+    float vignette = 1.0 - smoothstep(inner, outer, edge);
+
+    return 1.0 - vignette;
+}
+
 void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
 
     // Bloom
     color += texture(u_bloom_tex, in_uv).rgb * u_bloom_fac;
 
-    // TODO: Flares
+    // Flares & Glare
+    color += texture(u_flares_tex, in_uv).rgb * u_flares_fac;
+    color += texture(u_glare_tex, in_uv).rgb * u_flares_fac;
 
     // Tonemapping
     color = tonemapAgX(color);
+
+    // Vignette
+    color = mix(color, vec3(0.0, 0.0, 0.0), vignette(in_uv) * u_vignette_params.x); 
 
     // dithering
     color = dither(color);

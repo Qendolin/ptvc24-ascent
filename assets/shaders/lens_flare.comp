@@ -1,0 +1,95 @@
+#version 450 core
+
+// https://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html
+// https://john-chapman.github.io/2017/11/05/pseudo-lens-flare.html
+// https://www.froyok.fr/blog/2021-09-ue4-custom-lens-flare/
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D in_bloom;
+layout(binding = 1) uniform sampler2D in_ghost_color;
+layout(r11f_g11f_b10f, binding = 0) uniform writeonly restrict image2D out_color;
+
+uniform int u_ghost_count = 6;
+// dispersion, bias and factor
+uniform vec4 u_ghost_params;
+
+uniform float u_chromatic_distortion_fac;
+
+// size, bias and factor
+uniform vec4 u_halo_params;
+
+// 1 / sqrt(2)
+const float R_SQRT_2 = 0.70710678118;
+
+vec3 sampleDistorted(vec2 uv, vec2 direction, vec3 distortion) {
+	return vec3(
+		textureLod(in_bloom, uv + direction * distortion.r, 0).r,
+		textureLod(in_bloom, uv + direction * distortion.g, 0).g,
+		textureLod(in_bloom, uv + direction * distortion.b, 0).b
+	);
+}
+
+vec3 ghosts(vec2 uv, vec2 point, vec2 direction, vec3 chromatic_distortion) {
+    float dispersion = u_ghost_params.x;
+    float bias = u_ghost_params.y;
+    float factor = u_ghost_params.z;
+
+    vec3 result = vec3(0.0);
+    for (int i = 1; i <= u_ghost_count; i++) {
+        float offset_factor = float(i) / float(u_ghost_count);
+        vec2 offset = point * dispersion * offset_factor;
+
+        // From froyok's blog this is the "Local mask"
+        // It is 1 if the sampled location is in the screen center.
+        float center_closeness = 1.0 - length(-point + offset);
+        float weight = smoothstep(0.0, 0.7, center_closeness);
+
+        vec3 ghost = sampleDistorted(uv + 0.5 * offset, direction, chromatic_distortion).rgb;
+        result += ghost * weight;
+    }
+
+    // from froyok's blog this is the "Screenborder Mask"
+    float edge_closeness = length(point);
+    float mask = smoothstep(1.1, 0.5, edge_closeness);
+    mask = mask * mask;
+
+    result = max(result + bias, vec3(0.0)) * factor * mask;
+
+	// radial coloring
+	result *= textureLod(in_ghost_color, vec2(edge_closeness * R_SQRT_2, 0.5), 0).rgb;
+    return result;
+}
+
+vec3 halo(vec2 uv, vec2 direction, vec3 chromatic_distortion) {
+    float size = u_halo_params.x;
+    float bias = u_halo_params.y;
+    float factor = u_halo_params.z;
+
+    vec2 offset = direction * size;
+
+    float weight = length(vec2(0.5) - fract(uv + offset)) / length(vec2(0.5));
+    weight = pow(1.0 - weight, 5.0); // A different function might give better results (e.g.: double smoothstep)
+    weight = clamp(weight - 0.2, 0.0, 1.0) / 0.8;
+
+    vec3 halo = sampleDistorted(uv + offset, direction, chromatic_distortion).rgb;
+    halo = max(halo + bias, vec3(0.0)) * weight * factor;
+    return halo;
+}
+
+void main() {
+	ivec2 tex_coord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 out_texel_size = 1.0 / vec2(imageSize(out_color));
+	vec2 uv = tex_coord * out_texel_size;
+    vec2 point = vec2(1.0) - 2.0 * uv; // "point" for the lack of a better name. Rage: [-1, 1]
+
+    vec2 bloom_texel_size = 1.0 / vec2(textureSize(in_bloom, 0));
+    vec3 chromatic_distortion = vec3(-bloom_texel_size.x, 0.0, bloom_texel_size.x) * u_chromatic_distortion_fac;
+	vec2 direction = normalize(point);
+
+    vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
+    result.rgb += ghosts(uv, point, direction, chromatic_distortion);
+    result.rgb += halo(uv, direction, chromatic_distortion);
+
+	imageStore(out_color, tex_coord, result);
+}

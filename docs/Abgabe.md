@@ -151,7 +151,13 @@ Using tangents and normal maps from the glTF file.
 Open the debug menu (F3) to toggle it on and off.
 
 - PB Bloom/Glow  
-Configurable in the debug menu (F3).
+Configurable in the debug menu (F3).  
+Baed on [CoD: Advanced Warefare](https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/), [learnopengl](https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom) and [Froyok's Blog](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom/).
+
+- Lens Flares, Glare and Light Streaks   
+Configurable in the debug menu (F3).  
+Based on John Chapman's [Pseudo Lens Flare](https://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html),
+[this blog post](https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/) and Kawase's ligh streaks from [this presentation](https://www.chrisoat.com/papers/Oat-ScenePostprocessing.pdf).
 
 ## Debug Menu
 Open / Close with F3.  

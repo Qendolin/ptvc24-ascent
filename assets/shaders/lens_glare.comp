@@ -1,0 +1,50 @@
+#version 450 core
+
+// https://www.chrisoat.com/papers/Oat-ScenePostprocessing.pdf
+// http://www.daionet.gr.jp/~masa/archives/GDC2003_DSTEAL.ppt
+
+#define SAMPLES 4
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r11f_g11f_b10f, binding = 0) uniform readonly coherent restrict image2D in_color;
+layout(r11f_g11f_b10f, binding = 1) uniform coherent restrict image2D inout_color;
+
+uniform ivec2 u_direction;
+// attenuation, bias, factor 
+uniform vec3 u_params;
+// iteration, combine
+uniform ivec2 u_iteration_params;
+
+vec3 threshold(vec3 color) {
+	float bias = u_params.y;
+	float factor = u_params.z;
+	return max((color + bias) * factor, 0.0);
+}
+
+void main() {
+	ivec2 tex_coord = ivec2(gl_GlobalInvocationID.xy);
+	int iter = u_iteration_params.x;
+	float attenuation = u_params.x;
+
+	int b = int(pow(SAMPLES, iter));
+	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
+	for (int s = 0; s < SAMPLES; s++) {
+		// Weight = a^(b*s)
+		float weight = pow(attenuation, b * s);
+		weight = clamp(weight, 0.0, 1.0);
+		// Streak direction is a 2D vector in image space
+		ivec2 offset = u_direction * b * s;
+		// Scale and accumulate
+		vec3 color = imageLoad(in_color, tex_coord + offset).rgb;
+		if(iter == 0)
+			color = threshold(color);
+		result.rgb += weight * color;
+	}
+
+	if(u_iteration_params.y != 0) {
+		// combine pass
+		result.rgb += imageLoad(inout_color, tex_coord).rgb;
+	}
+	imageStore(inout_color, tex_coord, result);
+}

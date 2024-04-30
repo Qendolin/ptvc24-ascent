@@ -7,7 +7,7 @@ struct Settings {
     float fov = 110;
 
     // How much the camera turns when moving the mouse. The unit is Degrees / Pixel.
-    float lookSensitivity = 0.333f;
+    float lookSensitivity = 0.2f;
 };
 
 class SettingsManager {

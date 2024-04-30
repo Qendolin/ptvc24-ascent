@@ -17,6 +17,7 @@
 #include "Physics/Physics.h"
 #include "Renderer/BloomRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
+#include "Renderer/LensEffectsRenderer.h"
 #include "ScoreManager.h"
 #include "Tween.h"
 #include "UI/Renderer.h"
@@ -129,6 +130,8 @@ void Game::resize(int width, int height) {
 
     if (bloomRenderer_ != nullptr)
         bloomRenderer_->setViewport(width, height);
+    if (lensEffectsRenderer_ != nullptr)
+        lensEffectsRenderer_->setViewport(width, height);
 }
 
 void Game::load() {
@@ -151,6 +154,8 @@ void Game::load() {
     finalizationRenderer_ = std::make_unique<FinalizationRenderer>();
     bloomRenderer_ = std::make_unique<BloomRenderer>();
     bloomRenderer_->setViewport(window.size.x, window.size.y);
+    lensEffectsRenderer_ = std::make_unique<LensEffectsRenderer>();
+    lensEffectsRenderer_->setViewport(window.size.x, window.size.y);
 }
 
 void Game::unload() {
@@ -240,11 +245,14 @@ void Game::render_() {
 
     if (controller->useHdr()) {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
+        lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gl::manager->bindDrawFramebuffer(0);
         finalizationRenderer_->render(
             hdrFramebuffer_->getTexture(0),
             hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),
-            bloomRenderer_->result());
+            bloomRenderer_->result(),
+            lensEffectsRenderer_->flares(),
+            lensEffectsRenderer_->glare());
     }
 
     // Draw physics debugging shapes

@@ -67,14 +67,47 @@ void DebugMenu::drawDebugWindow_() {
         Indent();
         Checkbox("Normal Mapping", &settings.rendering.normalMapsEnabled);
 
-        Separator();
+        if (CollapsingHeader("Bloom", ImGuiTreeNodeFlags_DefaultOpen)) {
+            SliderFloat("Factor", &settings.rendering.bloom.factor, 0.0f, 1.0f);
+            SliderFloat("Bloom Threshold", &settings.rendering.bloom.threshold, 0.0f, 5.0f);
+            SliderFloat("Bloom Knee", &settings.rendering.bloom.thresholdKnee, 0.0f, 1.0f);
 
-        SliderFloat("Bloom", &settings.rendering.bloom.factor, 0.0f, 1.0f);
-        SliderFloat("Bloom Threshold", &settings.rendering.bloom.threshold, 0.0f, 5.0f);
-        SliderFloat("Bloom Knee", &settings.rendering.bloom.thresholdKnee, 0.0f, 1.0f);
+            for (int i = 0; i < settings.rendering.bloom.levels.size(); i++) {
+                SliderFloat(("Level " + std::to_string(i)).c_str(), &settings.rendering.bloom.levels[i], 0.0f, 1.0f);
+            }
+        }
 
-        for (int i = 0; i < settings.rendering.bloom.levels.size(); i++) {
-            SliderFloat(("Level " + std::to_string(i)).c_str(), &settings.rendering.bloom.levels[i], 0.0f, 1.0f);
+        if (CollapsingHeader("Lens Effects", ImGuiTreeNodeFlags_DefaultOpen)) {
+            PushID("lens_effects");
+            SliderFloat("Factor##factor", &settings.rendering.lens.factor, 0.0f, 1.0f);
+            SliderFloat("Chromatic Distortion##chromaticDistortion", &settings.rendering.lens.chromaticDistortion, 0.0f, 4.0f);
+            Checkbox("Blur##blur", &settings.rendering.lens.blur);
+
+            Text("Ghosts");
+            SliderInt("Count##ghosts", &settings.rendering.lens.ghosts, 0, 10);
+            SliderFloat("Dispersion##ghostDispersion", &settings.rendering.lens.ghostDispersion, 0.0f, 1.0f);
+            SliderFloat("Bias##ghostBias", &settings.rendering.lens.ghostBias, -100.0f, 0.0f);
+            SliderFloat("Factor##ghostFactor", &settings.rendering.lens.ghostFactor, 0.0f, 1.0f);
+
+            Text("Halo");
+            SliderFloat("Size##haloSize", &settings.rendering.lens.haloSize, 0.0f, 1.0f);
+            SliderFloat("Bias##haloBias", &settings.rendering.lens.haloBias, -100.0f, 0.0f);
+            SliderFloat("Factor##haloFactor", &settings.rendering.lens.haloFactor, 0.0f, 1.0f);
+            Text("Glare");
+            SliderFloat("Attenuation##glareAttenuation", &settings.rendering.lens.glareAttenuation, 0.0f, 1.0f);
+            SliderFloat("Bias##glareBias", &settings.rendering.lens.glareBias, -100.0f, 0.0f);
+            SliderFloat("Factor##glareFactor", &settings.rendering.lens.glareFactor, 0.0f, 1.0f);
+
+            PopID();
+        }
+
+        if (CollapsingHeader("Vignette", ImGuiTreeNodeFlags_DefaultOpen)) {
+            PushID("vignette");
+            SliderFloat("Factor", &settings.rendering.vignette.factor, 0.0f, 5.0f);
+            SliderFloat("Inner", &settings.rendering.vignette.inner, 0.0f, 1.0f);
+            SliderFloat("Outer", &settings.rendering.vignette.outer, 0.0f, 2.0f);
+            SliderFloat("Sharpness", &settings.rendering.vignette.sharpness, 0.5f, 16.0f);
+            PopID();
         }
 
         Unindent();

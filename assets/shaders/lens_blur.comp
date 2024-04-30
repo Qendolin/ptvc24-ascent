@@ -1,0 +1,56 @@
+#version 450 core
+
+// https://github.com/modanhan/unity-lens-flare/blob/87b37c7ae0b83b4823cb9e572476b929f481c587/Assets/Lens%20Flare/Shaders/GaussianBlur.shader
+
+
+// Should also check out:
+// https://lisyarus.github.io/blog/posts/compute-blur.html
+// https://github.com/JamShan/GfxSamples/blob/master/data/LensFlare_ScreenSpace/shaders/GaussBlur_cs.glsl
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D in_color;
+layout(r11f_g11f_b10f, binding = 0) uniform writeonly restrict image2D out_color;
+
+uniform vec2 u_direction;
+
+// Generated using https://lisyarus.github.io/blog/posts/blur-coefficients-generator.html
+// radius=8 sigma=3
+const int SAMPLE_COUNT = 9;
+const float OFFSETS[9] = float[9](
+    -7.304547036499911,
+    -5.35308381175656,
+    -3.4048471718931532,
+    -1.4588111840004858,
+    0.4862426846689484,
+    2.431625915613778,
+    4.378621204796657,
+    6.328357272092126,
+    8
+);
+const float WEIGHTS[9] = float[9](
+    0.012886119174695622,
+    0.0519163052253057,
+    0.1361482870984158,
+    0.23255915602238483,
+    0.2588386792559968,
+    0.18772977983330918,
+    0.08870474727392855,
+    0.027292496709325292,
+    0.003924429406638234
+);
+
+void main() {
+	vec2 tex_coord = vec2(gl_GlobalInvocationID.xy);
+	vec2 texel_size = 1.0 / vec2(textureSize(in_color, 0));
+	vec2 uv = tex_coord * texel_size;
+
+	vec4 color = vec4(0.0);
+	for (int i = 0; i < SAMPLE_COUNT; i++) {
+		vec2 offset = u_direction * OFFSETS[i] * texel_size;
+		float weight = WEIGHTS[i];
+		color += textureLod(in_color, uv + offset, 0) * weight;
+	}
+
+	imageStore(out_color, ivec2(tex_coord), color);
+}

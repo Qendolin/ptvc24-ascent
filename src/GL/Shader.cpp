@@ -124,12 +124,24 @@ void setProgramUniform(GLuint prog, GLint location, const glm::vec2 value) {
     glProgramUniform2f(prog, location, value[0], value[1]);
 }
 
+void setProgramUniform(GLuint prog, GLint location, const glm::ivec2 value) {
+    glProgramUniform2i(prog, location, value[0], value[1]);
+}
+
 void setProgramUniform(GLuint prog, GLint location, const glm::vec3 value) {
     glProgramUniform3f(prog, location, value[0], value[1], value[2]);
 }
 
+void setProgramUniform(GLuint prog, GLint location, const glm::ivec3 value) {
+    glProgramUniform3i(prog, location, value[0], value[1], value[2]);
+}
+
 void setProgramUniform(GLuint prog, GLint location, const glm::vec4 value) {
     glProgramUniform4f(prog, location, value[0], value[1], value[2], value[3]);
+}
+
+void setProgramUniform(GLuint prog, GLint location, const glm::ivec4 value) {
+    glProgramUniform4i(prog, location, value[0], value[1], value[2], value[3]);
 }
 
 void setProgramUniform(GLuint prog, GLint location, const glm::mat3 value) {
@@ -151,8 +163,11 @@ void ShaderProgram::setUniform(const std::string& name, T value) {
 
 template void ShaderProgram::setUniform<int>(const std::string& name, int value);
 template void ShaderProgram::setUniform<float>(const std::string& name, float value);
+template void ShaderProgram::setUniform<glm::ivec2>(const std::string& name, glm::ivec2 value);
 template void ShaderProgram::setUniform<glm::vec2>(const std::string& name, glm::vec2 value);
+template void ShaderProgram::setUniform<glm::ivec3>(const std::string& name, glm::ivec3 value);
 template void ShaderProgram::setUniform<glm::vec3>(const std::string& name, glm::vec3 value);
+template void ShaderProgram::setUniform<glm::ivec4>(const std::string& name, glm::ivec4 value);
 template void ShaderProgram::setUniform<glm::vec4>(const std::string& name, glm::vec4 value);
 template void ShaderProgram::setUniform<glm::mat3>(const std::string& name, glm::mat3 value);
 template void ShaderProgram::setUniform<glm::mat4>(const std::string& name, glm::mat4 value);

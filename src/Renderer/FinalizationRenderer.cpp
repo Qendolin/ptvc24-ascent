@@ -42,7 +42,7 @@ FinalizationRenderer::~FinalizationRenderer() {
     delete bloomSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom) {
+void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
     gl::manager->setEnabled({gl::Capability::DepthTest});
@@ -59,8 +59,14 @@ void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl
     hrd_color->bind(0);
     depth->bind(1);
     bloom->bind(2);
+    flares->bind(3);
+    glare->bind(4);
 
-    shader->fragmentStage()->setUniform("u_bloom_fac", Game::get().debugSettings.rendering.bloom.factor);
+    auto &settings = Game::get().debugSettings.rendering;
+
+    shader->fragmentStage()->setUniform("u_bloom_fac", settings.bloom.factor);
+    shader->fragmentStage()->setUniform("u_flares_fac", settings.lens.factor);
+    shader->fragmentStage()->setUniform("u_vignette_params", glm::vec4(settings.vignette.factor, settings.vignette.inner, settings.vignette.outer, settings.vignette.sharpness));
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     gl::popDebugGroup();
