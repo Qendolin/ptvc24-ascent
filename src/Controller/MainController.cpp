@@ -96,6 +96,7 @@ void MainController::applyLoadResult_() {
         RaceManager::RespawnPoint spawn = {
             .transform = player_spawn.transform().matrix(),
             .speed = player_spawn.prop("speed", 5.0f),
+            .boostMeter = 1.0,
         };
         raceManager = RaceManager(character, data.gltf->scenes[data.gltf->defaultScene].name, spawn);
         raceManager.loadCheckpoints(first_checkpoint.entity<CheckpointEntity>());

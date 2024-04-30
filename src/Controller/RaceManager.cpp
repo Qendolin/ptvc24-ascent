@@ -46,6 +46,7 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
         lastPassedCheckpoint = index;
         respawnPoint_.transform = checkpoint->respawnTransformation().matrix();
         respawnPoint_.speed = glm::length(character_->velocity());
+        respawnPoint_.boostMeter = character_->boostMeter();
     }
 
     // last checkpoint (may also be first)

@@ -21,15 +21,16 @@ class CharacterEntity : public scene::Entity {
     inline static const float BREAK_FACTOR = 1.0f;
     // Controls the fall speed
     inline static const float GRAVITY_ACCELERATION = 9.81f;
-    inline static const float BOOST_ACCELERATION = 5;
+    inline static const float BOOST_ACCELERATION = 10;
     // Consumption per second when boost is active
     inline static const float BOOST_CONSUME = 1.0f / 2.0f;
     // Regeneration per second when boost is inactive
     inline static const float BOOST_REGEN = 1.0f / 10.0f;
-    inline static const float BOOST_DYN_FOV_MAX = 10;
-    inline static const float BOOST_DYN_FOV_CHANGE = 15;
+    inline static const float BOOST_DYN_FOV_MAX = 20;
+    inline static const float BOOST_DYN_FOV_CHANGE = 30;
     // Controls how quicky the velocity matches the horizontal look direction
     inline static const float TURN_FACTOR = 6.0f;
+    inline static const float RESPAWN_TIME = 0.65f;
 
     Timer respawnInvulnerability;
     Timer respawnFreeze;
@@ -64,8 +65,6 @@ class CharacterEntity : public scene::Entity {
 
     virtual ~CharacterEntity();
 
-    // FIXME: respawn doesn't store boost meter
-    // FIXME: increase respawn freeze
     // respawn the character at the last checkpoint
     void respawn();
 

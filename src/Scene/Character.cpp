@@ -81,11 +81,13 @@ void CharacterEntity::respawn() {
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
 
     setPosition_(respawn_point.transform[3]);
-    controller.fader->fade(1.0f, 0.0f, 0.3f);
-    respawnFreeze = 0.3f;
+    controller.fader->fade(1.1f, 0.0f, RESPAWN_TIME);
+    respawnFreeze = RESPAWN_TIME;
 
     float speed = std::max(5.0f, respawn_point.speed * 0.75f);
     velocity_ = rotation * glm::vec3(0, 0, -speed);
+
+    boostMeter_ = respawn_point.boostMeter;
 }
 
 void CharacterEntity::setPosition_(glm::vec3 pos) {
@@ -194,8 +196,8 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
         }
         // convert horizontal to vertical velocity
         if (camera.angles.x > 0) {
-            float lift = horizontal_speed * pitch_sin * 0.04f * time_delta * SPEED;
-            result.y += lift * 3.5f;
+            float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
+            result.y += lift;
             result.x -= looking.x * lift / pitch_cos;
             result.z -= looking.z * lift / pitch_cos;
         }

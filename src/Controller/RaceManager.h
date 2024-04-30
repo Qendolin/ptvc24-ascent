@@ -16,6 +16,7 @@ class RaceManager {
     struct RespawnPoint {
         glm::mat4 transform;
         float speed;
+        float boostMeter;
     };
 
    private:
