@@ -7,10 +7,8 @@ struct Particle {
     vec4 position_rotation;
     // 3f velocity, 1f rotation speed
     vec4 velocity_revolutions;
-	// 1f drag, 1f gravity
-	vec2 drag_gravity;
-    // 3f rgb tint, 1f emission
-    vec4 tint;
+    // 1f drag, 1f gravity, 1f random
+    vec4 drag_gravity_rand;
     // 2f size, 1f life remaining, 1f life max
     vec4 size_life;
     int emitter;
@@ -54,9 +52,9 @@ void update(inout Particle particle, uint global_index) {
 	float dt = u_time_delta;
 
 	// gravity
-	particle.velocity_revolutions.xyz += emitter.gravity.xyz * particle.drag_gravity.y * dt;
-	// drag
-	vec3 drag = particle.drag_gravity.x * particle.velocity_revolutions.xyz * particle.velocity_revolutions.xyz * 0.5;
+	particle.velocity_revolutions.xyz += emitter.gravity.xyz * particle.drag_gravity_rand.y * dt;
+	// drag = p * v^2 / 2
+	vec3 drag = particle.drag_gravity_rand.x * particle.velocity_revolutions.xyz * particle.velocity_revolutions.xyz * 0.5;
 	particle.velocity_revolutions.xyz -= sign(particle.velocity_revolutions.xyz) * drag * dt;
 	// velocity
 	particle.position_rotation.xyz += particle.velocity_revolutions.xyz * dt;
@@ -66,7 +64,6 @@ void update(inout Particle particle, uint global_index) {
 	particle.size_life.z -= dt;
 
 	if (particle.size_life.z <= 0.0) {
-		particle.tint.a = 0.0;
 		free_indices[atomicAdd(free_stack_heads[particle.emitter], 1)] = index;
 	}
 }

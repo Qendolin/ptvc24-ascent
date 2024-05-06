@@ -5,10 +5,8 @@ struct Particle {
     vec4 position_rotation;
     // 3f velocity, 1f rotation speed
     vec4 velocity_revolutions;
-    // 1f drag, 1f gravity
-	vec2 drag_gravity;
-    // 3f rgb tint, 1f emission
-    vec4 tint;
+    // 1f drag, 1f gravity, 1f random
+    vec4 drag_gravity_rand;
     // 2f size, 1f life remaining, 1f life max
     vec4 size_life;
     int emitter;
@@ -208,16 +206,9 @@ void emit(out Particle particle) {
     particle.size_life.w = particle.size_life.z;
     particle.velocity_revolutions.xyz = direction * rand(u_emission.velocity.x, u_emission.velocity.y);
     particle.velocity_revolutions.w = rand(u_emission.rotation_revolutions.z, u_emission.rotation_revolutions.w);
-    particle.drag_gravity.x = rand(u_emission.drag.x, u_emission.drag.y);
-    particle.drag_gravity.y = rand(u_emission.gravity.x, u_emission.gravity.y);
-
-    // calculate color
-    vec3 hsl = convertRGBtoHSL(u_emission.color.rgb);
-    hsl.x = fract(hsl.x + rand(-u_emission.hslVariation.x, u_emission.hslVariation.x));
-    hsl.y = clamp(hsl.y + rand(-u_emission.hslVariation.y, u_emission.hslVariation.y), 0.0, 1.0);
-    hsl.z = clamp(hsl.z + rand(-u_emission.hslVariation.z, u_emission.hslVariation.z), 0.0, 1.0);
-    particle.tint.rgb = convertHSLtoRGB(hsl);
-    particle.tint.a = rand(u_emission.emissivity.x, u_emission.emissivity.y);
+    particle.drag_gravity_rand.x = rand(u_emission.drag.x, u_emission.drag.y);
+    particle.drag_gravity_rand.y = rand(u_emission.gravity.x, u_emission.gravity.y);
+    particle.drag_gravity_rand.z = rand(0.0, 1.0);
 
     particle.size_life.xy = u_emission.size * rand(u_emission.scale.x, u_emission.scale.y);
     particle.emitter = u_emission.index;

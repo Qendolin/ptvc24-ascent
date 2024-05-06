@@ -138,7 +138,12 @@ void Game::resize(int width, int height) {
 void Game::load() {
     directDraw = std::make_unique<DirectBuffer>();
     particleSystem = std::make_unique<ParticleSystem>(100000);
-    particleSystem->loadMaterial("circle", ParticleMaterialParams{.blending = ParticleBlending::AlphaClip, .sprite = "assets/textures/particle/circle.png"});
+    particleSystem->loadMaterial("circle", ParticleMaterialParams{
+                                               .blending = ParticleBlending::AlphaClip,
+                                               .sprite = "assets/textures/particle/circle.png",
+                                               .tint = "assets/textures/particle/fire_tint.png",
+                                               .scale = "assets/textures/particle/fire_scale.png",
+                                           });
     particleSystem->add(ParticleSettings{
                             .frequency = Range<float>(100.0f),
                             .count = Range<int>(1),

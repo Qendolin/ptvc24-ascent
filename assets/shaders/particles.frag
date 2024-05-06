@@ -13,5 +13,5 @@ void main() {
     if(color.a < 0.5)
         discard;
     out_color.a = 1.0;
-    out_color.rgb = color.rgb * in_tint.rgb * (1.0 + in_tint.a);
+    out_color.rgb = color.rgb * in_tint.rgb * (2.0 - in_tint.a);
 }

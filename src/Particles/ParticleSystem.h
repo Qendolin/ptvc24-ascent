@@ -44,12 +44,23 @@ struct ParticleMaterial {
     gl::Texture *sprite = nullptr;
     gl::Texture *tint = nullptr;
     gl::Texture *scale = nullptr;
+
+    void destroy() {
+        delete sprite;
+        sprite = nullptr;
+        delete tint;
+        tint = nullptr;
+        delete scale;
+        scale = nullptr;
+    }
 };
 
 struct ParticleMaterialParams {
     ParticleBlending blending = ParticleBlending::None;
     // Path of the sprite texture. Make sure to save colors of transparent pixels.
     std::string sprite = "";
+    std::string tint = "";
+    std::string scale = "";
 };
 
 struct ParticleSettings {
@@ -137,7 +148,8 @@ class ParticleSystem {
     gl::ShaderPipeline *updateShader_;
     gl::ShaderPipeline *drawShader_;
     gl::VertexArray *quad_;
-    gl::Sampler *sampler_;
+    gl::Sampler *spriteSampler_;
+    gl::Sampler *tableSampler_;
     std::vector<std::pair<int, int>> segmentation_;
     std::array<ParticleEmitter, MAX_EMITTERS> emitters_;
     int emittersCount_ = 0;

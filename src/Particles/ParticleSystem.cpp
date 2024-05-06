@@ -15,10 +15,8 @@ struct Particle {
     glm::vec4 position_rotation;
     // 3f velocity, 1f rotation speed
     glm::vec4 velocity_revolutions;
-    // 1f drag, 1f gravity
-    glm::vec2 drag_gravity;
-    // 3f rgb tint, 1f emission
-    glm::vec4 tint;
+    // 1f drag, 1f gravity, 1f random
+    glm::vec4 drag_gravity_rand;
     // 2f size, 1f life remaining, 1f life max
     glm::vec4 size_life;
     int emitter;
@@ -77,11 +75,16 @@ ParticleSystem::ParticleSystem(int capacity) {
     quad_->bindBuffer(0, *quad_vbo, 0, 2 * 4);
     quad_->own(quad_vbo);
 
-    sampler_ = new gl::Sampler();
-    sampler_->setDebugLabel("particle_system/sampler");
-    sampler_->filterMode(GL_NEAREST, GL_LINEAR);
-    sampler_->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
-    sampler_->borderColor(glm::vec4{0.0, 0.0, 0.0, 0.0});
+    spriteSampler_ = new gl::Sampler();
+    spriteSampler_->setDebugLabel("particle_system/sprite_sampler");
+    spriteSampler_->filterMode(GL_NEAREST, GL_LINEAR);
+    spriteSampler_->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
+    spriteSampler_->borderColor(glm::vec4{0.0, 0.0, 0.0, 0.0});
+
+    tableSampler_ = new gl::Sampler();
+    tableSampler_->setDebugLabel("particle_system/table_sampler");
+    tableSampler_->filterMode(GL_LINEAR, GL_LINEAR);
+    tableSampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
 
     segmentation_.push_back(std::make_pair(0, capacity_));
 }
@@ -95,10 +98,11 @@ ParticleSystem::~ParticleSystem() {
     delete updateShader_;
     delete drawShader_;
     delete quad_;
-    delete sampler_;
+    delete spriteSampler_;
+    delete tableSampler_;
 
     for (auto &&entry : materials_) {
-        delete entry.second.sprite;
+        entry.second.destroy();
     }
 }
 
@@ -268,9 +272,26 @@ void ParticleSystem::remove(ParticleEmitter *emitter) {
 
 void ParticleSystem::loadMaterial(std::string name, ParticleMaterialParams params) {
     gl::Texture *sprite = loader::texture(params.sprite, {.mipmap = false, .srgb = true});
+
+    auto tint_image = loader::image(params.tint);
+    gl::Texture *tint = new gl::Texture(GL_TEXTURE_1D_ARRAY);
+    tint->allocate(1, GL_RGBA8, tint_image.width, tint_image.height);
+    tint->load(0, tint_image.width, tint_image.height, GL_RGBA, GL_UNSIGNED_BYTE, tint_image.data.get());
+
+    auto scale_image = loader::image(params.scale);
+    gl::Texture *scale = new gl::Texture(GL_TEXTURE_2D);
+    scale->allocate(1, GL_RG8, scale_image.width, scale_image.height);
+    scale->load(0, scale_image.width, scale_image.height, GL_RGBA, GL_UNSIGNED_BYTE, scale_image.data.get());
+
+    if (materials_.count(name) != 0) {
+        materials_.at(name).destroy();
+    }
+
     materials_[name] = ParticleMaterial{
         .blending = params.blending,
         .sprite = sprite,
+        .tint = tint,
+        .scale = scale,
     };
 }
 
@@ -336,6 +357,10 @@ void ParticleSystem::draw(Camera &camera) {
     drawShader_->get(GL_VERTEX_SHADER)->setUniform("u_view_mat", camera.viewMatrix());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleBuffer_->id());
 
+    spriteSampler_->bind(0);
+    tableSampler_->bind(1);
+    tableSampler_->bind(2);
+
     for (auto &&emitter : emitters_) {
         if (!emitter.enabled)
             continue;
@@ -351,6 +376,8 @@ void ParticleSystem::draw(Camera &camera) {
                 break;
         }
         material.sprite->bind(0);
+        material.tint->bind(1);
+        material.scale->bind(2);
         drawShader_->get(GL_VERTEX_SHADER)->setUniform("u_base_index", emitter.segment().index);
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, emitter.segment().length);
     }
