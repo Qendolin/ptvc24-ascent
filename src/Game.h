@@ -20,6 +20,7 @@ class FinalizationRenderer;
 class BloomRenderer;
 class LensEffectsRenderer;
 class ScoreManager;
+class ParticleSystem;
 
 namespace ph {
 class Physics;
@@ -72,6 +73,7 @@ class Game {
     std::unique_ptr<TweenSystem> tween;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<DirectBuffer> directDraw;
+    std::unique_ptr<ParticleSystem> particleSystem;
 
     std::unique_ptr<AbstractController> controller;
     std::unique_ptr<ScoreManager> scores;

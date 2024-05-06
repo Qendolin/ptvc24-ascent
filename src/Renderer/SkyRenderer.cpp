@@ -47,6 +47,7 @@ void SkyRenderer::render(Camera &camera) {
 
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->depthMask(false);
 
     quad->bind();
     shader->bind();

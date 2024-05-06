@@ -153,6 +153,7 @@ void DebugRendererImpl::Draw(glm::mat4 view_projection_matrix) {
 
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::Blend, gl::Capability::CullFace});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->depthMask(true);
     gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
     gl::manager->blendFunc(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
     vao_->bind();

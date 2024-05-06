@@ -45,9 +45,7 @@ FinalizationRenderer::~FinalizationRenderer() {
 void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
-    gl::manager->setEnabled({gl::Capability::DepthTest});
-    gl::manager->depthMask(true);
-    gl::manager->depthFunc(gl::DepthFunc::Always);
+    gl::manager->setEnabled({});
 
     quad->bind();
     shader->bind();

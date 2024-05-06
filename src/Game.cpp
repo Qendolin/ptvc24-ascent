@@ -14,6 +14,7 @@
 #include "GL/StateManager.h"
 #include "GL/Texture.h"
 #include "Input.h"
+#include "Particles/ParticleSystem.h"
 #include "Physics/Physics.h"
 #include "Renderer/BloomRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
@@ -136,6 +137,28 @@ void Game::resize(int width, int height) {
 
 void Game::load() {
     directDraw = std::make_unique<DirectBuffer>();
+    particleSystem = std::make_unique<ParticleSystem>(100000);
+    particleSystem->loadMaterial("circle", ParticleMaterialParams{.blending = ParticleBlending::AlphaClip, .sprite = "assets/textures/particle/circle.png"});
+    particleSystem->add(ParticleSettings{
+                            .frequency = Range<float>(100.0f),
+                            .count = Range<int>(1),
+                            .life = Range<float>(1.5, 2.5),
+
+                            .position = glm::vec3(0, 100, 0),
+                            .direction = glm::vec3(0, 1, 0),
+                            .spread = Range<float>(90),
+                            .gravity = glm::vec3(0, 100, 0),
+                            .velocity = Range<float>(0, 50),
+
+                            .gravityFactor = Range<float>(1, 1.2f),
+                            .drag = Range<float>(0.2f, 1),
+                            .rotation = Range<float>(0, 360),
+                            .revolutions = Range<float>(60, 120),
+                            .color = glm::vec3(252 / 255.0f, 144 / 255.0f, 5 / 255.0f),
+                            .hslVariation = glm::vec3(0.04f, 0.75f, 0.075f),
+                            .size = glm::vec2(0.5f, 0.5f),
+                        },
+                        "circle");
 
     auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                      {{"menu_ty", 20}, {"menu_sm", 30}, {"menu_md", 38}, {"menu_lg", 70}}}},
@@ -239,14 +262,18 @@ void Game::render_() {
     }
 
     glClearDepth(0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     controller->render();
+
+    particleSystem->update(input->timeDelta());
+    particleSystem->draw(*camera);
 
     if (controller->useHdr()) {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gl::manager->bindDrawFramebuffer(0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
             hdrFramebuffer_->getTexture(0),
             hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),

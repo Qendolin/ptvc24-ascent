@@ -10,6 +10,7 @@
 #include "../Input.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"

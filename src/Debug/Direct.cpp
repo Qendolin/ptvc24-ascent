@@ -303,6 +303,8 @@ void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
         return;
     }
 
+    gl::pushDebugGroup("DirectBuffer::render");
+
     size_t buffer_size = data_.size() * sizeof(float);
     if (vbo_->grow(buffer_size)) {
         vao_->reBindBuffer(0, *vbo_);
@@ -320,6 +322,8 @@ void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     glDrawArrays(GL_TRIANGLES, 0, data_.size() / 9);
 
     clear();
+
+    gl::popDebugGroup();
 }
 
 void DirectBuffer::clear() {
