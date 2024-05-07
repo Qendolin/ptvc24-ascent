@@ -30,7 +30,7 @@ struct DebugSettings {
             float haloBias = -10;
             float haloFactor = 0.05f;
 
-            float glareBias = -0.6f;
+            float glareBias = -3.0f;
             float glareFactor = 0.05f;
             float glareAttenuation = 0.91f;
         } lens;

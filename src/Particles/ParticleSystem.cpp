@@ -30,6 +30,15 @@ struct EmitterShaderValues {
     glm::vec4 gravity;
 };
 
+void ParticleMaterial::destroy() {
+    delete sprite;
+    sprite = nullptr;
+    delete tint;
+    tint = nullptr;
+    delete scale;
+    scale = nullptr;
+}
+
 ParticleSystem::ParticleSystem(int capacity) {
     this->capacity_ = capacity;
     particleBuffer_ = new gl::Buffer();
@@ -113,9 +122,6 @@ struct Emission {
     glm::vec2 life;
     glm::vec3 position;
     glm::vec4 rotation_revolutions;
-    glm::vec4 color;
-    glm::vec4 hslVariation;
-    glm::vec2 emissivity;
     glm::vec2 size;
     glm::vec2 scale;
     glm::vec2 drag;
@@ -151,9 +157,6 @@ void ParticleSystem::emit_(Emission &emission) {
     comp->setUniform("u_emission.life", emission.life);
     comp->setUniform("u_emission.position", emission.position);
     comp->setUniform("u_emission.rotation_revolutions", emission.rotation_revolutions);
-    comp->setUniform("u_emission.color", emission.color);
-    comp->setUniform("u_emission.hslVariation", emission.hslVariation);
-    comp->setUniform("u_emission.emissivity", emission.emissivity);
     comp->setUniform("u_emission.size", emission.size);
     comp->setUniform("u_emission.scale", emission.scale);
     comp->setUniform("u_emission.drag", emission.drag);
@@ -316,9 +319,6 @@ void ParticleSystem::update(float time_delta) {
             .life = glm::vec2(settings.life.min, settings.life.max),
             .position = settings.position,
             .rotation_revolutions = glm::vec4(settings.rotation.min, settings.rotation.max, settings.revolutions.min / 60.0f, settings.revolutions.max / 60.0f),
-            .color = glm::vec4(settings.color, 0.0),
-            .hslVariation = glm::vec4(settings.hslVariation, 0.0),
-            .emissivity = glm::vec2(settings.emissivity.min, settings.emissivity.max),
             .size = settings.size,
             .scale = glm::vec2(settings.scale.min, settings.scale.max),
             .drag = glm::vec2(settings.drag.min, settings.drag.max),
@@ -345,10 +345,9 @@ void ParticleSystem::update(float time_delta) {
 
 void ParticleSystem::draw(Camera &camera) {
     gl::pushDebugGroup("ParticleSystem::draw");
-    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::Blend, gl::Capability::CullFace});
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::Blend});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     gl::manager->depthMask(true);
-    gl::manager->cullBack();
     gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
 
     drawShader_->bind();
@@ -379,6 +378,8 @@ void ParticleSystem::draw(Camera &camera) {
         material.tint->bind(1);
         material.scale->bind(2);
         drawShader_->get(GL_VERTEX_SHADER)->setUniform("u_base_index", emitter.segment().index);
+        drawShader_->get(GL_VERTEX_SHADER)->setUniform("u_emissivity", emitter.settings().emissivity);
+        drawShader_->get(GL_VERTEX_SHADER)->setUniform("u_stretching", emitter.settings().stretching);
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, emitter.segment().length);
     }
     gl::popDebugGroup();

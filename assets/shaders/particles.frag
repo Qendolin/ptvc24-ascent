@@ -1,7 +1,8 @@
 #version 430 core
 
 layout(location = 0) in vec2 in_uv;
-layout(location = 1) in vec4 in_tint;
+layout(location = 1) in vec3 in_tint;
+layout(location = 2) in float in_emission;
 
 layout(binding = 0) uniform sampler2D u_sprite;
 
@@ -13,5 +14,5 @@ void main() {
     if(color.a < 0.5)
         discard;
     out_color.a = 1.0;
-    out_color.rgb = color.rgb * in_tint.rgb * (2.0 - in_tint.a);
+    out_color.rgb = color.rgb * in_tint.rgb * (in_emission + 1.0);
 }

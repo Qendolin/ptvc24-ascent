@@ -45,14 +45,7 @@ struct ParticleMaterial {
     gl::Texture *tint = nullptr;
     gl::Texture *scale = nullptr;
 
-    void destroy() {
-        delete sprite;
-        sprite = nullptr;
-        delete tint;
-        tint = nullptr;
-        delete scale;
-        scale = nullptr;
-    }
+    void destroy();
 };
 
 struct ParticleMaterialParams {
@@ -79,11 +72,10 @@ struct ParticleSettings {
     Range<float> drag = 0;
     Range<float> rotation = 0;
     Range<float> revolutions = 0;
-    glm::vec3 color = glm::vec3{1, 1, 1};
-    glm::vec3 hslVariation = glm::vec3{0, 0, 0};
-    Range<float> emissivity = 0;
+    float emissivity = 0;
     glm::vec2 size = glm::vec2{1, 1};
     Range<float> scale = 1;
+    float stretching = 0;
 };
 
 class ParticleEmitter {

@@ -253,11 +253,10 @@ void DebugMenu::drawParticlesWindow_() {
         DragFloatRange2("Drag", &settings.drag.min, &settings.drag.max, 0.0001f, 0, 1, "%.4f");
         DragFloatRange2("Rotation", &settings.rotation.min, &settings.rotation.max, 1, -360, 360);
         DragFloatRange2("Revolutions", &settings.revolutions.min, &settings.revolutions.max);
-        ColorEdit3("Color", glm::value_ptr(settings.color), ImGuiColorEditFlags_Float);
-        DragFloat3("HSL Variation", glm::value_ptr(settings.hslVariation), 0.001f, 0, 1);
-        DragFloatRange2("Emissivity", &settings.emissivity.min, &settings.emissivity.max, 0.1f, 0, 100);
-        DragFloat2("Size", glm::value_ptr(settings.size), 0.1f);
+        DragFloat("Emissivity", &settings.emissivity, 0.1f, 0, 10);
+        DragFloat2("Size", glm::value_ptr(settings.size), 0.01f);
         DragFloatRange2("Scale", &settings.scale.min, &settings.scale.max, 0.01f);
+        DragFloat("Stretching", &settings.stretching, 0.1f, 0, 10);
     }
 
     End();

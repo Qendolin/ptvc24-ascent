@@ -22,11 +22,14 @@ uniform mat4 u_projection_mat;
 uniform mat4 u_view_mat;
 uniform int u_base_index;
 
+uniform float u_emissivity;
+uniform float u_stretching;
 layout(binding = 1) uniform sampler1DArray u_tint;
 layout(binding = 2) uniform sampler2D u_scale;
 
 layout(location = 0) out vec2 out_uv;
-layout(location = 1) out vec4 out_tint;
+layout(location = 1) out vec3 out_tint;
+layout(location = 2) out float out_emission;
 
 out gl_PerVertex {
     vec4 gl_Position;
@@ -42,23 +45,29 @@ void main() {
     float life_frac = 1.0 - particle.size_life.z / particle.size_life.w;
     float rand = particle.drag_gravity_rand.z;
 
-    // https://stackoverflow.com/a/18054309/7448536
+    // rotation
     float angle = particle.position_rotation.w * DEG_TO_RAD;
     float cos_angle = cos(angle);
     float sin_angle = sin(angle);
     mat2 rotation = mat2(cos_angle, sin_angle, -sin_angle, cos_angle);
     vec2 local_position = rotation * in_position;
+    
+    // stretching
+    vec3 view_velocity = mat3(u_view_mat) * particle.velocity_revolutions.xyz;
+    local_position += dot(normalize(view_velocity.xy), local_position) * view_velocity.xy * u_stretching;
 
 	vec4 view_position = u_view_mat * vec4(particle.position_rotation.xyz, 1.0);
 
     vec2 scale = particle.size_life.xy * texture(u_scale, vec2(life_frac, rand)).xy;
     view_position += vec4(local_position * scale, 0.0, 0.0);
     
+    // https://stackoverflow.com/a/18054309/7448536
     gl_Position = u_projection_mat * view_position;
 	out_uv = in_position.xy * 0.5 + 0.5;
 
     vec2 tint_uv = vec2(life_frac, rand * textureSize(u_tint, 0).y);
-	out_tint = texture(u_tint, tint_uv);
+	out_tint = texture(u_tint, tint_uv).rgb;
+    out_emission = u_emissivity;
 
 	if(particle.size_life.z <= 0.0) {
 		// place particle outside the clip space to skip the fragment shader

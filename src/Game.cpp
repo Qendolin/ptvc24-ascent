@@ -147,21 +147,21 @@ void Game::load() {
     particleSystem->add(ParticleSettings{
                             .frequency = Range<float>(100.0f),
                             .count = Range<int>(1),
-                            .life = Range<float>(1.5, 2.5),
+                            .life = Range<float>(2, 2.5),
 
                             .position = glm::vec3(0, 100, 0),
                             .direction = glm::vec3(0, 1, 0),
-                            .spread = Range<float>(90),
-                            .gravity = glm::vec3(0, 100, 0),
-                            .velocity = Range<float>(0, 50),
+                            .spread = Range<float>(0, 20),
+                            .gravity = glm::vec3(0, -9.81, 0),
+                            .velocity = Range<float>(3, 4),
 
-                            .gravityFactor = Range<float>(1, 1.2f),
-                            .drag = Range<float>(0.2f, 1),
-                            .rotation = Range<float>(0, 360),
+                            .gravityFactor = Range<float>(1),
+                            .drag = Range<float>(0),
+                            .rotation = Range<float>(0, 0),
                             .revolutions = Range<float>(60, 120),
-                            .color = glm::vec3(252 / 255.0f, 144 / 255.0f, 5 / 255.0f),
-                            .hslVariation = glm::vec3(0.04f, 0.75f, 0.075f),
-                            .size = glm::vec2(0.5f, 0.5f),
+                            .emissivity = 2.0,
+                            .size = glm::vec2(0.02f, 0.02f),
+                            .stretching = 1.6f,
                         },
                         "circle");
 
