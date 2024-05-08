@@ -79,6 +79,9 @@ Game::Game(Window &window)
         std::filesystem::create_directory("ascent_data");
     }
 
+    // Should be in load, but on reload existing emitters would go away
+    particles = std::make_unique<ParticleSystem>(10000);
+
     scores = std::make_unique<ScoreManager>("ascent_data/scores.ini");
     settings.load();
     settings.save();
@@ -137,7 +140,6 @@ void Game::resize(int width, int height) {
 
 void Game::load() {
     directDraw = std::make_unique<DirectBuffer>();
-    particles = std::make_unique<ParticleSystem>(10000);
 
     auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                      {{"menu_ty", 20}, {"menu_sm", 30}, {"menu_md", 38}, {"menu_lg", 70}}}},
