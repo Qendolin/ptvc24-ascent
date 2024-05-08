@@ -26,7 +26,7 @@ struct Particle {
 #define DIV_CEIL(x, y) ((x + y - 1) / y)
 
 struct EmitterShaderValues {
-    glm::ivec4 offset_capacity;
+    glm::ivec4 index_length;
     glm::vec4 gravity;
 };
 
@@ -73,6 +73,11 @@ ParticleSystem::ParticleSystem(int capacity) {
     });
     drawShader_->setDebugLabel("particle_system/draw_shader");
 
+    resetShader_ = new gl::ShaderPipeline({
+        new gl::ShaderProgram("assets/shaders/particles_reset.comp"),
+    });
+    resetShader_->setDebugLabel("particle_system/reset_shader");
+
     gl::Buffer *quad_vbo = new gl::Buffer();
     quad_vbo->setDebugLabel("particle_system/quad_vbo");
     glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
@@ -96,6 +101,9 @@ ParticleSystem::ParticleSystem(int capacity) {
     tableSampler_->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
 
     segmentation_.push_back(std::make_pair(0, capacity_));
+    for (int i = MAX_EMITTERS - 1; i >= 0; i--) {
+        freeEmitterIndices_.push_back(i);
+    }
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -106,6 +114,7 @@ ParticleSystem::~ParticleSystem() {
     delete emitShader_;
     delete updateShader_;
     delete drawShader_;
+    delete resetShader_;
     delete quad_;
     delete spriteSampler_;
     delete tableSampler_;
@@ -148,6 +157,8 @@ void ParticleEmitter::update(float time_delta) {
     }
 }
 
+ParticleEmitter::~ParticleEmitter() = default;
+
 void ParticleSystem::emit_(Emission &emission) {
     auto comp = emitShader_->get(GL_COMPUTE_SHADER);
     comp->setUniform("u_random_seed", (unsigned int)rand());
@@ -170,34 +181,37 @@ void ParticleSystem::emit_(Emission &emission) {
     glDispatchCompute(DIV_CEIL(emission.count, 64), 1, 1);
 }
 
-std::pair<int, int> *ParticleSystem::allocateSegment_(int length) {
-    std::pair<int, int> *free_fragment = nullptr;
+std::pair<int, int> ParticleSystem::allocateSegment_(int length) {
+    std::pair<int, int> *free_segment = nullptr;
     for (int i = 0; i < segmentation_.size(); i++) {
         int free = segmentation_[i].second - segmentation_[i].first;
         if (length <= free) {
-            free_fragment = &segmentation_[i];
+            free_segment = &segmentation_[i];
             break;
         }
     }
-    if (free_fragment != nullptr) {
-        free_fragment->first += length;
+    if (free_segment == nullptr) {
+        return std::make_pair(0, 0);
     }
-    return free_fragment;
+    std::pair<int, int> result = std::make_pair(free_segment->first, free_segment->first + length);
+    free_segment->first += length;
+    reserved_ += length;
+    return result;
 }
 
 void ParticleSystem::freeSegment_(int index, int length) {
     int start = index;
     int end = index + length;
     for (int i = 0; i < segmentation_.size(); i++) {
-        const auto &segment = segmentation_[i];
+        auto &segment = segmentation_[i];
         // extend end of previous
-        if (start == segment.second + 1) {
-            segmentation_[i].second = start;
+        if (start == segment.second) {
+            segment.second = end;
             break;
         }
         // extend start of next
-        if (end == segment.first - 1) {
-            segmentation_[i].first = start;
+        if (end == segment.first) {
+            segment.first = start;
             break;
         }
         // add new segment
@@ -211,12 +225,14 @@ void ParticleSystem::freeSegment_(int index, int length) {
     std::vector<std::pair<int, int>> filtered;
     filtered.reserve(segmentation_.size());
     std::pair<int, int> *active = nullptr;
-    for (int i = 1; i < segmentation_.size(); i++) {
+    for (int i = 0; i < segmentation_.size(); i++) {
         auto &curr = segmentation_[i];
         if (curr.first == curr.second) {
+            // zero length segement
             continue;
         }
         if (active && active->second == curr.first) {
+            // extend previous segement
             active->second = curr.second;
         } else {
             filtered.push_back(curr);
@@ -224,27 +240,31 @@ void ParticleSystem::freeSegment_(int index, int length) {
         }
     }
     segmentation_ = filtered;
+    reserved_ -= length;
 }
 
 ParticleEmitter *ParticleSystem::add(ParticleSettings settings, std::string material) {
-    int index = emittersCount_++;
-    if (index >= MAX_EMITTERS) {
-        PANIC("Max particle emitter count exceeded");
+    if (freeEmitterIndices_.empty()) {
+        PANIC("Maximum count of particle emitters reached");
     }
+    int index = freeEmitterIndices_.back();
+    freeEmitterIndices_.pop_back();
 
     int required_length = settings.count.max * (int)ceil(settings.life.max * settings.frequency.max);
-    std::pair<int, int> *free_fragment = allocateSegment_(required_length);
-    if (free_fragment == nullptr) {
+    ParticleEmitter::Segment segment(allocateSegment_(required_length));
+    if (segment.length == 0) {
         LOG_WARN("Not enough free space for particle emitter");
-        emitters_[index] = ParticleEmitter(settings, ParticleEmitter::Segment{.index = capacity_, .length = 0});
-        return &emitters_[index];
+        emitterPool_[index] = ParticleEmitter(settings, ParticleEmitter::Segment(capacity_, 0));
+        emitters_.push_back(&emitterPool_[index]);
+        return &emitterPool_[index];
     }
 
-    emitters_[index] = ParticleEmitter(settings, ParticleEmitter::Segment{.index = reserved_, .length = required_length});
-    emitters_[index].material = material;
+    emitterPool_[index] = ParticleEmitter(settings, segment);
+    emitterPool_[index].material = material;
+    emitters_.push_back(&emitterPool_[index]);
 
     EmitterShaderValues emitter_values = EmitterShaderValues{
-        .offset_capacity = glm::ivec4(reserved_, required_length, 0, 0),
+        .index_length = glm::ivec4(segment.index, segment.length, 0, 0),
         .gravity = glm::vec4(settings.gravity, 0.0f),
     };
     emitterBuffer_->write(index * sizeof(EmitterShaderValues), &emitter_values, sizeof(emitter_values));
@@ -254,23 +274,33 @@ ParticleEmitter *ParticleSystem::add(ParticleSettings settings, std::string mate
     for (GLuint i = 0; i < (GLuint)required_length; i++) {
         free_stack.push_back(required_length - i - 1);
     }
-    freeBuffer_->write(reserved_ * sizeof(GLuint), free_stack.data(), free_stack.size() * sizeof(GLuint));
+    freeBuffer_->write(segment.index * sizeof(GLuint), free_stack.data(), free_stack.size() * sizeof(GLuint));
     freeHeadsBuffer_->write(index * sizeof(required_length), &required_length, sizeof(required_length));
-    reserved_ += required_length;
     glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
-    return &emitters_[index];
+    return &emitterPool_[index];
 }
 
 void ParticleSystem::remove(ParticleEmitter *emitter) {
     if (emitter == nullptr)
         PANIC("Emitter is nullptr");
-    size_t index = emitter - &emitters_[0];
-    if (index < 0 || index >= emitters_.size())
+    size_t index = emitter - &emitterPool_[0];
+    if (index < 0 || index >= emitterPool_.size())
         PANIC("Emitter is not part of this system");
-    freeSegment_(emitter->segment().index, emitter->segment().length);
-    std::shift_left(emitters_.begin() + index, emitters_.end(), 1);
-    emittersCount_--;
+
+    // Free segment and bookkeeping
+    ParticleEmitter::Segment segment = emitter->segment();
+    freeSegment_(segment.index, segment.length);
+    freeEmitterIndices_.push_back(index);
+    emitters_.erase(std::remove(emitters_.begin(), emitters_.end(), emitter), emitters_.end());
+
+    resetShader_->bind();
+    resetShader_->get(GL_COMPUTE_SHADER)->setUniform("u_segment", glm::ivec2(segment.index, segment.length));
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleBuffer_->id());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, freeBuffer_->id());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, freeHeadsBuffer_->id());
+    glDispatchCompute(DIV_CEIL(segment.length, 64), 1, 1);
+    glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 }
 
 void ParticleSystem::loadMaterial(std::string name, ParticleMaterialParams params) {
@@ -301,8 +331,8 @@ void ParticleSystem::loadMaterial(std::string name, ParticleMaterialParams param
 void ParticleSystem::update(float time_delta) {
     gl::pushDebugGroup("ParticleSystem::update");
     emitShader_->bind();
-    for (int i = 0; i < emitters_.size(); i++) {
-        ParticleEmitter &emitter = emitters_[i];
+    for (int i = 0; i < emitterPool_.size(); i++) {
+        ParticleEmitter &emitter = emitterPool_[i];
         ParticleSettings &settings = emitter.settings();
 
         if (!emitter.enabled)
@@ -338,7 +368,7 @@ void ParticleSystem::update(float time_delta) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, freeBuffer_->id());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, freeHeadsBuffer_->id());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, emitterBuffer_->id());
-    glDispatchCompute(DIV_CEIL(reserved_, 64), 1, 1);
+    glDispatchCompute(DIV_CEIL(capacity_, 64), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     gl::popDebugGroup();
 }
@@ -360,7 +390,7 @@ void ParticleSystem::draw(Camera &camera) {
     tableSampler_->bind(1);
     tableSampler_->bind(2);
 
-    for (auto &&emitter : emitters_) {
+    for (auto &&emitter : emitterPool_) {
         if (!emitter.enabled)
             continue;
         if (materials_.count(emitter.material) == 0)

@@ -137,33 +137,7 @@ void Game::resize(int width, int height) {
 
 void Game::load() {
     directDraw = std::make_unique<DirectBuffer>();
-    particleSystem = std::make_unique<ParticleSystem>(100000);
-    particleSystem->loadMaterial("circle", ParticleMaterialParams{
-                                               .blending = ParticleBlending::AlphaClip,
-                                               .sprite = "assets/textures/particle/circle.png",
-                                               .tint = "assets/textures/particle/fire_tint.png",
-                                               .scale = "assets/textures/particle/fire_scale.png",
-                                           });
-    particleSystem->add(ParticleSettings{
-                            .frequency = Range<float>(100.0f),
-                            .count = Range<int>(1),
-                            .life = Range<float>(2, 2.5),
-
-                            .position = glm::vec3(0, 100, 0),
-                            .direction = glm::vec3(0, 1, 0),
-                            .spread = Range<float>(0, 20),
-                            .gravity = glm::vec3(0, -9.81, 0),
-                            .velocity = Range<float>(3, 4),
-
-                            .gravityFactor = Range<float>(1),
-                            .drag = Range<float>(0),
-                            .rotation = Range<float>(0, 0),
-                            .revolutions = Range<float>(60, 120),
-                            .emissivity = 2.0,
-                            .size = glm::vec2(0.02f, 0.02f),
-                            .stretching = 1.6f,
-                        },
-                        "circle");
+    particles = std::make_unique<ParticleSystem>(10000);
 
     auto fonts = new ui::FontAtlas({{"assets/fonts/MateSC-Medium.ttf",
                                      {{"menu_ty", 20}, {"menu_sm", 30}, {"menu_md", 38}, {"menu_lg", 70}}}},
@@ -259,6 +233,9 @@ void Game::render_() {
     gl::manager->setViewport(0, 0, window.size.x, window.size.y);
     gl::manager->disable(gl::Capability::ScissorTest);
     gl::manager->disable(gl::Capability::StencilTest);
+    gl::manager->enable(gl::Capability::DepthTest);
+    gl::manager->depthMask(true);
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 
     if (controller->useHdr()) {
         hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
@@ -270,9 +247,6 @@ void Game::render_() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     controller->render();
-
-    particleSystem->update(input->timeDelta());
-    particleSystem->draw(*camera);
 
     if (controller->useHdr()) {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));

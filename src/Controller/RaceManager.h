@@ -8,6 +8,7 @@
 #pragma region ForwardDecl
 class CheckpointEntity;
 class CharacterEntity;
+class CheckpointMarkerEntity;
 #pragma endregion
 
 // Handles the logic of measuring score and checkpoints
@@ -20,21 +21,22 @@ class RaceManager {
     };
 
    private:
-    int lastPassedCheckpoint = -1;
-    bool started = false;
-    bool ended = false;
-    float flightTime = 0.0;
-    float penaltyTime = 0.0;
-    std::vector<CheckpointEntity *> checkpoints;
+    int lastPassedCheckpoint_ = -1;
+    bool started_ = false;
+    bool ended_ = false;
+    float flightTime_ = 0;
+    float penaltyTime_ = 0;
+    std::vector<CheckpointEntity *> checkpoints_;
     RespawnPoint respawnPoint_;
-    std::vector<float> splits;
-    std::string courseName;
+    std::vector<float> timeSplits_;
+    std::string courseName_;
     const CharacterEntity *character_;
+    CheckpointMarkerEntity *checkpointMarker_;
 
    public:
     RaceManager() = default;
     RaceManager(const CharacterEntity *character, std::string course_name, RespawnPoint spawn)
-        : character_(character), courseName(course_name), respawnPoint_(spawn) {
+        : character_(character), courseName_(course_name), respawnPoint_(spawn) {
     }
 
     void onCheckpointEntered(CheckpointEntity *checkpoint);
@@ -49,7 +51,7 @@ class RaceManager {
 
     // @return timer time in seconds
     float timer() const {
-        return flightTime;
+        return flightTime_;
     }
 
     // @return time difference to best split of next checkpoint
@@ -57,15 +59,15 @@ class RaceManager {
 
     // @return penalty time in seconds
     float penalty() const {
-        return penaltyTime;
+        return penaltyTime_;
     }
 
     bool hasStarted() const {
-        return started;
+        return started_;
     }
 
     bool hasEnded() const {
-        return ended;
+        return ended_;
     }
 
     ScoreEntry score();

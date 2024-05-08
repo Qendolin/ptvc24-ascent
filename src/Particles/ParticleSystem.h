@@ -3,7 +3,6 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <map>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -83,10 +82,13 @@ class ParticleEmitter {
     struct Segment {
         int index = 0;
         int length = 0;
+
+        Segment(int index, int length) : index(index), length(length) {}
+        Segment(std::pair<int, int> range) : index(range.first), length(range.second - range.first) {}
     };
 
    private:
-    Segment segment_ = {.index = -1, .length = 0};
+    Segment segment_ = Segment(-1, 0);
     float timer_ = 0;
     int count_ = 0;
     float interval_ = 0;
@@ -98,7 +100,7 @@ class ParticleEmitter {
 
     ParticleEmitter() = default;
     ParticleEmitter(ParticleSettings settings, Segment segment) : settings_(settings), segment_(segment){};
-    ~ParticleEmitter() = default;
+    ~ParticleEmitter();
 
     Segment segment() const {
         return segment_;
@@ -139,17 +141,19 @@ class ParticleSystem {
     gl::ShaderPipeline *emitShader_;
     gl::ShaderPipeline *updateShader_;
     gl::ShaderPipeline *drawShader_;
+    gl::ShaderPipeline *resetShader_;
     gl::VertexArray *quad_;
     gl::Sampler *spriteSampler_;
     gl::Sampler *tableSampler_;
     std::vector<std::pair<int, int>> segmentation_;
-    std::array<ParticleEmitter, MAX_EMITTERS> emitters_;
-    int emittersCount_ = 0;
+    std::array<ParticleEmitter, MAX_EMITTERS> emitterPool_;
+    std::vector<ParticleEmitter *> emitters_;
+    std::vector<int> freeEmitterIndices_;
     std::map<std::string, ParticleMaterial> materials_;
 
     void emit_(Emission &emission);
 
-    std::pair<int, int> *allocateSegment_(int length);
+    std::pair<int, int> allocateSegment_(int length);
     void freeSegment_(int index, int length);
 
    public:
@@ -157,7 +161,7 @@ class ParticleSystem {
 
     ~ParticleSystem();
 
-    ParticleEmitter *add(ParticleSettings emitter, std::string material);
+    ParticleEmitter *add(ParticleSettings settings, std::string material);
 
     void remove(ParticleEmitter *emitter);
 
@@ -175,8 +179,8 @@ class ParticleSystem {
         return reserved_;
     }
 
-    std::span<ParticleEmitter> emitters() {
-        return std::span<ParticleEmitter>(emitters_.begin(), emitters_.begin() + emittersCount_);
+    std::vector<ParticleEmitter *> emitters() {
+        return emitters_;
     }
 
     std::map<std::string, ParticleMaterial> &materials() {

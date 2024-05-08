@@ -13,7 +13,7 @@ struct Particle {
 };
 
 struct Emitter {
-    ivec4 offset_capacity;
+    ivec4 index_length;
     vec4 gravity;
 };
 
@@ -225,7 +225,7 @@ void main() {
     }
     pcg_state = u_random_seed ^ pcgHash(gl_GlobalInvocationID.x);
 
-    int offset = emitters[u_emission.index].offset_capacity.x;
+    int offset = emitters[u_emission.index].index_length.x;
     uint index = free_indices[offset + free_head];
     uint global_index = index + offset;
     emit(particles[global_index]);

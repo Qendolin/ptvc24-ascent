@@ -193,7 +193,7 @@ void DebugMenu::drawParticlesWindow_() {
     using namespace ImGui;
 
     Game& game = Game::get();
-    ParticleSystem& particles = *game.particleSystem;
+    ParticleSystem& particles = *game.particles;
     Begin("Particles", nullptr, 0);
 
     // Misc
@@ -207,11 +207,14 @@ void DebugMenu::drawParticlesWindow_() {
     auto emitters = particles.emitters();
     std::string selected_preview = "";
     if (state.particles.selected >= 0) {
-        selected_preview = format_system_name(emitters[state.particles.selected]);
+        selected_preview = format_system_name(*emitters[state.particles.selected]);
     }
     if (BeginCombo("Systems", selected_preview.c_str(), 0)) {
+        if (Selectable("None", state.particles.selected == -1)) {
+            state.particles.selected = -1;
+        }
         for (int i = 0; i < emitters.size(); i++) {
-            std::string label = format_system_name(emitters[i]);
+            std::string label = format_system_name(*emitters[i]);
             bool selected = state.particles.selected == i;
             if (Selectable(label.c_str(), selected)) {
                 state.particles.selected = i;
@@ -223,7 +226,7 @@ void DebugMenu::drawParticlesWindow_() {
     }
 
     if (state.particles.selected >= 0) {
-        auto& emitter = emitters[state.particles.selected];
+        auto& emitter = *emitters[state.particles.selected];
         auto& settings = emitter.settings();
         game.directDraw->unshaded();
         game.directDraw->stroke(0.1f);

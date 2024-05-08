@@ -1,0 +1,50 @@
+#version 450 core
+
+// https://juandiegomontoya.github.io/particles.html
+
+struct Particle {
+    // 3f position, 1f rotation
+    vec4 position_rotation;
+    // 3f velocity, 1f rotation speed
+    vec4 velocity_revolutions;
+    // 1f drag, 1f gravity, 1f random
+    vec4 drag_gravity_rand;
+    // 2f size, 1f life remaining, 1f life max
+    vec4 size_life;
+    int emitter;
+};
+
+
+layout(std430, binding = 0) restrict buffer Particles {
+  Particle particles[];
+};
+
+layout(std430, binding = 1) restrict buffer FreeStack {
+  uint free_indices[];
+};
+
+layout(std430, binding = 2) restrict buffer FreeStackHead {
+    coherent int free_stack_heads[];
+};
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// index, length
+uniform ivec2 u_segment;
+
+void reset(inout Particle particle, uint index) {
+	if(index == 0) {
+		free_stack_heads[particle.emitter] = u_segment.y - 1;
+	}
+	
+	particle.size_life.z = -1.0;
+	free_indices[index + u_segment.x] = u_segment.y - index;
+}
+
+void main() {
+	uint index = uint(gl_GlobalInvocationID.x);
+	if (index >= u_segment.y)
+    	return;
+
+	reset(particles[index + u_segment.x], index);
+}

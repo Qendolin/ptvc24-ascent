@@ -9,6 +9,7 @@ layout(binding = 0) uniform samplerCube u_hdri_tex;
 uniform mat4 u_projection_mat;
 uniform mat4 u_view_mat;
 
+// FIXME: This shader is slow. Better to draw an actual cube to render the cube map.
 void main() {
 	// reconstruct world position from quad
 	vec4 view = inverse(u_projection_mat) * vec4(in_clip_pos, 1.0);

@@ -15,7 +15,7 @@ struct Particle {
 };
 
 struct Emitter {
-    ivec4 offset_capacity;
+    ivec4 index_length;
     vec4 gravity;
 };
 
@@ -43,8 +43,9 @@ uniform float u_time_delta;
 
 void update(inout Particle particle, uint global_index) {
 	Emitter emitter = emitters[particle.emitter];
-	uint index = global_index - emitter.offset_capacity.x;
-	if(index >= emitter.offset_capacity.y)
+	int offset = emitter.index_length.x;
+	uint index = global_index - offset;
+	if(index >= emitter.index_length.y)
 		return;
 	
 	if (particle.size_life.z <= 0.0) return;
@@ -64,7 +65,7 @@ void update(inout Particle particle, uint global_index) {
 	particle.size_life.z -= dt;
 
 	if (particle.size_life.z <= 0.0) {
-		free_indices[atomicAdd(free_stack_heads[particle.emitter], 1)] = index;
+		free_indices[atomicAdd(free_stack_heads[particle.emitter], 1) + offset] = index;
 	}
 }
 
