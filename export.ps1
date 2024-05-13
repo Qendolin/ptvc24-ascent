@@ -3,9 +3,16 @@ $globPatterns = @(
     "assets/fonts/*.ttf",
     "assets/models/*.glb",
     "assets/shaders/*.*",
-    "assets/textures/*.*",
-    "assets/textures/skybox/*.*",
-    "assets/textures/ui/*.*"
+    "assets/textures/*.png",
+    "assets/textures/*.txt",
+    "assets/textures/*.f32",
+    "assets/textures/skybox/*.iblenv",
+    "assets/textures/ui/*.png"
+    "assets/textures/particle/*.png"
+    "assets/audio/music/*.ogg"
+    "assets/audio/music/*.wav"
+    "assets/audio/sound/*.ogg"
+    "assets/audio/sound/*.wav"
 )
 
 # Define the output zip file name

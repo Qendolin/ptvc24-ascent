@@ -15,6 +15,7 @@ class StartScreen;
 class PauseScreen;
 class CharacterEntity;
 class FreeCamEntity;
+class Music;
 namespace loader {
 class SceneData;
 }
@@ -38,6 +39,8 @@ class MainController : public AbstractController {
 
     CharacterEntity* character = nullptr;
     std::unique_ptr<FreeCamEntity> freeCam;
+
+    std::unique_ptr<Music> bgMusic;
 
     /**
      * Draw the on screen hud (timer, score, etc.)

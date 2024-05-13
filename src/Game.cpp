@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 
+#include "Audio/Audio.h"
 #include "Camera.h"
 #include "Controller/MainMenuController.h"
 #include "Debug/DebugMenu.h"
@@ -26,6 +27,14 @@
 #include "UI/UI.h"
 #include "Util/Log.h"
 #include "Window.h"
+
+std::unique_ptr<Music> Audio::createMusic(std::string filename) {
+    return std::make_unique<Music>(*musicBus, filename);
+}
+
+std::unique_ptr<Sound> Audio::createSound(std::string filename) {
+    return std::make_unique<Sound>(*soundBus, filename);
+}
 
 Game &Game::get() {
     if (instance_ == nullptr) PANIC("No instance");
@@ -85,6 +94,10 @@ Game::Game(Window &window)
     scores = std::make_unique<ScoreManager>("ascent_data/scores.ini");
     settings.load();
     settings.save();
+
+    audio.system = std::make_unique<AudioSystem>();
+    audio.musicBus = std::make_unique<AudioBus>(*audio.system);
+    audio.soundBus = std::make_unique<AudioBus>(*audio.system);
 
     // at the end
     int vp_width, vp_height;
@@ -213,6 +226,8 @@ void Game::update_() {
 
     controller->update();
     debugMenu_->draw();
+
+    audio.system->update(camera->position, glm::mat3(camera->viewMatrix()) * glm::vec3(0, -1, 0));
 
     // mouse capturing & releasing
     if (input->mouseMode() == Input::MouseMode::Capture) {

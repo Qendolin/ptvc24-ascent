@@ -3,6 +3,7 @@
 #include <chrono>
 #include <string>
 
+#include "../Audio/Audio.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../Scene/Character.h"
@@ -17,6 +18,11 @@ int indexOf(const std::vector<T> &vec, const T elem) {
         return -1;
     }
     return static_cast<int>(std::distance(vec.cbegin(), it));
+}
+
+RaceManager::RaceManager(const CharacterEntity *character, std::string course_name, RespawnPoint spawn)
+    : character_(character), courseName_(course_name), respawnPoint_(spawn) {
+    checkpointPassedSound_ = Game::get().audio.createSound("assets/audio/sound/woosh.wav");
 }
 
 void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
@@ -55,6 +61,8 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
         } else {
             checkpointMarker_->setTarget(checkpoints_[next]->getBase());
         }
+
+        auto instance = checkpointPassedSound_->play3dEvent(checkpoint->getBase().transform().position(), 1.0f);
     }
 
     // last checkpoint (may also be first)

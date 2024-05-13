@@ -21,6 +21,10 @@ class BloomRenderer;
 class LensEffectsRenderer;
 class ScoreManager;
 class ParticleSystem;
+class AudioSystem;
+class AudioBus;
+class Music;
+class Sound;
 
 namespace ph {
 class Physics;
@@ -39,6 +43,17 @@ namespace scene {
 class Scene;
 }
 #pragma endregion
+
+class Audio {
+   public:
+    std::unique_ptr<AudioSystem> system;
+    std::unique_ptr<AudioBus> musicBus;
+    std::unique_ptr<AudioBus> soundBus;
+
+    std::unique_ptr<Music> createMusic(std::string filename);
+
+    std::unique_ptr<Sound> createSound(std::string filename);
+};
 
 class Game {
    private:
@@ -74,6 +89,7 @@ class Game {
     std::unique_ptr<Camera> camera;
     std::unique_ptr<DirectBuffer> directDraw;
     std::unique_ptr<ParticleSystem> particles;
+    Audio audio;
 
     std::unique_ptr<AbstractController> controller;
     std::unique_ptr<ScoreManager> scores;

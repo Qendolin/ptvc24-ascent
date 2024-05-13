@@ -46,7 +46,8 @@
 docs/*.pdf
 
 # Prebuild files and assets
-lib/
+lib/linux/
+lib/windows/
 include/GL/**
 include/GLFW/**
 include/gli/**

@@ -9,6 +9,7 @@
 class CheckpointEntity;
 class CharacterEntity;
 class CheckpointMarkerEntity;
+class Sound;
 #pragma endregion
 
 // Handles the logic of measuring score and checkpoints
@@ -32,12 +33,11 @@ class RaceManager {
     std::string courseName_;
     const CharacterEntity *character_;
     CheckpointMarkerEntity *checkpointMarker_;
+    std::unique_ptr<Sound> checkpointPassedSound_;
 
    public:
     RaceManager() = default;
-    RaceManager(const CharacterEntity *character, std::string course_name, RespawnPoint spawn)
-        : character_(character), courseName_(course_name), respawnPoint_(spawn) {
-    }
+    RaceManager(const CharacterEntity *character, std::string course_name, RespawnPoint spawn);
 
     void onCheckpointEntered(CheckpointEntity *checkpoint);
 

@@ -12,6 +12,7 @@
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
+#include "../Audio/Audio.h"
 #include "../Camera.h"
 #include "../Controller/MainController.h"
 #include "../Game.h"
@@ -28,6 +29,12 @@ using namespace scene;
 glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
 CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
+    windSound_ = game().audio.createSound("assets/audio/sound/wind-loop.ogg");
+    windSound_->setLooping(true);
+    windSound_->setVolume(0);
+    windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound_->play2d(0, -0.5));
+    windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound_->play2d(0, 0.5));
+    windSoundInstanceLeft_->seek(windSound_->duration() * 0.5);
 }
 
 CharacterEntity::~CharacterEntity() {
@@ -104,7 +111,9 @@ void CharacterEntity::update(float time_delta) {
 
     respawnInvulnerability.update(time_delta);
     respawnFreeze.update(time_delta);
-    if (!respawnFreeze.isZero()) {
+    if (isFrozen_()) {
+        windSoundInstanceLeft_->setVolume(0);
+        windSoundInstanceRight_->setVolume(0);
         return;
     }
     // Camera movement
@@ -140,10 +149,15 @@ void CharacterEntity::update(float time_delta) {
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
     camera.setFov(glm::radians(settings.fov + boostDynamicFov_));
+
+    float speed = glm::length(velocity_);
+    float volume = glm::pow(glm::clamp(speed / 30.0f, 0.0f, 1.0f), 2.0f);
+    windSoundInstanceLeft_->setVolume(volume * 1.25f);
+    windSoundInstanceRight_->setVolume(volume * 1.25f);
 }
 
 void CharacterEntity::prePhysicsUpdate() {
-    if (!respawnFreeze.isZero() || !enabled) {
+    if (isFrozen_() || !enabled) {
         body_->SetLinearVelocity(ph::convert(glm::vec3{0, 0, 0}));
         return;
     }

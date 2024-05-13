@@ -1,5 +1,6 @@
 #include "MainMenuController.h"
 
+#include "../Audio/Audio.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../UI/Screens/MainMenu.h"
@@ -17,6 +18,9 @@ MainMenuController::MainMenuController(Game &game)
 void MainMenuController::load() {
     if (menuScreen->closed())
         menuScreen->open();
+    menuMusic = game.audio.createMusic("assets/audio/music/shifting_dunes.ogg");
+    menuMusic->setLooping(true);
+    menuMusic->play();
 }
 
 void MainMenuController::unload() {

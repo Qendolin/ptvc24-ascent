@@ -9,6 +9,8 @@ class Character;
 namespace ph {
 struct SensorContact;
 }
+class Sound;
+class SoundInstance2d;
 #pragma endregion
 
 // The character controller handles movement and mouse look.
@@ -45,14 +47,25 @@ class CharacterEntity : public scene::Entity {
     float boostMeter_ = 1.0;
     float boostDynamicFov_ = 0.0;
 
+    bool frozen_ = false;
+    ;
+
     // The start and end position of the camera interpolation
     glm::vec3 cameraLerpStart_ = {};
     glm::vec3 cameraLerpEnd_ = {};
+
+    std::unique_ptr<Sound> windSound_;
+    std::unique_ptr<SoundInstance2d> windSoundInstanceLeft_;
+    std::unique_ptr<SoundInstance2d> windSoundInstanceRight_;
 
     // called as a callback by the physics engine
     void onBodyContact_(ph::SensorContact& contact);
 
     void setPosition_(glm::vec3 pos);
+
+    bool isFrozen_() {
+        return frozen_ || !respawnFreeze.isZero();
+    }
 
     // called in physics update
     glm::vec3 calculateVelocity_(float time_delta);
@@ -78,6 +91,10 @@ class CharacterEntity : public scene::Entity {
 
     glm::vec3 velocity() const {
         return velocity_;
+    }
+
+    void setFrozen(bool frozen) {
+        frozen_ = frozen;
     }
 
     float boostMeter() const {

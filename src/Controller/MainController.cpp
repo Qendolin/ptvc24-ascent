@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 
+#include "../Audio/Audio.h"
 #include "../Camera.h"
 #include "../Debug/Direct.h"
 #include "../Debug/ImGuiBackend.h"
@@ -63,6 +64,11 @@ void MainController::load() {
                     .tint = "assets/textures/particle/fire_tint.png",
                     .scale = "assets/textures/particle/fire_scale.png",
                 });
+
+    bgMusic = game.audio.createMusic("assets/audio/music/shifting_dunes.ogg");
+    bgMusic->setLooping(true);
+    bgMusic->setVolume(0.1f);
+    bgMusic->play();
 }
 
 bool MainController::useHdr() {
@@ -175,6 +181,7 @@ void MainController::update() {
         game.scores->add(score);
         game.scores->save();
         scoreScreen->open(score);
+        character->setFrozen(true);
     }
 }
 
