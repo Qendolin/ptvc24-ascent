@@ -59,6 +59,10 @@ AddFileToZip $zipFile (Get-ChildItem "LICENSE") "LICENSE"
 
 # Check if the executable exists in the release directory
 $exePath = "_bin/release/PTVC_Project_GL.exe"
+$lastCompileTime = (Get-Item $exePath).LastWriteTime
+if (((Get-Date) - $lastCompileTime).TotalHours -gt 1) {
+    Write-Warning "The compiled exe is older than an hour, may be outdated."
+}
 if (-not (Test-Path $exePath)) {
     Write-Host "Executable not found. Running 'make release'..."
     # Run make release
