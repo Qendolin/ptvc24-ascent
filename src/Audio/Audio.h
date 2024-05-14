@@ -73,6 +73,21 @@ class Music {
     AudioBus &bus;
     Music(AudioBus &bus, std::string filename);
 
+    // prevent copy
+    Music(Music const &) = delete;
+    Music &operator=(Music const &) = delete;
+
+    // allow move
+    Music(Music &&other)
+        : wav_(std::exchange(other.wav_, nullptr)),
+          handle_(std::exchange(other.handle_, 0)),
+          paused_(other.paused_),
+          looping_(other.looping_),
+          volume_(other.volume_),
+          speed_(other.speed_),
+          bus(other.bus) {
+    }
+
     ~Music();
 
     float getVolume();
@@ -85,6 +100,8 @@ class Music {
 
     void play();
 
+    void pause();
+
     void setPaused(bool pause);
 
     void stop();
@@ -94,16 +111,29 @@ class Music {
     void setLooping(bool looping);
 
     bool isLooping();
+
+    double duration();
+
+    void seek(double seconds);
 };
 
 class Sound {
    private:
     SoLoud::Wav *wav_;
-    SoLoud::handle handle_ = 0;
 
    public:
     AudioBus &bus;
     Sound(AudioBus &bus, std::string filename);
+
+    // prevent copy
+    Sound(Sound const &) = delete;
+    Sound &operator=(Sound const &) = delete;
+
+    // allow move
+    Sound(Sound &&other)
+        : wav_(std::exchange(other.wav_, nullptr)),
+          bus(other.bus) {
+    }
 
     ~Sound();
 
@@ -146,6 +176,10 @@ class SoundInstance {
     Sound &sound;
     SoundInstance(Sound &sound, unsigned int handle, bool lifetime_bound, float volume);
 
+    // prevent copy
+    SoundInstance(SoundInstance const &) = delete;
+    SoundInstance &operator=(SoundInstance const &) = delete;
+
     virtual ~SoundInstance();
 
     float getVolume();
@@ -153,6 +187,10 @@ class SoundInstance {
     void setVolume(float volume);
 
     void setSpeed(float speed);
+
+    void play();
+
+    void pause();
 
     void setPaused(bool pause);
 

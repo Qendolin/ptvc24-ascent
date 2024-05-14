@@ -1,6 +1,6 @@
 #include "MainMenuController.h"
 
-#include "../Audio/Audio.h"
+#include "../Audio/Assets.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../UI/Screens/MainMenu.h"
@@ -18,12 +18,12 @@ MainMenuController::MainMenuController(Game &game)
 void MainMenuController::load() {
     if (menuScreen->closed())
         menuScreen->open();
-    menuMusic = game.audio.createMusic("assets/audio/music/shifting_dunes.ogg");
-    menuMusic->setLooping(true);
-    menuMusic->play();
+    game.audio->assets->mainMenu.seek(0);
+    game.audio->assets->mainMenu.play();
 }
 
 void MainMenuController::unload() {
+    game.audio->assets->mainMenu.pause();
 }
 
 void MainMenuController::update() {

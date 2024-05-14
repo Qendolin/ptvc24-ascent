@@ -12,7 +12,7 @@
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include "../Audio/Audio.h"
+#include "../Audio/Assets.h"
 #include "../Camera.h"
 #include "../Controller/MainController.h"
 #include "../Game.h"
@@ -29,12 +29,10 @@ using namespace scene;
 glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
 CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
-    windSound_ = game().audio.createSound("assets/audio/sound/wind-loop.ogg");
-    windSound_->setLooping(true);
-    windSound_->setVolume(0);
-    windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound_->play2d(0, -0.5));
-    windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound_->play2d(0, 0.5));
-    windSoundInstanceLeft_->seek(windSound_->duration() * 0.5);
+    auto& windSound = game().audio->assets->wind;
+    windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, -0.5));
+    windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, 0.5));
+    windSoundInstanceLeft_->seek(windSound.duration() * 0.5);
 }
 
 CharacterEntity::~CharacterEntity() {
@@ -75,6 +73,7 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
 
     if (!respawnInvulnerability.isZero()) return;
     respawnInvulnerability = 1.0;
+    game().audio->assets->thump.play2dEvent(0.5, 0);
     respawn();
 }
 
@@ -88,7 +87,7 @@ void CharacterEntity::respawn() {
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
 
     setPosition_(respawn_point.transform[3]);
-    controller.fader->fade(1.1f, 0.0f, RESPAWN_TIME);
+    controller.fader->fade(1.5f, 0.0f, RESPAWN_TIME);
     respawnFreeze = RESPAWN_TIME;
 
     float speed = std::max(5.0f, respawn_point.speed * 0.75f);
@@ -105,7 +104,8 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
 }
 
 void CharacterEntity::terminate() {
-    this->windSound_->stop();
+    this->windSoundInstanceLeft_->stop();
+    this->windSoundInstanceRight_->stop();
 }
 
 void CharacterEntity::update(float time_delta) {

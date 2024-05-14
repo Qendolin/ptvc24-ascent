@@ -67,10 +67,12 @@ Music::Music(AudioBus &bus, std::string filename) : bus(bus) {
     if (result != 0) {
         PANIC("Failed to load music from '" + filename + "'");
     }
+    wav_->setSingleInstance(true);
 }
 
 Music::~Music() {
-    wav_->stop();
+    if (wav_ != nullptr)
+        wav_->stop();
     delete wav_;
 }
 
@@ -107,13 +109,17 @@ void Music::setSpeed(float speed) {
 void Music::play() {
     if (handle_ != 0 && paused_) {
         setPaused(false);
-    } else {
+    } else if (handle_ == 0) {
         handle_ = bus.bus_->play(*wav_, volume_, pan_, false);
         bus.system.soloud_->setLooping(handle_, looping_);
         bus.system.soloud_->setRelativePlaySpeed(handle_, speed_);
         bus.system.soloud_->setProtectVoice(handle_, true);
         paused_ = false;
     }
+}
+
+void Music::pause() {
+    setPaused(true);
 }
 
 void Music::setPaused(bool pause) {
@@ -145,6 +151,14 @@ bool Music::isLooping() {
     return looping_;
 }
 
+double Music::duration() {
+    return wav_->getLength();
+}
+
+void Music::seek(double seconds) {
+    bus.system.soloud_->seek(handle_, seconds);
+}
+
 Sound::Sound(AudioBus &bus, std::string filename) : bus(bus) {
     wav_ = new SoLoud::Wav();
     auto result = wav_->load(filename.c_str());
@@ -156,7 +170,8 @@ Sound::Sound(AudioBus &bus, std::string filename) : bus(bus) {
 }
 
 Sound::~Sound() {
-    wav_->stop();
+    if (wav_ != nullptr)
+        wav_->stop();
     delete wav_;
 }
 
@@ -243,6 +258,14 @@ void SoundInstance::setSpeed(float speed) {
     if (handle_ == 0) return;
 
     sound.bus.system.soloud_->setRelativePlaySpeed(handle_, speed);
+}
+
+void SoundInstance::play() {
+    setPaused(false);
+}
+
+void SoundInstance::pause() {
+    setPaused(true);
 }
 
 void SoundInstance::setPaused(bool pause) {

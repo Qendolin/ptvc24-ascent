@@ -33,7 +33,6 @@ class RaceManager {
     std::string courseName_;
     const CharacterEntity *character_;
     CheckpointMarkerEntity *checkpointMarker_;
-    std::unique_ptr<Sound> checkpointPassedSound_;
 
    public:
     RaceManager() = default;

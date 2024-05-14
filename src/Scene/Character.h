@@ -32,7 +32,7 @@ class CharacterEntity : public scene::Entity {
     inline static const float BOOST_DYN_FOV_CHANGE = 30;
     // Controls how quicky the velocity matches the horizontal look direction
     inline static const float TURN_FACTOR = 6.0f;
-    inline static const float RESPAWN_TIME = 0.65f;
+    inline static const float RESPAWN_TIME = 0.75f;
 
     Timer respawnInvulnerability;
     Timer respawnFreeze;
@@ -54,7 +54,6 @@ class CharacterEntity : public scene::Entity {
     glm::vec3 cameraLerpStart_ = {};
     glm::vec3 cameraLerpEnd_ = {};
 
-    std::unique_ptr<Sound> windSound_;
     std::unique_ptr<SoundInstance2d> windSoundInstanceLeft_;
     std::unique_ptr<SoundInstance2d> windSoundInstanceRight_;
 

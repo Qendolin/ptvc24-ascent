@@ -95,3 +95,7 @@ Also used by blender (4.0+).
 ## Development
 
 When adding .cpp or .h files run `./make rebuild` to rebuild the cmake configuration.
+
+## Special Thanks
+
+Special thanks to my (Wendelin) friend Boris Laaha for creating the awesome music. 
