@@ -1,10 +1,10 @@
 # Define the list of glob patterns of files that should be exported
 $globPatterns = @(
+    "assets/CREDITS.txt",
     "assets/fonts/*.ttf",
     "assets/models/*.glb",
     "assets/shaders/*.*",
     "assets/textures/*.png",
-    "assets/textures/*.txt",
     "assets/textures/*.f32",
     "assets/textures/skybox/*.iblenv",
     "assets/textures/ui/*.png"
