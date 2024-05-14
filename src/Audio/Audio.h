@@ -107,6 +107,8 @@ class Sound {
 
     ~Sound();
 
+    void stop();
+
     void setVolume(float volume);
 
     void setLooping(bool looping);

@@ -160,6 +160,10 @@ Sound::~Sound() {
     delete wav_;
 }
 
+void Sound::stop() {
+    wav_->stop();
+}
+
 void Sound::setVolume(float volume) {
     wav_->setVolume(volume);
 }

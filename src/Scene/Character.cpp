@@ -104,6 +104,10 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
     cameraLerpEnd_ = pos;
 }
 
+void CharacterEntity::terminate() {
+    this->windSound_->stop();
+}
+
 void CharacterEntity::update(float time_delta) {
     if (!enabled) return;
     Input& input = *game().input;
@@ -151,7 +155,7 @@ void CharacterEntity::update(float time_delta) {
     camera.setFov(glm::radians(settings.fov + boostDynamicFov_));
 
     float speed = glm::length(velocity_);
-    float volume = glm::pow(glm::clamp(speed / 30.0f, 0.0f, 1.0f), 2.0f);
+    float volume = glm::pow(glm::clamp(speed / 40.0f, 0.0f, 1.0f), 3.0f);
     windSoundInstanceLeft_->setVolume(volume * 1.25f);
     windSoundInstanceRight_->setVolume(volume * 1.25f);
 }

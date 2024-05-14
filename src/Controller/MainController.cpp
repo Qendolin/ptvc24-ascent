@@ -181,7 +181,7 @@ void MainController::update() {
         game.scores->add(score);
         game.scores->save();
         scoreScreen->open(score);
-        character->setFrozen(true);
+        character->terminate();
     }
 }
 

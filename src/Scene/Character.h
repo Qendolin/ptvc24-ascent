@@ -64,7 +64,7 @@ class CharacterEntity : public scene::Entity {
     void setPosition_(glm::vec3 pos);
 
     bool isFrozen_() {
-        return frozen_ || !respawnFreeze.isZero();
+        return !respawnFreeze.isZero();
     }
 
     // called in physics update
@@ -93,9 +93,7 @@ class CharacterEntity : public scene::Entity {
         return velocity_;
     }
 
-    void setFrozen(bool frozen) {
-        frozen_ = frozen;
-    }
+    void terminate();
 
     float boostMeter() const {
         return boostMeter_;
