@@ -305,14 +305,17 @@ void ParticleSystem::remove(ParticleEmitter *emitter) {
 
 void ParticleSystem::loadMaterial(std::string name, ParticleMaterialParams params) {
     gl::Texture *sprite = loader::texture(params.sprite, {.mipmap = false, .srgb = true});
+    sprite->setDebugLabel("particle/sprite_tex");
 
     auto tint_image = loader::image(params.tint);
     gl::Texture *tint = new gl::Texture(GL_TEXTURE_1D_ARRAY);
+    tint->setDebugLabel("particle/tint_tex");
     tint->allocate(1, GL_RGBA8, tint_image.width, tint_image.height);
     tint->load(0, tint_image.width, tint_image.height, GL_RGBA, GL_UNSIGNED_BYTE, tint_image.data.get());
 
     auto scale_image = loader::image(params.scale);
     gl::Texture *scale = new gl::Texture(GL_TEXTURE_2D);
+    scale->setDebugLabel("particle/scale_tex");
     scale->allocate(1, GL_RG8, scale_image.width, scale_image.height);
     scale->load(0, scale_image.width, scale_image.height, GL_RGBA, GL_UNSIGNED_BYTE, scale_image.data.get());
 
