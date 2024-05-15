@@ -70,6 +70,10 @@ GraphicsData::GraphicsData(
 
 GraphicsData::~GraphicsData() = default;
 
+uint32_t GraphicsData::commandCount() const {
+    return drawCommands_->size() / sizeof(gl::DrawElementsIndirectCommand);
+}
+
 void GraphicsData::bind() const {
     vao_->bind();
     drawCommands_->bind(GL_DRAW_INDIRECT_BUFFER);

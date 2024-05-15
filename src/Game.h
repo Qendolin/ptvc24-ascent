@@ -101,6 +101,8 @@ class Game {
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
 
+    void bindHdrFramebuffer();
+
     /**
      * Queue a controller to be activated next frame.
      */

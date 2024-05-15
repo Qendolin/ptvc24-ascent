@@ -278,10 +278,13 @@ class StateManager {
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glViewport.xhtml)
     void setViewport(int x, int y, int width, int height);
+    std::array<int, 4> getViewport() { return std::array<int, 4>(viewportRect); }
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glScissor.xhtml)
     void setScissor(int x, int y, int width, int height);
+    std::array<int, 4> getScissor() { return std::array<int, 4>(scissorRect); }
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearColor.xhtml)
     void setClearColor(float r, float g, float b, float a);
+    std::array<float, 4> getClearColor() { return std::array<float, 4>(clearColorRgba); };
 
    private:
     Environment env = {};

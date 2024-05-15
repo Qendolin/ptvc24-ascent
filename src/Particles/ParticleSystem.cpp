@@ -159,6 +159,7 @@ void ParticleEmitter::update(float time_delta) {
 
 ParticleEmitter::~ParticleEmitter() = default;
 
+// FIXME: This is reallllly slow
 void ParticleSystem::emit_(Emission &emission) {
     auto comp = emitShader_->get(GL_COMPUTE_SHADER);
     comp->setUniform("u_random_seed", (unsigned int)rand());

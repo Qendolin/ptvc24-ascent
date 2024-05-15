@@ -65,8 +65,10 @@ void MainController::load() {
                     .scale = "assets/textures/particle/fire_scale.png",
                 });
 
+    shadowRenderer = std::make_unique<ShadowMapRenderer>();
+
+    game.audio->assets->bgm.pause();
     game.audio->assets->bgm.seek(0);
-    game.audio->assets->bgm.play();
 }
 
 bool MainController::useHdr() {
@@ -116,6 +118,7 @@ void MainController::applyLoadResult_() {
     raceManager.loadCheckpoints(first_checkpoint.entity<CheckpointEntity>());
 
     character->respawn();
+    game.audio->assets->bgm.play();
 }
 
 void MainController::unload() {
@@ -277,7 +280,15 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
-    materialBatchRenderer->render(*game.camera, sceneData->graphics);
+    sunShadow->lookAt(
+        glm::make_vec3(&game.debugSettings.rendering.shadow.sunTarget[0]),
+        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
+        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1]),
+        game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
+    shadowRenderer->render(*sunShadow, sceneData->graphics);
+
+    game.bindHdrFramebuffer();
+    materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera);
 }

@@ -132,7 +132,7 @@ void Game::resize(int width, int height) {
     delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     auto hdr_depth_attachment = new gl::Texture(GL_TEXTURE_2D);
     hdr_depth_attachment->setDebugLabel("hdr_fbo/depth");
-    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT24, width, height);
+    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT32F, width, height);
     hdrFramebuffer_->attachTexture(GL_DEPTH_ATTACHMENT, hdr_depth_attachment);
     hdrFramebuffer_->check(GL_DRAW_FRAMEBUFFER);
 
@@ -260,6 +260,8 @@ void Game::render_() {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gl::manager->bindDrawFramebuffer(0);
+        gl::manager->enable(gl::Capability::DepthTest);
+        gl::manager->depthMask(true);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
             hdrFramebuffer_->getTexture(0),
@@ -281,4 +283,8 @@ void Game::render_() {
 
     // Finish the frame
     glfwSwapBuffers(window);
+}
+
+void Game::bindHdrFramebuffer() {
+    hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
 }

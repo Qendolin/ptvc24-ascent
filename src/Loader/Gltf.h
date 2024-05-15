@@ -176,6 +176,8 @@ class GraphicsData {
     // bind the vao and draw commands
     void bind() const;
 
+    uint32_t commandCount() const;
+
     InstanceAttributes *attributes(int32_t index) const;
 };
 

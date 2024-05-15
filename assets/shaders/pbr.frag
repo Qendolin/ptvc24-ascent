@@ -2,9 +2,10 @@
 
 layout(early_fragment_tests) in;
 
-layout(location = 0) in vec3 in_position;
-layout(location = 1) in vec2 in_uv;
-layout(location = 2) in mat3 in_tbn;
+layout(location = 0) in vec3 in_position_ws; // world space
+layout(location = 1) in vec3 in_position_ss; // shadow ndc space
+layout(location = 2) in vec2 in_uv;
+layout(location = 3) in mat3 in_tbn;
 
 layout(location = 0) out vec4 out_color;
 
@@ -16,10 +17,14 @@ layout(binding = 3) uniform samplerCube u_ibl_diffuse;
 layout(binding = 4) uniform samplerCube u_ibl_specualr;
 layout(binding = 5) uniform sampler2D u_ibl_brdf_lut;
 
+layout(binding = 6) uniform sampler2DShadow u_shadow_map;
+
 uniform vec3 u_camera_pos;
 uniform vec3 u_albedo_fac;
 uniform vec3 u_occlusion_metallic_roughness_fac;
 uniform float u_normal_fac;
+
+uniform float u_shadow_bias;
 
 const float PI = 3.14159265359;
 
@@ -77,14 +82,14 @@ float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+vec3 fresnelSchlick(float cos_theta, vec3 F0)
 {
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+vec3 fresnelSchlickRoughness(float cos_theta, vec3 F0, float roughness)
 {
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
 }
 
 vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metallic, vec3 albedo, float ao)
@@ -104,6 +109,28 @@ vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metal
     return (kD * diffuse + specular) * ao; 
 }
 
+float sampleShadow(vec3 P_shadow_ndc, float cos_theta) {
+    // z is seperate because we are using 0..1 depth, not the usual -1..1
+    vec3 shadow_uvz = vec3(P_shadow_ndc.xy * 0.5 + 0.5, P_shadow_ndc.z);
+
+    float bias = u_shadow_bias*tan(acos(cos_theta));
+    bias = clamp(bias, 0.0, 0.01);
+
+    // GPU Gems 1 / Chapter 11.4
+    vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
+    vec2 offset = vec2(fract(gl_FragCoord.x * 0.5) > 0.25, fract(gl_FragCoord.y * 0.5) > 0.25); // mod
+    offset.y += offset.x; // y ^= x in floating point
+    if (offset.y > 1.1) offset.y = 0;
+    float shadow = 0.0;
+    // + bias instead of - bias becase we are using reversed depth and the GL_GEQUAL compare mode.
+    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(-1.5, 0.5)) * texel_size, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(0.5, 0.5)) * texel_size, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(-1.5, -1.5)) * texel_size, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(0.5, -1.5)) * texel_size, shadow_uvz.z + bias));
+
+    return shadow * 0.25;
+}
+
 void main()
 {
     vec3 albedo = texture(u_albedo_tex, in_uv).rgb             * u_albedo_fac;
@@ -117,7 +144,7 @@ void main()
     roughness = adjustRoughness(tN, roughness);
 
     vec3 N = transformNormal(tN);
-    vec3 P = in_position;
+    vec3 P = in_position_ws;
     vec3 V = normalize(u_camera_pos - P);
     vec3 R = reflect(-V, N);
 
@@ -177,8 +204,12 @@ void main()
         Lo += (kD * albedo / PI + specular) * radiance * n_dot_l;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
 
+    float shadow = sampleShadow(in_position_ss, 1.0);
+
     // ambient lighting
-    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao);
+    // TODO: figure out physically based way for shadow contribution to ambient light
+    const float shadow_ambient_factor = 0.5;
+    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao) * mix(shadow_ambient_factor, 1.0, shadow);
 
     vec3 color = ambient + Lo;
     out_color = vec4(color, 1.0);

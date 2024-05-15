@@ -41,6 +41,18 @@ struct DebugSettings {
             float outer = 1.6f;
             float sharpness = 2.0f;
         } vignette;
+
+        struct Shadow {
+            bool debugDrawEnabled = false;
+            std::array<float, 3> sunTarget = {-27, 0, -70};
+            std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
+            float sunDistance = 150;
+            float normalBias = 0.035f;
+            float depthBias = 0.0f;
+            float offsetFactor = 1.85f;
+            float offsetUnits = 4.5f;
+            float offsetClamp = 0.05f;
+        } shadow;
     };
     Entity entity;
     Rendering rendering;

@@ -62,7 +62,7 @@ void CheckpointEntity::debugDraw() {
     DirectBuffer& dd = *Game::get().directDraw;
     scene::TransformRef transform = respawnTransformation();
     dd.unshaded();
-    dd.stroke(0.05f);
+    dd.stroke(0.1f);
     dd.axes(transform.matrix(), 2.0);
 
     if (nextCheckpointRef_.isValid()) {

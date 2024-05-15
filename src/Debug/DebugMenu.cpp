@@ -117,6 +117,25 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Shadow", ImGuiTreeNodeFlags_DefaultOpen)) {
+            PushID("shadow");
+            Checkbox("Debug Draw", &settings.rendering.shadow.debugDrawEnabled);
+            DragFloat3("Target", &settings.rendering.shadow.sunTarget[0]);
+            BeginTable("dir_input", 2);
+            TableNextColumn();
+            SliderFloat("Az", &settings.rendering.shadow.sunAzimuthElevation[0], 0, 360, "%.1f °");
+            TableNextColumn();
+            SliderFloat("El", &settings.rendering.shadow.sunAzimuthElevation[1], -90, 90, "%.1f °");
+            EndTable();
+            SliderFloat("Distance", &settings.rendering.shadow.sunDistance, 0, 1000);
+            SliderFloat("Normal Bias", &settings.rendering.shadow.normalBias, 0.0f, 0.1f, "%.5f");
+            SliderFloat("Depth Bias", &settings.rendering.shadow.depthBias, 0.0f, 0.1f, "%0.5f");
+            SliderFloat("Offset Factor", &settings.rendering.shadow.offsetFactor, -10.0f, 10.0f);
+            SliderFloat("Offset Units", &settings.rendering.shadow.offsetUnits, -10.0f, 10.0f);
+            SliderFloat("Offset Clamp", &settings.rendering.shadow.offsetClamp, -10.0f, 10.0f);
+            PopID();
+        }
+
         Unindent();
         PopID();
     }

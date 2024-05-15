@@ -49,7 +49,7 @@ void TestObstacleEntity::prePhysicsUpdate() {
 void TestObstacleEntity::debugDraw() {
     DirectBuffer& dd = *Game::get().directDraw;
     dd.unshaded();
-    dd.stroke(0.05f);
+    dd.stroke(0.1f);
     dd.color(0, 0, 0);
     dd.line(fromRef.transform().position(), toRef.transform().position());
 }

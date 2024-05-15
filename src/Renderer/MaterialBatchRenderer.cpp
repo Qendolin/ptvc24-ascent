@@ -8,6 +8,7 @@
 #include "../Game.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "ShadowRenderer.h"
 
 MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env_diffuse,
                                              std::shared_ptr<loader::IblEnv> env_specular,
@@ -16,6 +17,13 @@ MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env
         {new gl::ShaderProgram("assets/shaders/pbr.vert"),
          new gl::ShaderProgram("assets/shaders/pbr.frag")});
     shader->setDebugLabel("pbr_renderer/shader");
+
+    shadowSampler = new gl::Sampler();
+    shadowSampler->setDebugLabel("pbr_renderer/shadow_sampler");
+    shadowSampler->filterMode(GL_LINEAR, GL_LINEAR);
+    shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+    shadowSampler->borderColor(glm::vec4(0));
+    shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
 
     lutSampler = new gl::Sampler();
     lutSampler->setDebugLabel("pbr_renderer/lut_sampler");
@@ -74,9 +82,10 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete albedoSampler;
     delete normalSampler;
     delete ormSampler;
+    delete shadowSampler;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);
@@ -93,10 +102,16 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
     cubemapSampler->bind(3);
     cubemapSampler->bind(4);
     lutSampler->bind(5);
+    shadowSampler->bind(6);
 
     iblDiffuse->bind(3);
     iblSpecular->bind(4);
     iblBrdfLut->bind(5);
+
+    shadow.depthTexture()->bind(6);
+    shader->fragmentStage()->setUniform("u_shadow_bias", Game::get().debugSettings.rendering.shadow.depthBias);
+    shader->vertexStage()->setUniform("u_shadow_view_mat", shadow.viewMatrix());
+    shader->vertexStage()->setUniform("u_shadow_projection_mat", shadow.projectionMatrix());
 
     graphics.bind();
     for (auto &&batch : graphics.batches) {
