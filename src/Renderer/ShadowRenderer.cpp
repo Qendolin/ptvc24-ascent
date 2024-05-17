@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "../Camera.h"
 #include "../Debug/Direct.h"
 #include "../GL/Framebuffer.h"
 #include "../GL/Shader.h"
@@ -107,7 +108,7 @@ void ShadowMapRenderer::render(ShadowCaster& caster, loader::GraphicsData& graph
 
     shader->vertexStage()->setUniform("u_view_mat", caster.viewMatrix());
     shader->vertexStage()->setUniform("u_projection_mat", caster.projectionMatrix());
-    shader->vertexStage()->setUniform("u_size_bias", settings.normalBias);
+    shader->vertexStage()->setUniform("u_size_bias", (float)(settings.sizeBias / (double)caster.depthTexture()->width()));
     auto prev_vp = gl::manager->getViewport();
     gl::manager->setViewport(0, 0, caster.resolution(), caster.resolution());
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp, gl::Capability::PolygonOffsetFill, gl::Capability::CullFace});

@@ -3,9 +3,10 @@
 layout(early_fragment_tests) in;
 
 layout(location = 0) in vec3 in_position_ws; // world space
-layout(location = 1) in vec3 in_position_ss; // shadow ndc space
-layout(location = 2) in vec2 in_uv;
-layout(location = 3) in mat3 in_tbn;
+layout(location = 1) in vec2 in_uv;
+layout(location = 2) in mat3 in_tbn;
+layout(location = 5) in vec3 in_shadow_position; // shadow ndc space
+layout(location = 6) in vec3 in_shadow_direction;
 
 layout(location = 0) out vec4 out_color;
 
@@ -24,12 +25,12 @@ uniform vec3 u_albedo_fac;
 uniform vec3 u_occlusion_metallic_roughness_fac;
 uniform float u_normal_fac;
 
-uniform float u_shadow_bias;
+uniform float u_shadow_depth_bias;
 
 const float PI = 3.14159265359;
 
-vec3 transformNormal(vec3 tangent_normal) {
-    return normalize(in_tbn * tangent_normal);
+vec3 transformNormal(mat3 tbn, vec3 tangent_normal) {
+    return normalize(tbn * tangent_normal);
 }
 
 // Based on https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v32.pdf page 92
@@ -109,15 +110,16 @@ vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metal
     return (kD * diffuse + specular) * ao; 
 }
 
-float sampleShadow(vec3 P_shadow_ndc, float cos_theta) {
+float sampleShadow(vec3 P_shadow_ndc, float n_dot_l) {
+    vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
     // z is seperate because we are using 0..1 depth, not the usual -1..1
     vec3 shadow_uvz = vec3(P_shadow_ndc.xy * 0.5 + 0.5, P_shadow_ndc.z);
 
-    float bias = u_shadow_bias*tan(acos(cos_theta));
+    // float bias = u_shadow_depth_bias * texel_size.x * tan(acos(n_dot_l));
+    float bias = u_shadow_depth_bias * texel_size.x * tan(acos(n_dot_l));
     bias = clamp(bias, 0.0, 0.01);
 
     // GPU Gems 1 / Chapter 11.4
-    vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
     vec2 offset = vec2(fract(gl_FragCoord.x * 0.5) > 0.25, fract(gl_FragCoord.y * 0.5) > 0.25); // mod
     offset.y += offset.x; // y ^= x in floating point
     if (offset.y > 1.1) offset.y = 0;
@@ -138,12 +140,17 @@ void main()
     float ao        = omr.x;
     float metallic  = omr.y;
     float roughness = omr.z;
+    // I'm not sure if the normalize is required.
+    // When passing just the normal vector from VS to FS it is generally required to normalize it again.
+    // See https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/normalization-issues/
+    // mat3 tbn = mat3(normalize(in_tbn[0]), normalize(in_tbn[1]), normalize(in_tbn[2]));
+    mat3 tbn = in_tbn;
 
     vec3 tN = texture(u_normal_tex, in_uv).xyz * 2.0 - 1.0;
     tN = normalize(tN * vec3(u_normal_fac, u_normal_fac, 1.0)); // increase intensity
     roughness = adjustRoughness(tN, roughness);
 
-    vec3 N = transformNormal(tN);
+    vec3 N = transformNormal(tbn, tN);
     vec3 P = in_position_ws;
     vec3 V = normalize(u_camera_pos - P);
     vec3 R = reflect(-V, N);
@@ -204,12 +211,12 @@ void main()
         Lo += (kD * albedo / PI + specular) * radiance * n_dot_l;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
 
-    float shadow = sampleShadow(in_position_ss, 1.0);
+    float shadow = sampleShadow(in_shadow_position, dot(tbn[2], in_shadow_direction));
 
     // ambient lighting
     // TODO: figure out physically based way for shadow contribution to ambient light
-    const float shadow_ambient_factor = 0.5;
-    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao) * mix(shadow_ambient_factor, 1.0, shadow);
+    const float shadow_ambient_factor = 0.66;
+    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao) * mix(1.0 - shadow_ambient_factor, 1.0, shadow);
 
     vec3 color = ambient + Lo;
     out_color = vec4(color, 1.0);

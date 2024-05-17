@@ -2,9 +2,12 @@
 
 #include "../GL/Declarations.h"
 
+#pragma region ForwardDecl
+class Camera;
 namespace loader {
 class GraphicsData;
 }  // namespace loader
+#pragma endregion
 
 class ShadowCaster {
    protected:

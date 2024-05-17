@@ -47,8 +47,9 @@ struct DebugSettings {
             std::array<float, 3> sunTarget = {-27, 0, -70};
             std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
             float sunDistance = 175;
-            float normalBias = 0.035f;
-            float depthBias = 0.0f;
+            float normalBias = 300.0f;
+            float sizeBias = 10.0f;
+            float depthBias = 0.12f;
             float offsetFactor = 1.85f;
             float offsetUnits = 4.5f;
             float offsetClamp = 0.05f;

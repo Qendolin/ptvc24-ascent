@@ -33,6 +33,9 @@ class CharacterEntity : public scene::Entity {
     // Controls how quicky the velocity matches the horizontal look direction
     inline static const float TURN_FACTOR = 6.0f;
     inline static const float RESPAWN_TIME = 0.75f;
+    inline static const float RESPAWN_SPEED_FACTOR = 0.6f;
+    inline static const float RESPAWN_SPEED_MINIMUM = 7.5f;
+    inline static const float INVULNERABILITY_TIME = RESPAWN_TIME + 1.0f;
 
     Timer respawnInvulnerability;
     Timer respawnFreeze;
