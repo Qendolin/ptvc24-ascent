@@ -72,7 +72,6 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     if (contactNode.physics().hasTrigger()) return;
 
     if (!respawnInvulnerability.isZero()) return;
-    respawnInvulnerability = 1.0;
     game().audio->assets->thump.play2dEvent(0.5, 0);
     respawn();
 }
@@ -89,8 +88,9 @@ void CharacterEntity::respawn() {
     setPosition_(respawn_point.transform[3]);
     controller.fader->fade(1.5f, 0.0f, RESPAWN_TIME);
     respawnFreeze = RESPAWN_TIME;
+    respawnInvulnerability = INVULNERABILITY_TIME;
 
-    float speed = std::max(5.0f, respawn_point.speed * 0.75f);
+    float speed = std::max(RESPAWN_SPEED_MINIMUM, respawn_point.speed * RESPAWN_SPEED_FACTOR);
     velocity_ = rotation * glm::vec3(0, 0, -speed);
 
     boostMeter_ = respawn_point.boostMeter;
@@ -207,17 +207,17 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     if (pitch_cos > glm::epsilon<float>()) {
         // convert vertical to horizontal velocity
         if (velocity.y < 0) {
-            float lift = velocity.y * -0.1f * pitch_cos_sqr * time_delta * SPEED;
+            float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
             result.y += lift;
-            result.x += looking.x * lift / pitch_cos;
-            result.z += looking.z * lift / pitch_cos;
+            result.x += looking.x * 1.1f * lift / pitch_cos;
+            result.z += looking.z * 1.1f * lift / pitch_cos;
         }
         // convert horizontal to vertical velocity
         if (camera.angles.x > 0) {
             float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
             result.y += lift;
-            result.x -= looking.x * lift / pitch_cos;
-            result.z -= looking.z * lift / pitch_cos;
+            result.x -= looking.x * 0.9f * lift / pitch_cos;
+            result.z -= looking.z * 0.9f * lift / pitch_cos;
         }
 
         // steering / turning
