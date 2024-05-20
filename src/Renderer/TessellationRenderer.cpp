@@ -70,7 +70,6 @@ TessellationRenderer::TessellationRenderer() {
     std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
 
     // first, configure the cube's VAO (and terrainVBO)
-    unsigned int terrainVAO, terrainVBO;
     glGenVertexArrays(1, &terrainVAO);
     gl::manager->bindVertexArray(terrainVAO);
 
