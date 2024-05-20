@@ -42,7 +42,7 @@ FinalizationRenderer::~FinalizationRenderer() {
     delete fboLinearSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare, gl::Texture *edges) {
+void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
     gl::manager->setEnabled({});
