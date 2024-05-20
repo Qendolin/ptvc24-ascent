@@ -1,12 +1,13 @@
-#include <glm/glm.hpp>;
+#include <glm/glm.hpp>
 
 #include "../GL/Declarations.h"
 
 class TessellationRenderer {
    private:
-    gl::ShaderPipeline *shader;
+    gl::ShaderPipeline* shader;
     // first, configure the cube's VAO (and terrainVBO + terrainIBO)
-    unsigned int terrainVAO, terrainVBO;
+    gl::VertexArray* terrainVAO;
+    gl::Buffer* terrainVBO;
     const unsigned int NUM_PATCH_PTS = 4;
     int width, height, nrChannels;
     unsigned int rez = 20;

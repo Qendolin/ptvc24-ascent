@@ -3,8 +3,10 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
+#include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
+#include "../GL/Texture.h"
 #include "stb_image.h"
 
 TessellationRenderer::TessellationRenderer() {
@@ -70,11 +72,11 @@ TessellationRenderer::TessellationRenderer() {
     std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
 
     // first, configure the cube's VAO (and terrainVBO)
-    glGenVertexArrays(1, &terrainVAO);
-    gl::manager->bindVertexArray(terrainVAO);
+    terrainVAO = new gl::VertexArray();
+    terrainVAO->bind();
 
-    glGenBuffers(1, &terrainVBO);
-    gl::manager->bindArrayBuffer(terrainVBO);
+    terrainVBO = new gl::Buffer();
+    terrainVBO->bind(GL_ARRAY_BUFFER);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
     // position attribute
@@ -89,7 +91,7 @@ TessellationRenderer::TessellationRenderer() {
 
 void TessellationRenderer::render(glm::mat4 viewProjectionMatrix, glm::mat4 viewMatrix) {
     gl::pushDebugGroup("TessellationRenderer::render");
-    gl::manager->bindVertexArray(terrainVAO);
+    terrainVAO->bind();
     gl::manager->setEnabled({gl::Capability::DepthTest});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     gl::manager->depthMask(true);
