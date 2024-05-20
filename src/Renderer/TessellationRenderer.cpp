@@ -89,7 +89,7 @@ TessellationRenderer::TessellationRenderer() {
 }
 
 void TessellationRenderer::render(glm::mat4 viewProjectionMatrix, glm::mat4 viewMatrix) {
-    gl::pushDebugGroup;
+    gl::pushDebugGroup("TessellationRenderer::render");
     gl::manager->bindVertexArray(terrainVAO);
     gl::manager->setEnabled({gl::Capability::DepthTest});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
@@ -98,7 +98,7 @@ void TessellationRenderer::render(glm::mat4 viewProjectionMatrix, glm::mat4 view
     glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
     shader->vertexStage()->setUniform("u_projection_mat", viewProjectionMatrix);
     shader->vertexStage()->setUniform("u_view_mat", viewMatrix);
-    gl::popDebugGroup;
+    gl::popDebugGroup();
 }
 
 TessellationRenderer::~TessellationRenderer() {
