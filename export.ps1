@@ -1,11 +1,18 @@
 # Define the list of glob patterns of files that should be exported
 $globPatterns = @(
+    "assets/CREDITS.txt",
     "assets/fonts/*.ttf",
     "assets/models/*.glb",
     "assets/shaders/*.*",
-    "assets/textures/*.*",
-    "assets/textures/skybox/*.*",
-    "assets/textures/ui/*.*"
+    "assets/textures/*.png",
+    "assets/textures/*.f32",
+    "assets/textures/skybox/*.iblenv",
+    "assets/textures/ui/*.png"
+    "assets/textures/particle/*.png"
+    "assets/audio/music/*.ogg"
+    "assets/audio/music/*.wav"
+    "assets/audio/sound/*.ogg"
+    "assets/audio/sound/*.wav"
 )
 
 # Define the output zip file name
@@ -52,6 +59,10 @@ AddFileToZip $zipFile (Get-ChildItem "LICENSE") "LICENSE"
 
 # Check if the executable exists in the release directory
 $exePath = "_bin/release/PTVC_Project_GL.exe"
+$lastCompileTime = (Get-Item $exePath).LastWriteTime
+if (((Get-Date) - $lastCompileTime).TotalHours -gt 1) {
+    Write-Warning "The compiled exe is older than an hour, may be outdated."
+}
 if (-not (Test-Path $exePath)) {
     Write-Host "Executable not found. Running 'make release'..."
     # Run make release

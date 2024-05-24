@@ -10,19 +10,40 @@
 SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/sky.vert"),
-         new gl::ShaderProgram("assets/shaders/sky_cubemap.frag")});
+         new gl::ShaderProgram("assets/shaders/sky.frag")});
     shader->setDebugLabel("sky_renderer/shader");
+
+    // A single TRIANGLE_STRIP cube
+    // clang-format off
+    float cube_mesh[] = {
+    // [position        ]
+    // [  x     y     z ]
+        -.5f, -.5f, -.5f,
+        +.5f, -.5f, -.5f,
+        -.5f, -.5f, +.5f,
+        +.5f, -.5f, +.5f,
+        +.5f, +.5f, +.5f,
+        +.5f, -.5f, -.5f,
+        +.5f, +.5f, -.5f,
+        -.5f, -.5f, -.5f,
+        -.5f, +.5f, -.5f,
+        -.5f, -.5f, +.5f,
+        -.5f, +.5f, +.5f,
+        +.5f, +.5f, +.5f,
+        -.5f, +.5f, -.5f,
+        +.5f, +.5f, -.5f,
+    };
+    // clang-format on
 
     gl::Buffer *vbo = new gl::Buffer();
     vbo->setDebugLabel("sky_renderer/vbo");
-    glm::vec2 quad_verts[] = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-    vbo->allocate(&quad_verts, sizeof(quad_verts), 0);
+    vbo->allocate(&cube_mesh, sizeof(cube_mesh), 0);
 
-    quad = new gl::VertexArray();
-    quad->setDebugLabel("sky_renderer/vao");
-    quad->layout(0, 0, 2, GL_FLOAT, false, 0);
-    quad->bindBuffer(0, *vbo, 0, 2 * 4);
-    quad->own(vbo);
+    cube = new gl::VertexArray();
+    cube->setDebugLabel("sky_renderer/vao");
+    cube->layout(0, 0, 3, GL_FLOAT, false, 0);
+    cube->bindBuffer(0, *vbo, 0, 3 * sizeof(float));
+    cube->own(vbo);
 
     sampler = new gl::Sampler();
     sampler->setDebugLabel("sky_renderer/sampler");
@@ -37,7 +58,7 @@ SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
 
 SkyRenderer::~SkyRenderer() {
     delete shader;
-    delete quad;
+    delete cube;
     delete sampler;
     delete cubemap;
 }
@@ -47,17 +68,17 @@ void SkyRenderer::render(Camera &camera) {
 
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
+    gl::manager->depthMask(false);
 
-    quad->bind();
+    cube->bind();
     shader->bind();
 
     sampler->bind(0);
     cubemap->bind(0);
 
-    shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
-    shader->fragmentStage()->setUniform("u_projection_mat", camera.projectionMatrix());
+    shader->vertexStage()->setUniform("u_rotation_projection_mat", camera.projectionMatrix() * glm::mat4(glm::mat3(camera.viewMatrix())));
 
     // The sky is rendered using a single, full-screen quad
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
     gl::popDebugGroup();
 }

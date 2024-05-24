@@ -53,9 +53,6 @@ void CheckpointEntity::Propeller::update(float time_delta) {
     node.graphics().setTransformFromNode();
 }
 
-void CheckpointEntity::rotatePropeller_(NodeRef& node, float angle) {
-}
-
 void CheckpointEntity::update(float time_delta) {
     propellerLeft_.update(time_delta);
     propellerRight_.update(time_delta);
@@ -65,7 +62,7 @@ void CheckpointEntity::debugDraw() {
     DirectBuffer& dd = *Game::get().directDraw;
     scene::TransformRef transform = respawnTransformation();
     dd.unshaded();
-    dd.stroke(0.05f);
+    dd.stroke(0.1f);
     dd.axes(transform.matrix(), 2.0);
 
     if (nextCheckpointRef_.isValid()) {

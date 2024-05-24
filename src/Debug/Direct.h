@@ -89,10 +89,21 @@ class DirectBuffer {
     void tri(glm::vec3 a, glm::vec3 b, glm::vec3 c);
 
     /**
+     * Add a triangle to the buffer. Drawn as a wireframe.
+     */
+    void triLine(glm::vec3 a, glm::vec3 b, glm::vec3 c);
+
+    /**
      * Add a quad to the buffer.
      * Vertices should be specified in CW order.
      */
     void quad(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d);
+
+    /**
+     * Add a quad to the buffer. Drawn as a wireframe.
+     * Vertices should be specified in CW order.
+     */
+    void quadLine(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d);
 
     /**
      * Add a plane to the buffer.
@@ -181,11 +192,18 @@ class DirectBuffer {
     void uvSphere(glm::vec3 c, float r);
 
     /**
-     * Adds a unit box to the bufffer.
-     * Side length one. From `(-0.5, -0.5, -0.5)` to `(0.5, 0.5, 0.5)`.
-     * Use transformation for scaling and position.
+     * Adds a box to the bufffer.
+     * @param c center
+     * @param d dimensions
      */
-    void unitBox();
+    void box(glm::vec3 c, glm::vec3 d);
+
+    /**
+     * Adds a box to the bufffer.  Drawn as a wireframe.
+     * @param c center
+     * @param d dimensions
+     */
+    void boxLine(glm::vec3 c, glm::vec3 d);
 
     /**
      * Renders the buffer's contents and empties it for the next frame.

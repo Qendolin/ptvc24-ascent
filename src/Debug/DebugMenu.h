@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 // Not actually a screen
 class DebugMenu {
@@ -26,8 +27,15 @@ class DebugMenu {
         void update(float delta);
     } frameTimes;
 
+    struct State {
+        struct Particles {
+            int selected = -1;
+        } particles;
+    } state;
+
     void drawDebugWindow_();
     void drawPerformanceWindow_();
+    void drawParticlesWindow_();
 
    public:
     // `true` will draw the debug menu. `false` will hide it

@@ -109,6 +109,8 @@ class Entity;
 class Scene {
    private:
     int32_t convertNodes_(const loader::SceneData& scene, const NodeEntityFactory& factory, const loader::Node& node, int32_t parent);
+    bool initialized_ = false;
+    std::vector<Entity*> initializationQueue_;
 
    public:
     std::vector<Node> nodes;
@@ -126,6 +128,10 @@ class Scene {
     ~Scene();
 
     void callEntityInit();
+
+    bool initialized() {
+        return initialized_;
+    }
 
     void callEntityUpdate(float time_delta);
 
@@ -391,6 +397,16 @@ class SceneRef {
 
     NodeRef root() const {
         return NodeRef(*scene_, 0);
+    }
+
+    template <typename T, typename... Args>
+    T* create(Args&&... args) {
+        T* entity = new T(*this, std::forward<Args>(args)...);
+        scene_->entities.push_back(entity);
+        if (scene_->initialized()) {
+            entity->init();
+        }
+        return entity;
     }
 
     bool isValid() const {

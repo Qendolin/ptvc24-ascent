@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Jolt/Jolt.h>
+#ifdef JPH_DEBUG_RENDERER
 #include <Jolt/Renderer/DebugRenderer.h>
+#endif
 
 #include <cstdarg>
 #include <glm/glm.hpp>

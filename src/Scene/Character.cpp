@@ -12,6 +12,7 @@
 #include <glm/gtx/fast_trigonometry.hpp>
 #include <glm/gtx/transform.hpp>
 
+#include "../Audio/Assets.h"
 #include "../Camera.h"
 #include "../Controller/MainController.h"
 #include "../Game.h"
@@ -28,6 +29,10 @@ using namespace scene;
 glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
 CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
+    auto& windSound = game().audio->assets->wind;
+    windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, -0.5));
+    windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, 0.5));
+    windSoundInstanceLeft_->seek(windSound.duration() * 0.5);
 }
 
 CharacterEntity::~CharacterEntity() {
@@ -67,7 +72,7 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     if (contactNode.physics().hasTrigger()) return;
 
     if (!respawnInvulnerability.isZero()) return;
-    respawnInvulnerability = 1.0;
+    game().audio->assets->thump.play2dEvent(0.5, 0);
     respawn();
 }
 
@@ -81,10 +86,11 @@ void CharacterEntity::respawn() {
     camera.angles = {azimuth_elevation.y, azimuth_elevation.x, 0};
 
     setPosition_(respawn_point.transform[3]);
-    controller.fader->fade(1.1f, 0.0f, RESPAWN_TIME);
+    controller.fader->fade(1.5f, 0.0f, RESPAWN_TIME);
     respawnFreeze = RESPAWN_TIME;
+    respawnInvulnerability = INVULNERABILITY_TIME;
 
-    float speed = std::max(5.0f, respawn_point.speed * 0.75f);
+    float speed = std::max(RESPAWN_SPEED_MINIMUM, respawn_point.speed * RESPAWN_SPEED_FACTOR);
     velocity_ = rotation * glm::vec3(0, 0, -speed);
 
     boostMeter_ = respawn_point.boostMeter;
@@ -97,6 +103,11 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
     cameraLerpEnd_ = pos;
 }
 
+void CharacterEntity::terminate() {
+    this->windSoundInstanceLeft_->stop();
+    this->windSoundInstanceRight_->stop();
+}
+
 void CharacterEntity::update(float time_delta) {
     if (!enabled) return;
     Input& input = *game().input;
@@ -104,7 +115,9 @@ void CharacterEntity::update(float time_delta) {
 
     respawnInvulnerability.update(time_delta);
     respawnFreeze.update(time_delta);
-    if (!respawnFreeze.isZero()) {
+    if (isFrozen_()) {
+        windSoundInstanceLeft_->setVolume(0);
+        windSoundInstanceRight_->setVolume(0);
         return;
     }
     // Camera movement
@@ -140,10 +153,15 @@ void CharacterEntity::update(float time_delta) {
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
     camera.setFov(glm::radians(settings.fov + boostDynamicFov_));
+
+    float speed = glm::length(velocity_);
+    float volume = glm::pow(glm::clamp(speed / 40.0f, 0.0f, 1.0f), 3.0f);
+    windSoundInstanceLeft_->setVolume(volume * 1.25f);
+    windSoundInstanceRight_->setVolume(volume * 1.25f);
 }
 
 void CharacterEntity::prePhysicsUpdate() {
-    if (!respawnFreeze.isZero() || !enabled) {
+    if (isFrozen_() || !enabled) {
         body_->SetLinearVelocity(ph::convert(glm::vec3{0, 0, 0}));
         return;
     }
@@ -189,17 +207,17 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     if (pitch_cos > glm::epsilon<float>()) {
         // convert vertical to horizontal velocity
         if (velocity.y < 0) {
-            float lift = velocity.y * -0.1f * pitch_cos_sqr * time_delta * SPEED;
+            float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
             result.y += lift;
-            result.x += looking.x * lift / pitch_cos;
-            result.z += looking.z * lift / pitch_cos;
+            result.x += looking.x * 1.1f * lift / pitch_cos;
+            result.z += looking.z * 1.1f * lift / pitch_cos;
         }
         // convert horizontal to vertical velocity
         if (camera.angles.x > 0) {
             float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
             result.y += lift;
-            result.x -= looking.x * lift / pitch_cos;
-            result.z -= looking.z * lift / pitch_cos;
+            result.x -= looking.x * 0.9f * lift / pitch_cos;
+            result.z -= looking.z * 0.9f * lift / pitch_cos;
         }
 
         // steering / turning

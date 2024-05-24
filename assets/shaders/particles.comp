@@ -1,0 +1,78 @@
+#version 450 core
+
+// https://juandiegomontoya.github.io/particles.html
+
+struct Particle {
+    // 3f position, 1f rotation
+    vec4 position_rotation;
+    // 3f velocity, 1f rotation speed
+    vec4 velocity_revolutions;
+    // 1f drag, 1f gravity, 1f random
+    vec4 drag_gravity_rand;
+    // 2f size, 1f life remaining, 1f life max
+    vec4 size_life;
+    int emitter;
+};
+
+struct Emitter {
+    ivec4 index_length;
+    vec4 gravity;
+};
+
+layout(std430, binding = 0) restrict buffer Particles {
+  Particle particles[];
+};
+
+layout(std430, binding = 1) restrict buffer FreeStack {
+  uint free_indices[];
+};
+
+// One head per emitter
+layout(std430, binding = 2) restrict buffer FreeStackHead {
+    coherent int free_stack_heads[];
+};
+
+layout(std430, binding = 3) readonly buffer Emitters {
+    readonly Emitter emitters[];
+};
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// delta time
+uniform float u_time_delta;
+
+void update(inout Particle particle, uint global_index) {
+	Emitter emitter = emitters[particle.emitter];
+	int offset = emitter.index_length.x;
+	uint index = global_index - offset;
+	if(index >= emitter.index_length.y)
+		return;
+	
+	if (particle.size_life.z <= 0.0) return;
+
+	float dt = u_time_delta;
+
+	// gravity
+	particle.velocity_revolutions.xyz += emitter.gravity.xyz * particle.drag_gravity_rand.y * dt;
+	// drag = p * v^2 / 2
+	vec3 drag = particle.drag_gravity_rand.x * particle.velocity_revolutions.xyz * particle.velocity_revolutions.xyz * 0.5;
+	particle.velocity_revolutions.xyz -= sign(particle.velocity_revolutions.xyz) * drag * dt;
+	// velocity
+	particle.position_rotation.xyz += particle.velocity_revolutions.xyz * dt;
+	// rotation
+	particle.position_rotation.w += particle.velocity_revolutions.w * dt;
+	// lifetime
+	particle.size_life.z -= dt;
+
+	if (particle.size_life.z <= 0.0) {
+		free_indices[atomicAdd(free_stack_heads[particle.emitter], 1) + offset] = index;
+	}
+}
+
+void main() {
+	uint global_index = uint(gl_GlobalInvocationID.x);
+	if (global_index >= particles.length())
+    	return;
+
+	update(particles[global_index], global_index);
+}

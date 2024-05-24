@@ -66,6 +66,24 @@ file(GLOB lz4_SOURCES ${lz4_SOURCE_DIR}/lib/*.c)
 add_library(lz4 STATIC ${lz4_SOURCES})
 target_include_directories(lz4 PUBLIC ${lz4_SOURCE_DIR}/lib)
 
+# Include SoLoud 
+FetchContent_Declare(
+    soloud
+    GIT_REPOSITORY "https://github.com/jarikomppa/soloud"
+    GIT_TAG "RELEASE_20200207"
+)
+FetchContent_MakeAvailable(soloud)
+add_compile_definitions(WITH_MINIAUDIO)
+file(GLOB SOLOUD_SOURCES 
+    ${soloud_SOURCE_DIR}/src/core/*.cpp
+    ${soloud_SOURCE_DIR}/src/audiosource/wav/*.cpp
+    ${soloud_SOURCE_DIR}/src/audiosource/wav/*.c
+    ${soloud_SOURCE_DIR}/src/backend/miniaudio/*.cpp
+    ${soloud_SOURCE_DIR}/src/filter/*.cpp)
+add_library(soloud STATIC ${SOLOUD_SOURCES})
+target_include_directories(soloud PUBLIC ${soloud_SOURCE_DIR}/include)
+# Note to self: It is <lowercase_name>_SOURCE_DIR
+
 set(LINK_LIBRARIES
     debug glfw3d optimized glfw3
     debug glew32sd optimized glew32s
@@ -73,6 +91,7 @@ set(LINK_LIBRARIES
     Jolt
     imgui
     lz4
+    soloud
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

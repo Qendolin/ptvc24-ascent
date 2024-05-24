@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "../Renderer/ShadowRenderer.h"
 #include "AbstractController.h"
 #include "RaceManager.h"
 
@@ -16,6 +17,7 @@ class StartScreen;
 class PauseScreen;
 class CharacterEntity;
 class FreeCamEntity;
+class Music;
 namespace loader {
 class SceneData;
 }
@@ -29,6 +31,7 @@ class MainController : public AbstractController {
     std::unique_ptr<MaterialBatchRenderer> materialBatchRenderer;
     std::unique_ptr<SkyRenderer> skyRenderer;
     std::unique_ptr<TerrainRenderer> terrainRenderer;
+    std::unique_ptr<ShadowMapRenderer> shadowRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
@@ -40,6 +43,8 @@ class MainController : public AbstractController {
 
     CharacterEntity* character = nullptr;
     std::unique_ptr<FreeCamEntity> freeCam;
+
+    std::unique_ptr<OrthoShadowCaster> sunShadow = std::make_unique<OrthoShadowCaster>(1024 * 2, 225.0f, 1.0f, 250.0f);
 
     /**
      * Draw the on screen hud (timer, score, etc.)

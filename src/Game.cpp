@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 
+#include "Audio/Assets.h"
 #include "Camera.h"
 #include "Controller/MainMenuController.h"
 #include "Debug/DebugMenu.h"
@@ -14,9 +15,12 @@
 #include "GL/StateManager.h"
 #include "GL/Texture.h"
 #include "Input.h"
+#include "Particles/ParticleSystem.h"
 #include "Physics/Physics.h"
 #include "Renderer/BloomRenderer.h"
+#include "Renderer/DebugRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
+#include "Renderer/GtaoRenderer.h"
 #include "Renderer/LensEffectsRenderer.h"
 #include "ScoreManager.h"
 #include "Tween.h"
@@ -78,9 +82,15 @@ Game::Game(Window &window)
         std::filesystem::create_directory("ascent_data");
     }
 
+    // Should be in load, but on reload existing emitters would go away
+    particles = std::make_unique<ParticleSystem>(10000);
+
     scores = std::make_unique<ScoreManager>("ascent_data/scores.ini");
     settings.load();
     settings.save();
+
+    audio = std::make_unique<Audio>();
+    audio->loadAssets();
 
     // at the end
     int vp_width, vp_height;
@@ -92,6 +102,7 @@ Game::~Game() {
     controller->unload();
 
     delete hdrFramebuffer_->getTexture(0);
+    delete hdrFramebuffer_->getTexture(1);
     delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     delete hdrFramebuffer_;
 
@@ -119,19 +130,28 @@ void Game::resize(int width, int height) {
     hdr_color_attachment->setDebugLabel("hdr_fbo/color");
     hdr_color_attachment->allocate(1, GL_R11F_G11F_B10F, width, height);
     hdrFramebuffer_->attachTexture(0, hdr_color_attachment);
-    hdrFramebuffer_->bindTargets({0});
+
+    delete hdrFramebuffer_->getTexture(1);
+    auto hdr_normals_attachment = new gl::Texture(GL_TEXTURE_2D);
+    hdr_normals_attachment->setDebugLabel("hdr_fbo/normals_packed");
+    hdr_normals_attachment->allocate(1, GL_RG16_SNORM, width, height);
+    hdrFramebuffer_->attachTexture(1, hdr_normals_attachment);
 
     delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     auto hdr_depth_attachment = new gl::Texture(GL_TEXTURE_2D);
     hdr_depth_attachment->setDebugLabel("hdr_fbo/depth");
-    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT24, width, height);
+    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT32F, width, height);
     hdrFramebuffer_->attachTexture(GL_DEPTH_ATTACHMENT, hdr_depth_attachment);
+
+    hdrFramebuffer_->bindTargets({0, 1});
     hdrFramebuffer_->check(GL_DRAW_FRAMEBUFFER);
 
     if (bloomRenderer_ != nullptr)
         bloomRenderer_->setViewport(width, height);
     if (lensEffectsRenderer_ != nullptr)
         lensEffectsRenderer_->setViewport(width, height);
+    if (gtaoRenderer_ != nullptr)
+        gtaoRenderer_->setViewport(width, height);
 }
 
 void Game::load() {
@@ -156,6 +176,9 @@ void Game::load() {
     bloomRenderer_->setViewport(window.size.x, window.size.y);
     lensEffectsRenderer_ = std::make_unique<LensEffectsRenderer>();
     lensEffectsRenderer_->setViewport(window.size.x, window.size.y);
+    gtaoRenderer_ = std::make_unique<GtaoRenderer>();
+    gtaoRenderer_->setViewport(window.size.x, window.size.y);
+    debugRenderer_ = std::make_unique<DebugRenderer>();
 }
 
 void Game::unload() {
@@ -210,6 +233,8 @@ void Game::update_() {
     controller->update();
     debugMenu_->draw();
 
+    audio->system->update(camera->position, glm::mat3(camera->viewMatrix()) * glm::vec3(0, -1, 0));
+
     // mouse capturing & releasing
     if (input->mouseMode() == Input::MouseMode::Capture) {
         bool can_capture_mouse = !imgui->shouldShowCursor();
@@ -231,28 +256,38 @@ void Game::render_() {
     gl::manager->setViewport(0, 0, window.size.x, window.size.y);
     gl::manager->disable(gl::Capability::ScissorTest);
     gl::manager->disable(gl::Capability::StencilTest);
+    gl::manager->enable(gl::Capability::DepthTest);
+    gl::manager->depthMask(true);
+    gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 
     if (controller->useHdr()) {
         hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
+        hdrFramebuffer_->bindTargets({0, 1});
     } else {
         gl::manager->bindDrawFramebuffer(0);
     }
 
     glClearDepth(0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     controller->render();
 
     if (controller->useHdr()) {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
+        gtaoRenderer_->render(*camera, *hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT), *hdrFramebuffer_->getTexture(1));
         gl::manager->bindDrawFramebuffer(0);
+        gl::manager->enable(gl::Capability::DepthTest);
+        gl::manager->depthMask(true);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
             hdrFramebuffer_->getTexture(0),
             hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),
             bloomRenderer_->result(),
             lensEffectsRenderer_->flares(),
-            lensEffectsRenderer_->glare());
+            lensEffectsRenderer_->glare(),
+            gtaoRenderer_->result());
+        debugRenderer_->render(*this);
     }
     //  Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());
@@ -266,4 +301,8 @@ void Game::render_() {
 
     // Finish the frame
     glfwSwapBuffers(window);
+}
+
+gl::Framebuffer &Game::hdrFramebuffer() {
+    return *hdrFramebuffer_;
 }

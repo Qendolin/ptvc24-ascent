@@ -29,38 +29,40 @@ FinalizationRenderer::FinalizationRenderer() {
     fboSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
     fboSampler->filterMode(GL_NEAREST, GL_NEAREST);
 
-    bloomSampler = new gl::Sampler();
-    bloomSampler->setDebugLabel("finalization_renderer/bloom_sampler");
-    bloomSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
-    bloomSampler->filterMode(GL_LINEAR, GL_LINEAR);
+    fboLinearSampler = new gl::Sampler();
+    fboLinearSampler->setDebugLabel("finalization_renderer/fbo_linear_sampler");
+    fboLinearSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
+    fboLinearSampler->filterMode(GL_LINEAR, GL_LINEAR);
 }
 
 FinalizationRenderer::~FinalizationRenderer() {
     delete shader;
     delete quad;
     delete fboSampler;
-    delete bloomSampler;
+    delete fboLinearSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare) {
+void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare, gl::Texture *ao) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
-    gl::manager->setEnabled({gl::Capability::DepthTest});
-    gl::manager->depthMask(true);
-    gl::manager->depthFunc(gl::DepthFunc::Always);
+    gl::manager->setEnabled({});
 
     quad->bind();
     shader->bind();
 
     fboSampler->bind(0);
     fboSampler->bind(1);
-    bloomSampler->bind(2);
+    fboLinearSampler->bind(2);
+    fboLinearSampler->bind(3);
+    fboLinearSampler->bind(4);
+    fboLinearSampler->bind(5);
 
     hrd_color->bind(0);
     depth->bind(1);
     bloom->bind(2);
     flares->bind(3);
     glare->bind(4);
+    ao->bind(5);
 
     auto &settings = Game::get().debugSettings.rendering;
 

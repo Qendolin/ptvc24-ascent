@@ -25,8 +25,6 @@ class CheckpointEntity : public scene::NodeEntity {
     Propeller propellerLeft_;
     Propeller propellerRight_;
 
-    void rotatePropeller_(scene::NodeRef& node, float angle);
-
    public:
     CheckpointEntity(scene::SceneRef scene, scene::NodeRef base) : scene::NodeEntity(scene, base) {
     }

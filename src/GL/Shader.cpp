@@ -120,6 +120,10 @@ void setProgramUniform(GLuint prog, GLint location, int value) {
     glProgramUniform1i(prog, location, value);
 }
 
+void setProgramUniform(GLuint prog, GLint location, unsigned int value) {
+    glProgramUniform1ui(prog, location, value);
+}
+
 void setProgramUniform(GLuint prog, GLint location, const glm::vec2 value) {
     glProgramUniform2f(prog, location, value[0], value[1]);
 }
@@ -162,6 +166,7 @@ void ShaderProgram::setUniform(const std::string& name, T value) {
 }
 
 template void ShaderProgram::setUniform<int>(const std::string& name, int value);
+template void ShaderProgram::setUniform<unsigned int>(const std::string& name, unsigned int value);
 template void ShaderProgram::setUniform<float>(const std::string& name, float value);
 template void ShaderProgram::setUniform<glm::ivec2>(const std::string& name, glm::ivec2 value);
 template void ShaderProgram::setUniform<glm::vec2>(const std::string& name, glm::vec2 value);

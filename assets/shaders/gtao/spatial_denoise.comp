@@ -1,0 +1,84 @@
+#version 450
+
+// Copy of https://github.com/bevyengine/bevy/blob/2aed777435d26c357ed71cdb8c7b858de35e582e/crates/bevy_pbr/src/ssao/spatial_denoise.wgsl
+
+// 3x3 bilaterial filter (edge-preserving blur)
+// https://people.csail.mit.edu/sparis/bf_course/course_notes.pdf
+
+// Note: Does not use the Gaussian kernel part of a typical bilateral blur
+// From the paper: "use the information gathered on a neighborhood of 4 × 4 using a bilateral filter for
+// reconstruction, using _uniform_ convolution weights"
+
+// Note: The paper does a 4x4 (not quite centered) filter, offset by +/- 1 pixel every other frame
+// XeGTAO does a 3x3 filter, on two pixels at a time per compute thread, applied twice
+// We do a 3x3 filter, on 1 pixel per compute thread, applied once
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D in_ambient_occlusion_noisy;
+layout(binding = 1) uniform usampler2D in_depth_differences;
+layout(binding = 0, r16f) uniform restrict writeonly image2D out_ambient_occlusion;
+
+void main() {
+    ivec2 pixel_coordinates = ivec2(gl_GlobalInvocationID.xy);
+    vec2 uv = vec2(pixel_coordinates) / imageSize(out_ambient_occlusion).xy;
+
+    vec4 edges0 = textureGatherOffset(in_depth_differences, uv, ivec2(0, 0), 0);
+    vec4 edges1 = textureGatherOffset(in_depth_differences, uv, ivec2(2, 0), 0);
+    vec4 edges2 = textureGatherOffset(in_depth_differences, uv, ivec2(1, 2), 0);
+    vec4 visibility0 = textureGatherOffset(in_ambient_occlusion_noisy, uv, ivec2(0, 0), 0);
+    vec4 visibility1 = textureGatherOffset(in_ambient_occlusion_noisy, uv, ivec2(2, 0), 0);
+    vec4 visibility2 = textureGatherOffset(in_ambient_occlusion_noisy, uv, ivec2(0, 2), 0);
+    vec4 visibility3 = textureGatherOffset(in_ambient_occlusion_noisy, uv, ivec2(2, 2), 0);
+
+    vec4 left_edges = unpackUnorm4x8(uint(edges0.x));
+    vec4 right_edges = unpackUnorm4x8(uint(edges1.x));
+    vec4 top_edges = unpackUnorm4x8(uint(edges0.z));
+    vec4 bottom_edges = unpackUnorm4x8(uint(edges2.w));
+    vec4 center_edges = unpackUnorm4x8(uint(edges0.y));
+    center_edges *= vec4(left_edges.y, right_edges.x, top_edges.w, bottom_edges.z);
+
+    float center_weight = 1.2;
+    float left_weight = center_edges.x;
+    float right_weight = center_edges.y;
+    float top_weight = center_edges.z;
+    float bottom_weight = center_edges.w;
+    float top_left_weight = 0.425 * (top_weight * top_edges.x + left_weight * left_edges.z);
+    float top_right_weight = 0.425 * (top_weight * top_edges.y + right_weight * right_edges.z);
+    float bottom_left_weight = 0.425 * (bottom_weight * bottom_edges.x + left_weight * left_edges.w);
+    float bottom_right_weight = 0.425 * (bottom_weight * bottom_edges.y + right_weight * right_edges.w);
+
+    float center_visibility = visibility0.y;
+    float left_visibility = visibility0.x;
+    float right_visibility = visibility0.z;
+    float top_visibility = visibility1.x;
+    float bottom_visibility = visibility2.z;
+    float top_left_visibility = visibility0.w;
+    float top_right_visibility = visibility1.w;
+    float bottom_left_visibility = visibility2.w;
+    float bottom_right_visibility = visibility3.w;
+
+    float sum = center_visibility;
+    sum += left_visibility * left_weight;
+    sum += right_visibility * right_weight;
+    sum += top_visibility * top_weight;
+    sum += bottom_visibility * bottom_weight;
+    sum += top_left_visibility * top_left_weight;
+    sum += top_right_visibility * top_right_weight;
+    sum += bottom_left_visibility * bottom_left_weight;
+    sum += bottom_right_visibility * bottom_right_weight;
+
+    float sum_weight = center_weight;
+    sum_weight += left_weight;
+    sum_weight += right_weight;
+    sum_weight += top_weight;
+    sum_weight += bottom_weight;
+    sum_weight += top_left_weight;
+    sum_weight += top_right_weight;
+    sum_weight += bottom_left_weight;
+    sum_weight += bottom_right_weight;
+
+    float denoised_visibility = sum / sum_weight;
+
+    imageStore(out_ambient_occlusion, pixel_coordinates, vec4(denoised_visibility));
+}

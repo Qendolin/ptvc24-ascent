@@ -6,7 +6,7 @@ class Camera;
 #pragma endregion
 
 // allows free camera movement for debugging
-class FreeCamEntity : public scene::Entity {
+class FreeCamEntity {
    private:
     // Flying speed in m/s
     inline static const float BASE_SPEED = 10.0f;
@@ -18,12 +18,10 @@ class FreeCamEntity : public scene::Entity {
    public:
     Camera& camera;
 
-    FreeCamEntity(Camera& camera) : Entity(scene::SceneRef{}), camera(camera) {
+    FreeCamEntity(Camera& camera) : camera(camera) {
     }
 
     virtual ~FreeCamEntity() = default;
 
-    void init() override;
-
-    void update(float time_delta) override;
+    void update(float time_delta);
 };

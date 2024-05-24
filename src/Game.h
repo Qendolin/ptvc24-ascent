@@ -17,9 +17,13 @@ class Screen;
 struct Window;
 class AbstractController;
 class FinalizationRenderer;
+class GtaoRenderer;
+class DebugRenderer;
 class BloomRenderer;
 class LensEffectsRenderer;
 class ScoreManager;
+class ParticleSystem;
+class Audio;
 
 namespace ph {
 class Physics;
@@ -49,6 +53,8 @@ class Game {
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
     std::unique_ptr<BloomRenderer> bloomRenderer_;
     std::unique_ptr<LensEffectsRenderer> lensEffectsRenderer_;
+    std::unique_ptr<GtaoRenderer> gtaoRenderer_;
+    std::unique_ptr<DebugRenderer> debugRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
     //  Process user input
     void processInput_();
@@ -71,6 +77,8 @@ class Game {
     std::unique_ptr<TweenSystem> tween;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<DirectBuffer> directDraw;
+    std::unique_ptr<ParticleSystem> particles;
+    std::unique_ptr<Audio> audio;
 
     std::unique_ptr<AbstractController> controller;
     std::unique_ptr<ScoreManager> scores;
@@ -95,6 +103,8 @@ class Game {
 
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
+
+    gl::Framebuffer &hdrFramebuffer();
 
     /**
      * Queue a controller to be activated next frame.

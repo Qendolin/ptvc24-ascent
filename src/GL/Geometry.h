@@ -56,7 +56,7 @@ class Buffer : public GLObject {
     template <typename T>
     void writeIndex(int index, const T data) {
         size_t size = sizeof(data);
-        glNamedBufferSubData(id_, index * size, size, data);
+        glNamedBufferSubData(id_, index * size, size, &data);
     }
 
     // [Reference](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml)

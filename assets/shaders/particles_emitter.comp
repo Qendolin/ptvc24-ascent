@@ -1,0 +1,142 @@
+#version 450 core
+
+struct Particle {
+    // 3f position, 1f rotation
+    vec4 position_rotation;
+    // 3f velocity, 1f rotation speed
+    vec4 velocity_revolutions;
+    // 1f drag, 1f gravity, 1f random
+    vec4 drag_gravity_rand;
+    // 2f size, 1f life remaining, 1f life max
+    vec4 size_life;
+    int emitter;
+};
+
+struct Emitter {
+    ivec4 index_length;
+    vec4 gravity;
+};
+
+uniform uint u_random_seed = 0;
+
+uniform struct Emission {
+    vec4 direction;
+    vec2 spread;
+    vec2 velocity;
+    vec2 life;
+    vec3 position;
+    vec2 drag;
+    vec2 gravity;
+    vec4 rotation_revolutions;
+    vec4 color;
+    vec4 hslVariation;
+    vec2 emissivity;
+    vec2 size;
+    vec2 scale;
+    int index;
+    int count;
+} u_emission;
+
+layout(std430, binding = 0) restrict buffer Particles {
+    Particle particles[];
+};
+
+layout(std430, binding = 1) restrict buffer FreeStack {
+    uint free_indices[];
+};
+
+// One head per emitter
+layout(std430, binding = 2) restrict buffer FreeStackHead {
+    coherent int free_stack_heads[];
+};
+
+layout(std430, binding = 3) readonly buffer Emitters {
+    readonly Emitter emitters[];
+};
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+uint pcg_state;
+
+// https://www.pcg-random.org/
+uint pcgHash(uint v)
+{
+    uint state = v * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+float rand()
+{
+    uint result = pcgHash(pcg_state);
+    pcg_state = result;
+    return float(result) * uintBitsToFloat(0x2f800004u);
+}
+
+float rand(float from, float to) {
+    return from + (to - from) * rand();
+}
+
+vec2 rand(vec2 from, vec2 to) {
+    return from + (to - from) * rand();
+}
+
+vec3 rand(vec3 from, vec3 to) {
+    return from + (to - from) * rand();
+}
+
+// https://blog.selfshadow.com/2011/10/17/perp-vectors/
+vec3 perpendicular(vec3 v) {
+    vec3 w = vec3(0, -sign(v.y * v.z), 1);
+    return cross(w, v);
+}
+
+const float PI = 3.14159265359;
+
+void emit(out Particle particle) {
+    // calculate direction
+    vec3 up = u_emission.direction.xyz;
+    vec3 right = perpendicular(up);
+    vec3 forward = cross(up, right);
+    mat3 rotation_matrix = mat3(right, up, forward);
+
+    float angle_z = rand(u_emission.spread.x, u_emission.spread.y);
+    float angle_y = rand(0.0, 2.0 * PI);
+    vec3 direction = vec3(sin(angle_z), cos(angle_z), 0);
+    direction.xz = vec2(
+        dot(direction.xz, vec2(cos(angle_y), sin(angle_y))), 
+        dot(direction.xz, vec2(-sin(angle_y), cos(angle_y)))); 
+    // rotate to target space
+    direction = normalize(rotation_matrix * direction);
+
+    // other stuff
+    particle.position_rotation.xyz = u_emission.position;
+    particle.position_rotation.w = rand(u_emission.rotation_revolutions.x, u_emission.rotation_revolutions.y);
+    particle.size_life.z = rand(u_emission.life.x, u_emission.life.y);
+    particle.size_life.w = particle.size_life.z;
+    particle.velocity_revolutions.xyz = direction * rand(u_emission.velocity.x, u_emission.velocity.y);
+    particle.velocity_revolutions.w = rand(u_emission.rotation_revolutions.z, u_emission.rotation_revolutions.w);
+    particle.drag_gravity_rand.x = rand(u_emission.drag.x, u_emission.drag.y);
+    particle.drag_gravity_rand.y = rand(u_emission.gravity.x, u_emission.gravity.y);
+    particle.drag_gravity_rand.z = rand(0.0, 1.0);
+
+    particle.size_life.xy = u_emission.size * rand(u_emission.scale.x, u_emission.scale.y);
+    particle.emitter = u_emission.index;
+}
+
+void main() {
+    if (gl_GlobalInvocationID.x >= u_emission.count)
+        return;
+
+    int free_head = atomicAdd(free_stack_heads[u_emission.index], -1) - 1;
+    if (free_head < 0) {
+        atomicAdd(free_stack_heads[u_emission.index], 1);
+        return;
+    }
+    pcg_state = u_random_seed ^ pcgHash(gl_GlobalInvocationID.x);
+
+    int offset = emitters[u_emission.index].index_length.x;
+    uint index = free_indices[offset + free_head];
+    uint global_index = index + offset;
+    emit(particles[global_index]);
+}

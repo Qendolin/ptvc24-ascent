@@ -6,11 +6,13 @@
 
 class MainMenuScreen;
 class SettingsScreen;
+class Music;
 
 class MainMenuController : public AbstractController {
    private:
     const std::unique_ptr<MainMenuScreen> menuScreen;
     const std::unique_ptr<SettingsScreen> settingsScreen;
+    std::unique_ptr<Music> menuMusic;
 
    public:
     MainMenuController(Game &game);

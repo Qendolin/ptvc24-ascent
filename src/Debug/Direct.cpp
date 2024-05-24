@@ -136,9 +136,20 @@ void DirectBuffer::tri(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
     vert(b);
 }
 
+void DirectBuffer::triLine(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+    line(a, b);
+    line(b, c);
+    line(c, a);
+}
+
 void DirectBuffer::quad(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d) {
     tri(a, b, c);
     tri(d, c, b);
+}
+
+void DirectBuffer::quadLine(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d) {
+    triLine(a, b, c);
+    triLine(d, c, b);
 }
 
 void DirectBuffer::plane(glm::vec3 min, glm::vec3 max, glm::vec3 up) {
@@ -158,8 +169,9 @@ void DirectBuffer::plane(glm::vec3 min, glm::vec3 max, glm::vec3 up) {
 
 void DirectBuffer::line(glm::vec3 a, glm::vec3 b) {
     glm::vec3 v = b - a;
-    glm::vec3 normal = glm::normalize(perpendicular(v)) * stroke_;
-    glm::vec3 bitangent = glm::normalize(glm::cross(normal, v)) * stroke_;
+    glm::vec3 scale = {glm::length(stack_.back().positionMatrix[0]), glm::length(stack_.back().positionMatrix[1]), glm::length(stack_.back().positionMatrix[2])};
+    glm::vec3 normal = glm::normalize(perpendicular(v)) * stroke_ / scale;
+    glm::vec3 bitangent = glm::normalize(glm::cross(normal, v)) * stroke_ / scale;
     glm::vec3 a0 = glm::vec3(a[0] + normal[0] / 2, a[1] + normal[1] / 2, a[2] + normal[2] / 2);
     glm::vec3 a1 = glm::vec3(a[0] - normal[0] / 2, a[1] - normal[1] / 2, a[2] - normal[2] / 2);
     glm::vec3 b0 = glm::vec3(b[0] + normal[0] / 2, b[1] + normal[1] / 2, b[2] + normal[2] / 2);
@@ -283,25 +295,50 @@ void DirectBuffer::uvSphere(glm::vec3 c, float r) {
     autoShade_ = false;
 }
 
-void DirectBuffer::unitBox() {
+void DirectBuffer::box(glm::vec3 c, glm::vec3 d) {
+    glm::vec3 nxnynz = glm::vec3(c.x - 0.5 * d.x, c.y - 0.5 * d.y, c.z - 0.5 * d.z), pxpypz = glm::vec3(c.x + 0.5 * d.x, c.y + 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxnynz = glm::vec3(c.x + 0.5 * d.x, c.y - 0.5 * d.y, c.z - 0.5 * d.z), nxpypz = glm::vec3(c.x - 0.5 * d.x, c.y + 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxpynz = glm::vec3(c.x + 0.5 * d.x, c.y + 0.5 * d.y, c.z - 0.5 * d.z), nxnypz = glm::vec3(c.x - 0.5 * d.x, c.y - 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxnypz = glm::vec3(c.x + 0.5 * d.x, c.y - 0.5 * d.y, c.z + 0.5 * d.z), nxpynz = glm::vec3(c.x - 0.5 * d.x, c.y + 0.5 * d.y, c.z - 0.5 * d.z);
     normal_ = glm::vec3(0, 0, -1);  // -z
-    quad(glm::vec3(-0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, -0.5), glm::vec3(-0.5, -0.5, -0.5), glm::vec3(+0.5, -0.5, -0.5));
+    quad(nxpynz, pxpynz, nxnynz, pxnynz);
     normal_ = glm::vec3(0, 0, 1);  // +z
-    quad(glm::vec3(-0.5, +0.5, +0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(-0.5, -0.5, +0.5), glm::vec3(+0.5, -0.5, +0.5));
+    quad(nxpypz, pxpypz, nxnypz, pxnypz);
     normal_ = glm::vec3(-1, 0, 0);  // -x
-    quad(glm::vec3(-0.5, +0.5, -0.5), glm::vec3(-0.5, +0.5, +0.5), glm::vec3(-0.5, -0.5, -0.5), glm::vec3(-0.5, -0.5, +0.5));
+    quad(nxpynz, nxpypz, nxnynz, nxnypz);
     normal_ = glm::vec3(1, 0, 0);  // +x
-    quad(glm::vec3(+0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(+0.5, -0.5, -0.5), glm::vec3(+0.5, -0.5, +0.5));
+    quad(pxpynz, pxpypz, pxnynz, pxnypz);
     normal_ = glm::vec3(0, -1, 0);  // -y
-    quad(glm::vec3(-0.5, -0.5, +0.5), glm::vec3(+0.5, -0.5, +0.5), glm::vec3(-0.5, -0.5, -0.5), glm::vec3(+0.5, -0.5, -0.5));
+    quad(nxnypz, pxnypz, nxnynz, pxnynz);
     normal_ = glm::vec3(0, 1, 0);  // +y
-    quad(glm::vec3(-0.5, +0.5, +0.5), glm::vec3(+0.5, +0.5, +0.5), glm::vec3(-0.5, +0.5, -0.5), glm::vec3(+0.5, +0.5, -0.5));
+    quad(nxpypz, pxpypz, nxpynz, pxpynz);
+}
+
+void DirectBuffer::boxLine(glm::vec3 c, glm::vec3 d) {
+    glm::vec3 nxnynz = glm::vec3(c.x - 0.5 * d.x, c.y - 0.5 * d.y, c.z - 0.5 * d.z), pxpypz = glm::vec3(c.x + 0.5 * d.x, c.y + 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxnynz = glm::vec3(c.x + 0.5 * d.x, c.y - 0.5 * d.y, c.z - 0.5 * d.z), nxpypz = glm::vec3(c.x - 0.5 * d.x, c.y + 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxpynz = glm::vec3(c.x + 0.5 * d.x, c.y + 0.5 * d.y, c.z - 0.5 * d.z), nxnypz = glm::vec3(c.x - 0.5 * d.x, c.y - 0.5 * d.y, c.z + 0.5 * d.z);
+    glm::vec3 pxnypz = glm::vec3(c.x + 0.5 * d.x, c.y - 0.5 * d.y, c.z + 0.5 * d.z), nxpynz = glm::vec3(c.x - 0.5 * d.x, c.y + 0.5 * d.y, c.z - 0.5 * d.z);
+    normal_ = glm::vec3(0, 0, -1);  // -z
+    quadLine(nxpynz, pxpynz, nxnynz, pxnynz);
+    normal_ = glm::vec3(0, 0, 1);  // +z
+    quadLine(nxpypz, pxpypz, nxnypz, pxnypz);
+    normal_ = glm::vec3(-1, 0, 0);  // -x
+    quadLine(nxpynz, nxpypz, nxnynz, nxnypz);
+    normal_ = glm::vec3(1, 0, 0);  // +x
+    quadLine(pxpynz, pxpypz, pxnynz, pxnypz);
+    normal_ = glm::vec3(0, -1, 0);  // -y
+    quadLine(nxnypz, pxnypz, nxnynz, pxnynz);
+    normal_ = glm::vec3(0, 1, 0);  // +y
+    quadLine(nxpypz, pxpypz, nxpynz, pxpynz);
 }
 
 void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     if (data_.empty()) {
         return;
     }
+
+    gl::pushDebugGroup("DirectBuffer::render");
 
     size_t buffer_size = data_.size() * sizeof(float);
     if (vbo_->grow(buffer_size)) {
@@ -320,6 +357,8 @@ void DirectBuffer::render(glm::mat4 view_proj_mat, glm::vec3 camera_pos) {
     glDrawArrays(GL_TRIANGLES, 0, data_.size() / 9);
 
     clear();
+
+    gl::popDebugGroup();
 }
 
 void DirectBuffer::clear() {

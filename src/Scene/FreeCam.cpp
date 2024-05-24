@@ -10,13 +10,10 @@
 #include "../Util/Log.h"
 #include "../Window.h"
 
-void FreeCamEntity::init() {
-}
-
 void FreeCamEntity::update(float time_delta) {
-    Input &input = *game().input;
-
-    Settings settings = game().settings.get();
+    Game &game = Game::get();
+    Input &input = *game.input;
+    Settings settings = game.settings.get();
 
     camera.setFov(glm::radians(settings.fov));
 

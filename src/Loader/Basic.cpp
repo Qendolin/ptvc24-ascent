@@ -33,6 +33,9 @@ std::vector<uint8_t> binary(std::string filename) {
     // binary mode is only for switching off newline translation
     std::ifstream file(filename, std::ios::binary);
     file.unsetf(std::ios::skipws);
+    if (!file.is_open()) {
+        PANIC("Error opening file: " + filename);
+    }
 
     file.seekg(0, std::ios::end);
     std::streampos size = file.tellg();

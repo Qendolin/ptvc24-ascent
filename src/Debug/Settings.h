@@ -30,7 +30,7 @@ struct DebugSettings {
             float haloBias = -10;
             float haloFactor = 0.05f;
 
-            float glareBias = -0.6f;
+            float glareBias = -3.0f;
             float glareFactor = 0.05f;
             float glareAttenuation = 0.91f;
         } lens;
@@ -41,6 +41,19 @@ struct DebugSettings {
             float outer = 1.6f;
             float sharpness = 2.0f;
         } vignette;
+
+        struct Shadow {
+            bool debugDrawEnabled = false;
+            std::array<float, 3> sunTarget = {-27, 0, -70};
+            std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
+            float sunDistance = 175;
+            float normalBias = 300.0f;
+            float sizeBias = 10.0f;
+            float depthBias = 0.12f;
+            float offsetFactor = 1.85f;
+            float offsetUnits = 4.5f;
+            float offsetClamp = 0.05f;
+        } shadow;
 
         struct Terrain {
             bool wireframe = false;

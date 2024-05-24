@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 
+#include "../Audio/Assets.h"
 #include "../Camera.h"
 #include "../Debug/Direct.h"
 #include "../Debug/ImGuiBackend.h"
+#include "../GL/Framebuffer.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
@@ -55,6 +58,19 @@ MainController::~MainController() {
 void MainController::load() {
     LOG_INFO("Started loading");
     loader->load();
+
+    game.particles->loadMaterial(
+        "fire", ParticleMaterialParams{
+                    .blending = ParticleBlending::AlphaClip,
+                    .sprite = "assets/textures/particle/circle.png",
+                    .tint = "assets/textures/particle/fire_tint.png",
+                    .scale = "assets/textures/particle/fire_scale.png",
+                });
+
+    shadowRenderer = std::make_unique<ShadowMapRenderer>();
+
+    game.audio->assets->bgm.pause();
+    game.audio->assets->bgm.seek(0);
 }
 
 bool MainController::useHdr() {
@@ -68,46 +84,48 @@ void MainController::applyLoadResult_() {
     skyRenderer = std::make_unique<SkyRenderer>(data.environment);
     terrainRenderer = std::make_unique<TerrainRenderer>();
 
-    if (data.gltf) {
-        LOG_INFO("Creating scene from gltf data");
-        fader->fade(1.0f, 0.0f, 0.3f);
-        startScreen->open();
+    if (!data.gltf)
+        return;
 
-        sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
-        JPH::BodyInterface &physics = game.physics->interface();
-        for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
-            JPH::BodyID id = physics.CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
-            if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
-            instance.id = id;
-        }
+    LOG_INFO("Creating scene from gltf data");
+    fader->fade(1.0f, 0.0f, 0.3f);
+    startScreen->open();
 
-        scene::NodeEntityFactory factory;
-        scene::registerEntityTypes(factory);
-        scene = std::make_unique<scene::Scene>(*sceneData, factory);
-        character = new CharacterEntity(scene::SceneRef(*scene), *game.camera);
-        scene->entities.push_back(character);
-        scene->callEntityInit();
-
-        game.physics->system->OptimizeBroadPhase();
-
-        scene::SceneRef scene_ref(*scene);
-        scene::NodeRef first_checkpoint = scene_ref.find(scene_ref.root(), [](scene::NodeRef &node) {
-            return node.prop<bool>("is_first", false);
-        });
-        scene::NodeRef player_spawn = scene_ref.find(scene_ref.root(), "PlayerSpawn");
-        RaceManager::RespawnPoint spawn = {
-            .transform = player_spawn.transform().matrix(),
-            .speed = player_spawn.prop("speed", 5.0f),
-            .boostMeter = 1.0,
-        };
-        raceManager = RaceManager(character, data.gltf->scenes[data.gltf->defaultScene].name, spawn);
-        raceManager.loadCheckpoints(first_checkpoint.entity<CheckpointEntity>());
-
-        character->respawn();
+    sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
+    JPH::BodyInterface &physics = game.physics->interface();
+    for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
+        JPH::BodyID id = physics.CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
+        if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");
+        instance.id = id;
     }
+
+    scene::NodeEntityFactory factory;
+    scene::registerEntityTypes(factory);
+    scene = std::make_unique<scene::Scene>(*sceneData, factory);
+    character = scene::SceneRef(*scene).create<CharacterEntity>(*game.camera);
+    scene->callEntityInit();
+
+    game.physics->system->OptimizeBroadPhase();
+
+    scene::SceneRef scene_ref(*scene);
+    scene::NodeRef first_checkpoint = scene_ref.find(scene_ref.root(), [](scene::NodeRef &node) {
+        return node.prop<bool>("is_first", false);
+    });
+    scene::NodeRef player_spawn = scene_ref.find(scene_ref.root(), "PlayerSpawn");
+    RaceManager::RespawnPoint spawn = {
+        .transform = player_spawn.transform().matrix(),
+        .speed = player_spawn.prop("speed", 5.0f),
+        .boostMeter = 1.0,
+    };
+    raceManager = RaceManager(character, data.gltf->scenes[data.gltf->defaultScene].name, spawn);
+    raceManager.loadCheckpoints(first_checkpoint.entity<CheckpointEntity>());
+
+    character->respawn();
+    game.audio->assets->bgm.play();
 }
 
 void MainController::unload() {
+    game.audio->assets->bgm.pause();
 }
 
 void MainController::update() {
@@ -161,11 +179,14 @@ void MainController::update() {
     // Update entities
     scene->callEntityUpdate(time_delta);
 
+    game.particles->update(time_delta);
+
     if (raceManager.hasEnded() && !scoreScreen->opened()) {
         ScoreEntry score = raceManager.score();
         game.scores->add(score);
         game.scores->save();
         scoreScreen->open(score);
+        character->terminate();
     }
 }
 
@@ -262,7 +283,18 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
+    sunShadow->lookAt(
+        glm::make_vec3(&game.debugSettings.rendering.shadow.sunTarget[0]),
+        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
+        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1]),
+        game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
+    shadowRenderer->render(*sunShadow, sceneData->graphics);
+
+    game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
+    game.hdrFramebuffer().bindTargets({0, 1});
     terrainRenderer->render(*game.camera);
-    materialBatchRenderer->render(*game.camera, sceneData->graphics);
+    materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
+    game.hdrFramebuffer().bindTargets({0});
+    game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera);
 }

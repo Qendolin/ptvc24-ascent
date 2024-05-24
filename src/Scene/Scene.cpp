@@ -89,6 +89,11 @@ int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFac
 }
 
 void Scene::callEntityInit() {
+    if (initialized_) {
+        LOG_WARN("Scene::callEntityInit called after scene was already initialized");
+        return;
+    }
+    initialized_ = true;
     for (auto&& ent : entities) {
         ent->init();
     }

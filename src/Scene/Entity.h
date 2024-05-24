@@ -25,13 +25,17 @@ class Entity {
 
     virtual ~Entity(){};
 
+    SceneRef getScene() const {
+        return scene;
+    }
+
     // Called at scene creation
     virtual void init() = 0;
 
     // Called every frame, not before physics update
     virtual void update(float time_delta) = 0;
 
-    virtual void debugDraw(){};
+    virtual void debugDraw() {};
 
     // Called just before every physics step
     virtual void prePhysicsUpdate() {}
@@ -49,6 +53,10 @@ class NodeEntity : public Entity {
     virtual ~NodeEntity() {}
 
     NodeEntity(SceneRef scene, NodeRef base) : Entity(scene), base(base) {
+    }
+
+    const NodeRef getBase() const {
+        return base;
     }
 };
 
