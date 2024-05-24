@@ -291,8 +291,9 @@ void MainController::render() {
     shadowRenderer->render(*sunShadow, sceneData->graphics);
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
-    game.hdrFramebuffer().bindTargets({0, 1});
+    game.hdrFramebuffer().bindTargets({0});
     terrainRenderer->render(*game.camera);
+    game.hdrFramebuffer().bindTargets({0, 1});
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
