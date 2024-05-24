@@ -7,6 +7,7 @@
 #include "../Camera.h"
 #include "../Debug/Direct.h"
 #include "../Debug/ImGuiBackend.h"
+#include "../GL/Framebuffer.h"
 #include "../Game.h"
 #include "../Input.h"
 #include "../Loader/Environment.h"
@@ -287,8 +288,10 @@ void MainController::render() {
         game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
     shadowRenderer->render(*sunShadow, sceneData->graphics);
 
-    game.bindHdrFramebuffer();
+    game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
+    game.hdrFramebuffer().bindTargets({0, 1});
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
+    game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera);
 }

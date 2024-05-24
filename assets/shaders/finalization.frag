@@ -10,6 +10,7 @@ layout(binding = 1) uniform sampler2D u_depth_tex;
 layout(binding = 2) uniform sampler2D u_bloom_tex;
 layout(binding = 3) uniform sampler2D u_flares_tex;
 layout(binding = 4) uniform sampler2D u_glare_tex;
+layout(binding = 5) uniform sampler2D u_ao_tex;
 
 uniform float u_bloom_fac;
 uniform float u_flares_fac;
@@ -138,6 +139,7 @@ float vignette(vec2 uv) {
 
 void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
+    color *= clamp(texture(u_ao_tex, in_uv).r, 0.0, 1.0);
 
     // Bloom
     color += texture(u_bloom_tex, in_uv).rgb * u_bloom_fac;

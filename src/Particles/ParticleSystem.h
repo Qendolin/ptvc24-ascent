@@ -95,11 +95,13 @@ class ParticleEmitter {
     ParticleSettings settings_;
 
    public:
-    bool enabled = true;
+    bool enabled = false;
     std::string material;
 
     ParticleEmitter() = default;
-    ParticleEmitter(ParticleSettings settings, Segment segment) : settings_(settings), segment_(segment){};
+    ParticleEmitter(ParticleSettings settings, Segment segment) : settings_(settings), segment_(segment) {
+        enabled = true;
+    };
     ~ParticleEmitter();
 
     Segment segment() const {

@@ -110,6 +110,7 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
 
     shadow.depthTexture()->bind(6);
     shader->fragmentStage()->setUniform("u_shadow_depth_bias", Game::get().debugSettings.rendering.shadow.depthBias);
+    shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->vertexStage()->setUniform("u_shadow_normal_bias", Game::get().debugSettings.rendering.shadow.normalBias);
     shader->vertexStage()->setUniform("u_shadow_view_mat", shadow.viewMatrix());
     shader->vertexStage()->setUniform("u_shadow_projection_mat", shadow.projectionMatrix());

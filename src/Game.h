@@ -17,6 +17,8 @@ class Screen;
 struct Window;
 class AbstractController;
 class FinalizationRenderer;
+class GtaoRenderer;
+class DebugRenderer;
 class BloomRenderer;
 class LensEffectsRenderer;
 class ScoreManager;
@@ -51,6 +53,8 @@ class Game {
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
     std::unique_ptr<BloomRenderer> bloomRenderer_;
     std::unique_ptr<LensEffectsRenderer> lensEffectsRenderer_;
+    std::unique_ptr<GtaoRenderer> gtaoRenderer_;
+    std::unique_ptr<DebugRenderer> debugRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
 
     // Process user input
@@ -101,7 +105,7 @@ class Game {
     // Resize the window's contents, not the window itself.
     void resize(int width, int height);
 
-    void bindHdrFramebuffer();
+    gl::Framebuffer &hdrFramebuffer();
 
     /**
      * Queue a controller to be activated next frame.

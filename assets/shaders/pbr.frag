@@ -9,6 +9,7 @@ layout(location = 5) in vec3 in_shadow_position; // shadow ndc space
 layout(location = 6) in vec3 in_shadow_direction;
 
 layout(location = 0) out vec4 out_color;
+layout(location = 1) out vec2 out_normal;
 
 layout(binding = 0) uniform sampler2D u_albedo_tex;
 layout(binding = 1) uniform sampler2D u_occlusion_metallic_roughness_tex;
@@ -24,6 +25,7 @@ uniform vec3 u_camera_pos;
 uniform vec3 u_albedo_fac;
 uniform vec3 u_occlusion_metallic_roughness_fac;
 uniform float u_normal_fac;
+uniform mat4 u_view_mat;
 
 uniform float u_shadow_depth_bias;
 
@@ -31,6 +33,19 @@ const float PI = 3.14159265359;
 
 vec3 transformNormal(mat3 tbn, vec3 tangent_normal) {
     return normalize(tbn * tangent_normal);
+}
+
+// Octahedral Normal Packing
+// Credit: https://discourse.panda3d.org/t/glsl-octahedral-normal-packing/15233
+// For each component of v, returns -1 if the component is < 0, else 1
+vec2 signNotZero(vec2 v) {
+    return fma(step(vec2(0.0), v), vec2(2.0), vec2(-1.0));
+}
+
+// Packs a 3-component normal to 2 channels using octahedron normals
+vec2 packNormal(vec3 n) {
+  n.xy /= dot(abs(n), vec3(1));
+  return mix(n.xy, (1.0 - abs(n.yx)) * signNotZero(n.xy), step(n.z, 0.0));
 }
 
 // Based on https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v32.pdf page 92
@@ -220,4 +235,7 @@ void main()
 
     vec3 color = ambient + Lo;
     out_color = vec4(color, 1.0);
+
+    // Note: I don't really understand why the inverse view matrix isn't needed here
+    out_normal = packNormal(mat3(u_view_mat) * N);
 }

@@ -42,7 +42,7 @@ FinalizationRenderer::~FinalizationRenderer() {
     delete fboLinearSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare) {
+void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare, gl::Texture *ao) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
     gl::manager->setEnabled({});
@@ -55,12 +55,14 @@ void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl
     fboLinearSampler->bind(2);
     fboLinearSampler->bind(3);
     fboLinearSampler->bind(4);
+    fboLinearSampler->bind(5);
 
     hrd_color->bind(0);
     depth->bind(1);
     bloom->bind(2);
     flares->bind(3);
     glare->bind(4);
+    ao->bind(5);
 
     auto &settings = Game::get().debugSettings.rendering;
 

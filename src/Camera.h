@@ -50,6 +50,10 @@ class Camera {
         updateProjectionMatrix_();
     }
 
+    float nearPlane() {
+        return nearPlane_;
+    }
+
     /**
      * @param fov vertical field of view, in radians
      */
