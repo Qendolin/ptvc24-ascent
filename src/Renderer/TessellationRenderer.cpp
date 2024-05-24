@@ -30,7 +30,7 @@ TessellationRenderer::TessellationRenderer() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    unsigned char *data = stbi_load("heightmaps/iceland_heightmap.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("assets/textures/iceland_heightmap.png", &width, &height, &nrChannels, 0);
     if (data) {
         std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
     } else {
@@ -39,9 +39,9 @@ TessellationRenderer::TessellationRenderer() {
     stbi_image_free(data);
 
     std::vector<float> vertices;
-
-    for (unsigned i = 0; i <= rez - 1; i++) {
-        for (unsigned j = 0; j <= rez - 1; j++) {
+    std::cout << "values of width and height are: " << height << ", " << width << std::endl;
+    for (unsigned int i = 0; i <= rez - 1; i++) {
+        for (unsigned int j = 0; j <= rez - 1; j++) {
             vertices.push_back(-width / 2.0f + width * i / (float)rez);    // v.x
             vertices.push_back(0.0f);                                      // v.y
             vertices.push_back(-height / 2.0f + height * j / (float)rez);  // v.z
@@ -90,6 +90,7 @@ TessellationRenderer::TessellationRenderer() {
 }
 
 void TessellationRenderer::render(glm::mat4 viewProjectionMatrix, glm::mat4 viewMatrix) {
+    gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_LINE);
     gl::pushDebugGroup("TessellationRenderer::render");
     terrainVAO->bind();
     gl::manager->setEnabled({gl::Capability::DepthTest});
@@ -97,9 +98,10 @@ void TessellationRenderer::render(glm::mat4 viewProjectionMatrix, glm::mat4 view
     gl::manager->depthMask(true);
     shader->bind();
     glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
-    shader->vertexStage()->setUniform("u_projection_mat", viewProjectionMatrix);
-    shader->vertexStage()->setUniform("u_view_mat", viewMatrix);
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_projection_mat", viewProjectionMatrix);
+    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_view_mat", viewMatrix);
     gl::popDebugGroup();
+    gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 TessellationRenderer::~TessellationRenderer() {
