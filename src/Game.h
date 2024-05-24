@@ -20,8 +20,6 @@ class FinalizationRenderer;
 class BloomRenderer;
 class LensEffectsRenderer;
 class ScoreManager;
-class TerrainRenderer;
-class TessellationRenderer;
 
 namespace ph {
 class Physics;
@@ -52,8 +50,6 @@ class Game {
     std::unique_ptr<BloomRenderer> bloomRenderer_;
     std::unique_ptr<LensEffectsRenderer> lensEffectsRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
-    // std::unique_ptr<TerrainRenderer> terrainRenderer_;
-    std::unique_ptr<TessellationRenderer> TessellationRenderer_;
     //  Process user input
     void processInput_();
 

@@ -110,6 +110,14 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
+            PushID("terrain");
+            Checkbox("Wireframe", &settings.rendering.terrain.wireframe);
+            Checkbox("Debug LODs", &settings.rendering.terrain.fixedLodOrigin);
+            DragFloat("Height", &settings.rendering.terrain.heightScale, 1.0, 1.0);
+            PopID();
+        }
+
         Unindent();
         PopID();
     }

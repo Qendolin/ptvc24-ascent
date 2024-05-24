@@ -8,6 +8,7 @@
 #pragma region ForwardDecl
 class MaterialBatchRenderer;
 class SkyRenderer;
+class TerrainRenderer;
 class MainControllerLoader;
 class FadeOverlay;
 class ScoreScreen;
@@ -27,6 +28,7 @@ class MainController : public AbstractController {
    private:
     std::unique_ptr<MaterialBatchRenderer> materialBatchRenderer;
     std::unique_ptr<SkyRenderer> skyRenderer;
+    std::unique_ptr<TerrainRenderer> terrainRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;

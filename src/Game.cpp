@@ -18,8 +18,6 @@
 #include "Renderer/BloomRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
 #include "Renderer/LensEffectsRenderer.h"
-// #include "Renderer/TerrainRenderer.h"
-#include "Renderer/TessellationRenderer.h"
 #include "ScoreManager.h"
 #include "Tween.h"
 #include "UI/Renderer.h"
@@ -158,8 +156,6 @@ void Game::load() {
     bloomRenderer_->setViewport(window.size.x, window.size.y);
     lensEffectsRenderer_ = std::make_unique<LensEffectsRenderer>();
     lensEffectsRenderer_->setViewport(window.size.x, window.size.y);
-    // terrainRenderer_ = std::make_unique<TerrainRenderer>();
-    TessellationRenderer_ = std::make_unique<TessellationRenderer>();
 }
 
 void Game::unload() {
@@ -258,8 +254,6 @@ void Game::render_() {
             lensEffectsRenderer_->flares(),
             lensEffectsRenderer_->glare());
     }
-    // terrainRenderer_->render(camera->viewProjectionMatrix());
-    TessellationRenderer_->render(camera->viewProjectionMatrix(), camera->viewMatrix());
     //  Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());
 

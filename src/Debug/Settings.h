@@ -41,6 +41,12 @@ struct DebugSettings {
             float outer = 1.6f;
             float sharpness = 2.0f;
         } vignette;
+
+        struct Terrain {
+            bool wireframe = false;
+            bool fixedLodOrigin = false;
+            float heightScale = 64.0;
+        } terrain;
     };
     Entity entity;
     Rendering rendering;

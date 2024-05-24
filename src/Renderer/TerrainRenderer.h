@@ -1,17 +1,20 @@
 #include <glm/glm.hpp>
 
-#include "../GL/Declarations.h";
+#pragma region FrowardDecl
+#include "../GL/Declarations.h"
+class Camera;
+#pragma endregion
 
 class TerrainRenderer {
    private:
-    gl::ShaderPipeline *shader;
-    // first, configure the cube's VAO (and terrainVBO + terrainIBO)
-    unsigned int terrainVAO, terrainVBO, terrainIBO;
-    int width, height, nrChannels;
-    int rez = 1;
+    gl::ShaderPipeline* shader;
+    gl::VertexArray* vao;
+    gl::Texture* heightMap;
+    gl::Sampler* sampler;
+    int resolution = 20;
 
    public:
-    void render(glm::mat4 viewProjectionMatrix);
+    void render(Camera& camera);
     TerrainRenderer();
     ~TerrainRenderer();
 };

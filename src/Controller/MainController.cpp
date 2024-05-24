@@ -13,6 +13,7 @@
 #include "../Physics/Physics.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
+#include "../Renderer/TerrainRenderer.h"
 #include "../Scene/Character.h"
 #include "../Scene/Entity.h"
 #include "../Scene/FreeCam.h"
@@ -65,6 +66,7 @@ void MainController::applyLoadResult_() {
     MainControllerLoader::Data data = loader->result();
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>(data.environment);
+    terrainRenderer = std::make_unique<TerrainRenderer>();
 
     if (data.gltf) {
         LOG_INFO("Creating scene from gltf data");
@@ -260,6 +262,7 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
+    terrainRenderer->render(*game.camera);
     materialBatchRenderer->render(*game.camera, sceneData->graphics);
     skyRenderer->render(*game.camera);
 }
