@@ -10,6 +10,7 @@
 #include "../GL/Texture.h"
 #include "../Game.h"
 #include "../Loader/Loader.h"
+#include "IblEnvironment.h"
 
 TerrainRenderer::TerrainRenderer() {
     shader = new gl::ShaderPipeline(
@@ -17,20 +18,22 @@ TerrainRenderer::TerrainRenderer() {
          new gl::ShaderProgram("assets/shaders/terrain.frag"),
          new gl::ShaderProgram("assets/shaders/terrain.tesc"),
          new gl::ShaderProgram("assets/shaders/terrain.tese")});
-    shader->setDebugLabel("Tessellation_renderer/shader");
+    shader->setDebugLabel("terrain_renderer/shader");
 
     // load and create a texture
     // -------------------------
-    sampler = new gl::Sampler();
+    heightSampler = new gl::Sampler();
+    heightSampler->setDebugLabel("terrain_renderer/height_sampler");
     // height will be 0 outside of image bounds
-    sampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
-    sampler->borderColor(glm::vec4(0.0));
-    sampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
+    heightSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
+    heightSampler->borderColor(glm::vec4(0.0));
+    heightSampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
 
     loader::Image image = loader::image("assets/textures/iceland_heightmap.png");
     int width = image.width, height = image.height;
 
     heightMap = new gl::Texture(GL_TEXTURE_2D);
+    heightMap->setDebugLabel("terrain_renderer/height_map");
     heightMap->allocate(0, GL_R8, width, height);
     heightMap->load(0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.data.get());
     // mip levels are for normals
@@ -71,10 +74,12 @@ TerrainRenderer::TerrainRenderer() {
     std::cout << "Processing " << resolution * resolution * 4 << " vertices in vertex shader" << std::endl;
 
     vao = new gl::VertexArray();
+    vao->setDebugLabel("terrain_renderer/vao");
     vao->layout(0, 0, 3, GL_FLOAT, false, 0);
     vao->layout(0, 1, 2, GL_FLOAT, false, 3 * sizeof(float));
 
     gl::Buffer *vbo = new gl::Buffer();
+    vbo->setDebugLabel("terrain_renderer/vbo");
     vbo->allocate(vertices.data(), sizeof(float) * vertices.size(), 0);
 
     vao->bindBuffer(0, *vbo, 0, 5 * sizeof(float));
@@ -83,12 +88,12 @@ TerrainRenderer::TerrainRenderer() {
 
 TerrainRenderer::~TerrainRenderer() {
     delete shader;
-    delete sampler;
+    delete heightSampler;
     delete heightMap;
     delete vao;
 }
 
-void TerrainRenderer::render(Camera &camera) {
+void TerrainRenderer::render(Camera &camera, IblEnvironment &env) {
     gl::pushDebugGroup("TerrainRenderer::render");
     auto settings = Game::get().debugSettings.rendering.terrain;
 
@@ -103,7 +108,14 @@ void TerrainRenderer::render(Camera &camera) {
     shader->bind();
 
     heightMap->bind(0);
-    sampler->bind(0);
+    heightSampler->bind(0);
+
+    env.diffuse().bind(1);
+    env.cubemapSampler().bind(1);
+    env.specular().bind(2);
+    env.cubemapSampler().bind(2);
+    env.brdfLut().bind(3);
+    env.lutSampler().bind(3);
 
     glm::vec3 origin = camera.position;
     if (settings.fixedLodOrigin) {
@@ -113,6 +125,9 @@ void TerrainRenderer::render(Camera &camera) {
 
     shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_projection_mat", camera.viewProjectionMatrix());
     shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", settings.heightScale);
+
+    shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
+    shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
 
     glPatchParameteri(GL_PATCH_VERTICES, 4);
     glDrawArrays(GL_PATCHES, 0, 4 * resolution * resolution);

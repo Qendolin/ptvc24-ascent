@@ -12,7 +12,8 @@ in gl_PerVertex
 } gl_in[];
 
 layout(location = 0) out float out_height;
-layout(location = 1) out vec3 out_normal;
+layout(location = 1) out vec3 out_position_ws;
+layout(location = 2) out vec3 out_normal;
 
 out gl_PerVertex {
     vec4 gl_Position;
@@ -50,13 +51,14 @@ void main()
     float height10 = textureLodOffset(u_height_map, tex_coord, lod, ivec2(1, 0)).r;
     float height01 = textureLodOffset(u_height_map, tex_coord, lod, ivec2(0, 1)).r;
 
-    float dx = (height00 - height10) * u_height_scale;
-    float dy = (height00 - height01) * u_height_scale;
-    out_normal = normalize(cross(vec3(0, dy, lod_texel_size), vec3(lod_texel_size, dx, 0)));
+    float dx = (height10 - height00) * u_height_scale;
+    float dy = (height01 - height00) * u_height_scale;
+    out_normal = normalize(cross(vec3(0, dy, 0.5 * lod_texel_size), vec3(0.5 * lod_texel_size, dx, 0)));
 
     vec4 p0 = (p01 - p00) * s + p00;
     vec4 p1 = (p11 - p10) * s + p10;
     vec4 p = (p1 - p0) * t + p0 + vec4(0.0, 1.0, 0.0, 0.0) * out_height * u_height_scale;
 
+    out_position_ws = p.xyz;
     gl_Position = u_view_projection_mat * p;
 }

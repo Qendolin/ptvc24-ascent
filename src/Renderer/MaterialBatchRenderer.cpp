@@ -6,13 +6,11 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
-#include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "IblEnvironment.h"
 #include "ShadowRenderer.h"
 
-MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env_diffuse,
-                                             std::shared_ptr<loader::IblEnv> env_specular,
-                                             std::shared_ptr<loader::FloatImage> brdf_lut) {
+MaterialBatchRenderer::MaterialBatchRenderer() {
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/pbr.vert"),
          new gl::ShaderProgram("assets/shaders/pbr.frag")});
@@ -24,16 +22,6 @@ MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env
     shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
     shadowSampler->borderColor(glm::vec4(0));
     shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
-
-    lutSampler = new gl::Sampler();
-    lutSampler->setDebugLabel("pbr_renderer/lut_sampler");
-    lutSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-    lutSampler->filterMode(GL_LINEAR, GL_LINEAR);
-
-    cubemapSampler = new gl::Sampler();
-    cubemapSampler->setDebugLabel("pbr_renderer/cubemap_sampler");
-    cubemapSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-    cubemapSampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
     albedoSampler = new gl::Sampler();
     albedoSampler->setDebugLabel("pbr_renderer/albedo_sampler");
@@ -53,39 +41,17 @@ MaterialBatchRenderer::MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> env
     ormSampler->wrapMode(GL_REPEAT, GL_REPEAT, 0);
     ormSampler->anisotropicFilter(gl::manager->clampAnisotropy(8.0));
     ormSampler->lodBias(-2.0);
-
-    iblDiffuse = new gl::Texture(GL_TEXTURE_CUBE_MAP);
-    iblDiffuse->setDebugLabel("pbr_renderer/environment/diffuse");
-    iblDiffuse->allocate(1, GL_RGB16F, env_diffuse->baseSize, env_diffuse->baseSize);
-    iblDiffuse->load(0, env_diffuse->baseSize, env_diffuse->baseSize, 6, GL_RGB, GL_FLOAT, env_diffuse->all().data());
-
-    iblSpecular = new gl::Texture(GL_TEXTURE_CUBE_MAP);
-    iblSpecular->setDebugLabel("pbr_renderer/environment/diffuse");
-    iblSpecular->allocate(env_specular->levels, GL_RGB16F, env_specular->baseSize, env_specular->baseSize);
-    for (int lvl = 0; lvl < env_specular->levels; lvl++) {
-        iblSpecular->load(lvl, env_specular->size(lvl), env_specular->size(lvl), 6, GL_RGB, GL_FLOAT, env_specular->level(lvl).data());
-    }
-
-    iblBrdfLut = new gl::Texture(GL_TEXTURE_2D);
-    iblBrdfLut->setDebugLabel("pbr_renderer/environment/brdf_lut");
-    iblBrdfLut->allocate(1, GL_RG32F, brdf_lut->width, brdf_lut->height);
-    iblBrdfLut->load(0, brdf_lut->width, brdf_lut->height, GL_RG, GL_FLOAT, brdf_lut->data.data());
 }
 
 MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete shader;
-    delete iblDiffuse;
-    delete iblSpecular;
-    delete iblBrdfLut;
-    delete lutSampler;
-    delete cubemapSampler;
     delete albedoSampler;
     delete normalSampler;
     delete ormSampler;
     delete shadowSampler;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, IblEnvironment &env) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);
@@ -99,14 +65,14 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
     albedoSampler->bind(0);
     ormSampler->bind(1);
     normalSampler->bind(2);
-    cubemapSampler->bind(3);
-    cubemapSampler->bind(4);
-    lutSampler->bind(5);
+    env.cubemapSampler().bind(3);
+    env.cubemapSampler().bind(4);
+    env.lutSampler().bind(5);
     shadowSampler->bind(6);
 
-    iblDiffuse->bind(3);
-    iblSpecular->bind(4);
-    iblBrdfLut->bind(5);
+    env.diffuse().bind(3);
+    env.specular().bind(4);
+    env.brdfLut().bind(5);
 
     shadow.depthTexture()->bind(6);
     shader->fragmentStage()->setUniform("u_shadow_depth_bias", Game::get().debugSettings.rendering.shadow.depthBias);

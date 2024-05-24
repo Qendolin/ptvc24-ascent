@@ -11,6 +11,7 @@ class MaterialBatchRenderer;
 class SkyRenderer;
 class TerrainRenderer;
 class MainControllerLoader;
+class IblEnvironment;
 class FadeOverlay;
 class ScoreScreen;
 class StartScreen;
@@ -35,6 +36,7 @@ class MainController : public AbstractController {
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
+    std::unique_ptr<IblEnvironment> iblEnv;
     std::unique_ptr<MainControllerLoader> loader;
 
     const std::unique_ptr<ScoreScreen> scoreScreen;

@@ -129,7 +129,6 @@ void GtaoRenderer::render(Camera &camera, gl::Texture &depth_texture, gl::Textur
 
     gtaoShader->bind();
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_frame", frame++);
-    gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_projection_mat", camera.projectionMatrix());
 

@@ -14,6 +14,7 @@
 #include "../Loader/Gltf.h"
 #include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
+#include "../Renderer/IblEnvironment.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
@@ -80,7 +81,9 @@ bool MainController::useHdr() {
 void MainController::applyLoadResult_() {
     LOG_INFO("Finished loading");
     MainControllerLoader::Data data = loader->result();
-    materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
+
+    materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
+    iblEnv = std::make_unique<IblEnvironment>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>(data.environment);
     terrainRenderer = std::make_unique<TerrainRenderer>();
 
@@ -291,10 +294,9 @@ void MainController::render() {
     shadowRenderer->render(*sunShadow, sceneData->graphics);
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
-    game.hdrFramebuffer().bindTargets({0});
-    terrainRenderer->render(*game.camera);
     game.hdrFramebuffer().bindTargets({0, 1});
-    materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
+    terrainRenderer->render(*game.camera, *iblEnv);
+    materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow, *iblEnv);
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera);
