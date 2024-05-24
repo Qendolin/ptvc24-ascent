@@ -39,11 +39,11 @@ SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
     vbo->setDebugLabel("sky_renderer/vbo");
     vbo->allocate(&cube_mesh, sizeof(cube_mesh), 0);
 
-    quad = new gl::VertexArray();
-    quad->setDebugLabel("sky_renderer/vao");
-    quad->layout(0, 0, 3, GL_FLOAT, false, 0);
-    quad->bindBuffer(0, *vbo, 0, 3 * sizeof(float));
-    quad->own(vbo);
+    cube = new gl::VertexArray();
+    cube->setDebugLabel("sky_renderer/vao");
+    cube->layout(0, 0, 3, GL_FLOAT, false, 0);
+    cube->bindBuffer(0, *vbo, 0, 3 * sizeof(float));
+    cube->own(vbo);
 
     sampler = new gl::Sampler();
     sampler->setDebugLabel("sky_renderer/sampler");
@@ -58,7 +58,7 @@ SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
 
 SkyRenderer::~SkyRenderer() {
     delete shader;
-    delete quad;
+    delete cube;
     delete sampler;
     delete cubemap;
 }
@@ -70,7 +70,7 @@ void SkyRenderer::render(Camera &camera) {
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     gl::manager->depthMask(false);
 
-    quad->bind();
+    cube->bind();
     shader->bind();
 
     sampler->bind(0);
