@@ -6,6 +6,7 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
+#include "IblEnvironment.h"
 
 FinalizationRenderer::FinalizationRenderer() {
     shader = new gl::ShaderPipeline(
@@ -42,7 +43,7 @@ FinalizationRenderer::~FinalizationRenderer() {
     delete fboLinearSampler;
 }
 
-void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare, gl::Texture *ao) {
+void FinalizationRenderer::render(Camera &camera, gl::Texture *hrd_color, gl::Texture *depth, gl::Texture *bloom, gl::Texture *flares, gl::Texture *glare, gl::Texture *ao) {
     gl::pushDebugGroup("FinalizationRenderer::render");
 
     gl::manager->setEnabled({});
@@ -69,6 +70,9 @@ void FinalizationRenderer::render(gl::Texture *hrd_color, gl::Texture *depth, gl
     shader->fragmentStage()->setUniform("u_bloom_fac", settings.bloom.factor);
     shader->fragmentStage()->setUniform("u_flares_fac", settings.lens.factor);
     shader->fragmentStage()->setUniform("u_vignette_params", glm::vec4(settings.vignette.factor, settings.vignette.inner, settings.vignette.outer, settings.vignette.sharpness));
+    shader->fragmentStage()->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
+    shader->fragmentStage()->setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
+    shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     gl::popDebugGroup();

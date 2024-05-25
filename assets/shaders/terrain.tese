@@ -53,7 +53,4 @@ void main()
     out_position_ws = p.xyz;
     out_uv = tex_coord;
     gl_Position = u_view_projection_mat * p;
-
-    // A hack to render the terrain "always" in the background
-    gl_Position.z = mix(0.0, 0.00001, gl_Position.z / gl_Position.w);
 }

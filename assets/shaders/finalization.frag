@@ -16,6 +16,9 @@ uniform float u_bloom_fac;
 uniform float u_flares_fac;
 // factor, inner radius, outer radius, sharpness
 uniform vec4 u_vignette_params;
+uniform mat4 u_inverse_projection_mat;
+uniform mat4 u_inverse_view_mat;
+uniform vec3 u_camera_pos;
 
 // dither matrix, use as dither_matrix[y][x] / 256.0
 const float dither_matrix[16][16] = {
@@ -137,12 +140,55 @@ float vignette(vec2 uv) {
     return 1.0 - vignette;
 }
 
+// TODO: pass as uniform
+const float FOG_DENSITY = 0.0065;
+const float FOG_EMISSION = 0.002;
+const float FOG_LINEAR = 7.0;
+const float FOG_HEIGHT = 60.0;
+const float FOG_MAX = 0.8;
+const vec3 FOG_COLOR = vec3(83, 110, 170) / 255.0;
+
+// Iquilezles fog
+vec3 applyFog(vec3 frag_color, float d, vec3 ray_origin, vec3 ray_direction) {
+    // No fog for far plane
+    if(isnan(d)) return frag_color;
+    // height based fog
+    float fog_amount = (FOG_EMISSION/FOG_DENSITY) * exp(-(ray_origin.y-FOG_HEIGHT) * FOG_DENSITY) * (1.0 - exp(-d * ray_direction.y * FOG_DENSITY)) / ray_direction.y;
+    // puerely distance based fog
+    fog_amount += FOG_LINEAR * FOG_EMISSION * FOG_DENSITY * d;
+    return mix(frag_color, FOG_COLOR, clamp(fog_amount, 0.0, FOG_MAX));
+}
+
+vec3 reconstruct_view_space_position(float depth, vec2 uv) {
+    vec2 clip_xy = uv * 2.0 - 1.0;
+    vec4 t = u_inverse_projection_mat * vec4(clip_xy, depth, 1.0);
+    return t.xyz / t.w;
+}
+
+
+vec3 load_and_reconstruct_view_space_position(vec2 uv) {
+    float depth = texture(u_depth_tex, uv).r;
+    return reconstruct_view_space_position(depth, uv);
+}
+
 void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
+
+    // GTAO (todo: apply in pbr shader)
     color *= clamp(texture(u_ao_tex, in_uv).r, 0.0, 1.0);
+    // FIXME: ao looks bad on terrain
 
     // Bloom
     color += texture(u_bloom_tex, in_uv).rgb * u_bloom_fac;
+
+    // Fog
+    vec3 view_position = load_and_reconstruct_view_space_position(in_uv);
+    vec3 world_position = (u_inverse_view_mat * vec4(view_position, 1.0)).xyz;
+    float view_distance = length(world_position - u_camera_pos);
+    color = applyFog(color, view_distance, u_camera_pos, (world_position - u_camera_pos) / view_distance);
+
+    // out_color.rgb = vec3(view_distance) / 1000.0;
+    // return;
 
     // Flares & Glare
     color += texture(u_flares_tex, in_uv).rgb * u_flares_fac;

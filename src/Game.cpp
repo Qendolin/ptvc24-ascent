@@ -281,6 +281,7 @@ void Game::render_() {
         gl::manager->depthMask(true);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
+            *camera,
             hdrFramebuffer_->getTexture(0),
             hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),
             bloomRenderer_->result(),

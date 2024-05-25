@@ -24,7 +24,7 @@ class LensEffectsRenderer;
 class ScoreManager;
 class ParticleSystem;
 class Audio;
-
+class IblEnvironment;
 namespace ph {
 class Physics;
 }

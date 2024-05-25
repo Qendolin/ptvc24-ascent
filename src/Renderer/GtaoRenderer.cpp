@@ -95,8 +95,8 @@ void GtaoRenderer::createTextures_() {
 
     noisyOcclusion = new gl::Texture(GL_TEXTURE_2D);
     noisyOcclusion->setDebugLabel("gtao_renderer/noisy_occlusion");
-    // noisyOcclusion->allocate(5, GL_R16F, viewport_.x, viewport_.y);
-    noisyOcclusion->allocate(5, GL_RGBA16F, viewport_.x, viewport_.y);
+    // TODO: Why use r16f? WHy not r8?
+    noisyOcclusion->allocate(5, GL_R16F, viewport_.x, viewport_.y);
 
     noisyEdges = new gl::Texture(GL_TEXTURE_2D);
     noisyEdges->setDebugLabel("gtao_renderer/noisy_edges");
@@ -134,8 +134,7 @@ void GtaoRenderer::render(Camera &camera, gl::Texture &depth_texture, gl::Textur
 
     depthMips->bind(0);
     view_normals_texture.bind(1);
-    // glBindImageTexture(0, noisyOcclusion->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
-    glBindImageTexture(0, noisyOcclusion->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+    glBindImageTexture(0, noisyOcclusion->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
     glBindImageTexture(1, noisyEdges->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32UI);
     glBindImageTexture(2, hilbertLut->id(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
     glDispatchCompute(DIV_CEIL(w, 8), DIV_CEIL(h, 8), 1);
