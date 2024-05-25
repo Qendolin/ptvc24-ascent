@@ -58,7 +58,7 @@ struct DebugSettings {
         struct Terrain {
             bool wireframe = false;
             bool fixedLodOrigin = false;
-            float heightScale = 64.0;
+            float heightScale = 1200.0;
         } terrain;
     };
     Entity entity;

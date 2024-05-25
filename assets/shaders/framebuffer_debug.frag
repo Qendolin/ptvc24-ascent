@@ -8,7 +8,6 @@ layout(binding = 0) uniform sampler2D in_view_normals;
 layout(binding = 1) uniform sampler2D in_depth;
 
 uniform mat4 u_inverse_projection_mat;
-uniform mat4 u_inverse_view_mat;
 
 vec2 sign_not_zero(vec2 v) {
     return fma(step(vec2(0.0), v), vec2(2.0), vec2(-1.0));

@@ -1,8 +1,8 @@
 #version 450 core
 
 const int MAX_TESS_LEVEL = 6;
-const float MIN_DISTANCE = 100.0;
-const float MAX_DISTANCE = 4000.0;
+const float MIN_DISTANCE = 200.0;
+const float MAX_DISTANCE = 10000.0;
 
 layout(vertices=4) out;
 
@@ -33,10 +33,10 @@ void main()
     if(gl_InvocationID == 0)
     {
         // Transform positions to eye space
-        vec3 eyeSpacePos00 = gl_in[0].gl_Position.xyz - u_camera_pos;
-        vec3 eyeSpacePos01 = gl_in[1].gl_Position.xyz - u_camera_pos;
-        vec3 eyeSpacePos10 = gl_in[2].gl_Position.xyz - u_camera_pos;
-        vec3 eyeSpacePos11 = gl_in[3].gl_Position.xyz - u_camera_pos;
+        vec2 eyeSpacePos00 = gl_in[0].gl_Position.xz - u_camera_pos.xz;
+        vec2 eyeSpacePos01 = gl_in[1].gl_Position.xz - u_camera_pos.xz;
+        vec2 eyeSpacePos10 = gl_in[2].gl_Position.xz - u_camera_pos.xz;
+        vec2 eyeSpacePos11 = gl_in[3].gl_Position.xz - u_camera_pos.xz;
 
         float distance00 = length(eyeSpacePos00);
         float distance01 = length(eyeSpacePos01);

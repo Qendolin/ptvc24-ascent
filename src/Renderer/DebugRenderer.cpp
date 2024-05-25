@@ -50,7 +50,6 @@ void DebugRenderer::render(Game &game) {
     quad->bind();
     shader->bind();
     shader->fragmentStage()->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
-    shader->fragmentStage()->setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
     sampler->bind(0);
     sampler->bind(1);
 

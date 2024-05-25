@@ -2,16 +2,21 @@
 
 layout(location = 0) in float in_height;
 layout(location = 1) in vec3 in_position_ws;
-layout(location = 2) in vec3 in_normal;
+// layout(location = 2) in vec3 in_normal;
+layout(location = 3) in vec2 in_uv;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_normal;
 
 uniform vec3 u_camera_pos;
 uniform mat4 u_view_mat;
-layout(binding = 1) uniform samplerCube u_ibl_diffuse;
-layout(binding = 2) uniform samplerCube u_ibl_specualr;
-layout(binding = 3) uniform sampler2D u_ibl_brdf_lut;
+uniform float u_height_scale;
+layout(binding = 1) uniform sampler2D u_albedo_tex;
+layout(binding = 2) uniform sampler2D u_normal_tex;
+layout(binding = 3) uniform sampler2D u_ao_tex;
+layout(binding = 4) uniform samplerCube u_ibl_diffuse;
+layout(binding = 5) uniform samplerCube u_ibl_specualr;
+layout(binding = 6) uniform sampler2D u_ibl_brdf_lut;
 
 const float PI = 3.14159265359;
 
@@ -94,12 +99,16 @@ vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metal
 
 void main()
 {
-    vec3 albedo = mix(vec3(1.0), vec3(0.474, 0.133, 0.0), 1.0 - pow(1.0 - in_height, 2.0));
-    float ao        = 1.0;
+    vec3 albedo = texture(u_albedo_tex, in_uv).rgb;
+    float ao        = texture(u_ao_tex, in_uv).r;
     float metallic  = 0.0;
-    float roughness = 0.8;
+    float roughness = 0.9;
+    // Note: normal map needs to fit the height scale
+    vec3 tN = texture(u_normal_tex, in_uv).xyz * 2.0 - 1.0;
 
-    vec3 N = normalize(in_normal);
+    ao = pow(ao, 1.5);
+
+    vec3 N = normalize((tN).xzy);
     vec3 P = in_position_ws;
     vec3 V = normalize(u_camera_pos - P);
     vec3 R = reflect(-V, N);

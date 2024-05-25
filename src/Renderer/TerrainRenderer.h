@@ -10,8 +10,11 @@ class TerrainRenderer {
    private:
     gl::ShaderPipeline* shader;
     gl::VertexArray* vao;
-    gl::Texture* heightMap;
-    gl::Sampler* heightSampler;
+    gl::Texture* height;
+    gl::Texture* albedo;
+    gl::Texture* normal;
+    gl::Texture* occlusion;
+    gl::Sampler* sampler;
     int resolution = 20;
 
    public:
