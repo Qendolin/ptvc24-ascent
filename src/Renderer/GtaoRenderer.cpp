@@ -4,6 +4,7 @@
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
+#include "../Game.h"
 
 // integer divide x / y but round up instead of truncate
 #define DIV_CEIL(x, y) ((x + y - 1) / y)
@@ -108,6 +109,11 @@ void GtaoRenderer::createTextures_() {
 }
 
 void GtaoRenderer::render(Camera &camera, gl::Texture &depth_texture, gl::Texture &view_normals_texture) {
+    auto settings = Game::get().debugSettings.rendering.ao;
+    if (!settings.enabled) {
+        return;
+    }
+
     gl::pushDebugGroup("GtaoRenderer::render");
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -131,6 +137,9 @@ void GtaoRenderer::render(Camera &camera, gl::Texture &depth_texture, gl::Textur
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_frame", frame++);
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
     gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_projection_mat", camera.projectionMatrix());
+    gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_radius", settings.radius);
+    gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_power", settings.power);
+    gtaoShader->get(GL_COMPUTE_SHADER)->setUniform("u_factor", settings.factor);
 
     depthMips->bind(0);
     view_normals_texture.bind(1);

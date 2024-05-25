@@ -60,6 +60,13 @@ struct DebugSettings {
             bool fixedLodOrigin = false;
             float heightScale = 1200.0;
         } terrain;
+
+        struct AmbientOcclusion {
+            bool enabled = true;
+            float factor = 1.0;
+            float radius = 0.5;
+            float power = 2.0;
+        } ao;
     };
     Entity entity;
     Rendering rendering;

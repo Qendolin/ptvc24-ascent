@@ -69,12 +69,12 @@ void DebugMenu::drawDebugWindow_() {
     }
 
     // Rendering
-    if (CollapsingHeader("Rendering", 0)) {
+    if (CollapsingHeader("Rendering")) {
         PushID("rendering");
         Indent();
         Checkbox("Normal Mapping", &settings.rendering.normalMapsEnabled);
 
-        if (CollapsingHeader("Bloom", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (CollapsingHeader("Bloom")) {
             SliderFloat("Factor", &settings.rendering.bloom.factor, 0.0f, 1.0f);
             SliderFloat("Bloom Threshold", &settings.rendering.bloom.threshold, 0.0f, 5.0f);
             SliderFloat("Bloom Knee", &settings.rendering.bloom.thresholdKnee, 0.0f, 1.0f);
@@ -84,7 +84,7 @@ void DebugMenu::drawDebugWindow_() {
             }
         }
 
-        if (CollapsingHeader("Lens Effects", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (CollapsingHeader("Lens Effects")) {
             PushID("lens_effects");
             SliderFloat("Factor##factor", &settings.rendering.lens.factor, 0.0f, 1.0f);
             SliderFloat("Chromatic Distortion##chromaticDistortion", &settings.rendering.lens.chromaticDistortion, 0.0f, 4.0f);
@@ -108,7 +108,7 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
-        if (CollapsingHeader("Vignette", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (CollapsingHeader("Vignette")) {
             PushID("vignette");
             SliderFloat("Factor", &settings.rendering.vignette.factor, 0.0f, 5.0f);
             SliderFloat("Inner", &settings.rendering.vignette.inner, 0.0f, 1.0f);
@@ -117,7 +117,7 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
-        if (CollapsingHeader("Shadow", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (CollapsingHeader("Shadow")) {
             PushID("shadow");
             Checkbox("Debug Draw", &settings.rendering.shadow.debugDrawEnabled);
             DragFloat3("Target", &settings.rendering.shadow.sunTarget[0]);
@@ -137,11 +137,20 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
-        if (CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (CollapsingHeader("Terrain")) {
             PushID("terrain");
             Checkbox("Wireframe", &settings.rendering.terrain.wireframe);
             Checkbox("Debug LODs", &settings.rendering.terrain.fixedLodOrigin);
             DragFloat("Height", &settings.rendering.terrain.heightScale, 1.0, 1.0);
+            PopID();
+        }
+
+        if (CollapsingHeader("GTAO")) {
+            PushID("gtao");
+            Checkbox("Enabled", &settings.rendering.ao.enabled);
+            SliderFloat("Factor", &settings.rendering.ao.factor, 0.0, 1.0);
+            SliderFloat("Radius", &settings.rendering.ao.radius, 0.0, 10.0);
+            SliderFloat("Power", &settings.rendering.ao.power, 0.0, 10.0);
             PopID();
         }
 
