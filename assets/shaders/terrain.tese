@@ -46,9 +46,10 @@ void main()
     vec4 p10 = gl_in[2].gl_Position;
     vec4 p11 = gl_in[3].gl_Position;
 
+    const vec4 up = vec4(0.0, 1.0, 0.0, 0.0);
     vec4 p0 = (p01 - p00) * s + p00;
     vec4 p1 = (p11 - p10) * s + p10;
-    vec4 p = (p1 - p0) * t + p0 + vec4(0.0, 1.0, 0.0, 0.0) * out_height * u_height_scale;
+    vec4 p = (p1 - p0) * t + p0 + up * out_height * u_height_scale;
 
     out_position_ws = p.xyz;
     out_uv = tex_coord;

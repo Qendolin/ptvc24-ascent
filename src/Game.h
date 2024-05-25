@@ -24,7 +24,6 @@ class LensEffectsRenderer;
 class ScoreManager;
 class ParticleSystem;
 class Audio;
-class IblEnvironment;
 namespace ph {
 class Physics;
 }
@@ -36,7 +35,8 @@ class ImGuiBackend;
 
 namespace loader {
 class SceneData;
-}
+class Environment;
+}  // namespace loader
 
 namespace scene {
 class Scene;

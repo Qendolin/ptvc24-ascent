@@ -12,9 +12,9 @@
 #include "../Input.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "../Loader/Terrain.h"
 #include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
-#include "../Renderer/IblEnvironment.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
@@ -69,6 +69,7 @@ void MainController::load() {
                 });
 
     shadowRenderer = std::make_unique<ShadowMapRenderer>();
+    terrainRenderer = std::make_unique<TerrainRenderer>();
 
     game.audio->assets->bgm.pause();
     game.audio->assets->bgm.seek(0);
@@ -83,9 +84,9 @@ void MainController::applyLoadResult_() {
     MainControllerLoader::Data data = loader->result();
 
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
-    iblEnv = std::make_unique<IblEnvironment>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
-    skyRenderer = std::make_unique<SkyRenderer>(data.environment);
-    terrainRenderer = std::make_unique<TerrainRenderer>();
+    iblEnv = std::make_unique<loader::Environment>(*data.environment, *data.environmentDiffuse, *data.environmentSpecular, *data.iblBrdfLut);
+    skyRenderer = std::make_unique<SkyRenderer>();
+    terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 20);
 
     if (!data.gltf)
         return;
@@ -295,9 +296,9 @@ void MainController::render() {
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
     game.hdrFramebuffer().bindTargets({0, 1});
-    terrainRenderer->render(*game.camera, *iblEnv);
+    terrainRenderer->render(*game.camera, *terrain, *iblEnv);
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow, *iblEnv);
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
-    skyRenderer->render(*game.camera);
+    skyRenderer->render(*game.camera, *iblEnv);
 }

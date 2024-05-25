@@ -25,12 +25,12 @@ struct IblEnvHeader {
 
 size_t decodeRgbeChunk(std::vector<uint8_t>& src, std::vector<float>& dst);
 
-loader::IblEnv* decodeIblEnv(std::istream& input);
+loader::EnvironmentImage* decodeIblEnv(std::istream& input);
 
 uint32_t calcCubeMapPixels(uint32_t size, uint32_t levels);
 
 namespace loader {
-IblEnv* environment(std::string filename) {
+EnvironmentImage* environment(std::string filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         PANIC("Error opening file: " + filename);
@@ -39,7 +39,7 @@ IblEnv* environment(std::string filename) {
 }
 }  // namespace loader
 
-loader::IblEnv* decodeIblEnv(std::istream& input) {
+loader::EnvironmentImage* decodeIblEnv(std::istream& input) {
     IblEnvHeader header;
     input.read(reinterpret_cast<char*>(&header), sizeof(header));
 
@@ -48,7 +48,7 @@ loader::IblEnv* decodeIblEnv(std::istream& input) {
     }
 
     if (header.version != IBLENV_VERSION_1_002_000) {
-        PANIC("Environment version unsupported");
+        PANIC("loader::Environment version unsupported");
     }
 
     uint32_t pixel_count = calcCubeMapPixels(header.size, header.levels);
@@ -66,7 +66,7 @@ loader::IblEnv* decodeIblEnv(std::istream& input) {
             PANIC("Expected " + std::to_string(pixel_count) + " encoded pixels");
         }
     } else {
-        PANIC("Environment compression method unsupported");
+        PANIC("loader::Environment compression method unsupported");
     }
 
     std::vector<float> result;
@@ -76,7 +76,7 @@ loader::IblEnv* decodeIblEnv(std::istream& input) {
         PANIC("Did not decode as many RGBE pixels as expected");
     }
 
-    return new loader::IblEnv(result, header.size, header.levels);
+    return new loader::EnvironmentImage(result, header.size, header.levels);
 }
 
 uint32_t calcCubeMapPixels(uint32_t size, uint32_t levels) {

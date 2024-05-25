@@ -11,7 +11,6 @@ class MaterialBatchRenderer;
 class SkyRenderer;
 class TerrainRenderer;
 class MainControllerLoader;
-class IblEnvironment;
 class FadeOverlay;
 class ScoreScreen;
 class StartScreen;
@@ -21,7 +20,10 @@ class FreeCamEntity;
 class Music;
 namespace loader {
 class SceneData;
-}
+class Terrain;
+class Environment;
+
+}  // namespace loader
 namespace scene {
 class Scene;
 }
@@ -36,7 +38,8 @@ class MainController : public AbstractController {
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
-    std::unique_ptr<IblEnvironment> iblEnv;
+    std::unique_ptr<loader::Environment> iblEnv;
+    std::unique_ptr<loader::Terrain> terrain;
     std::unique_ptr<MainControllerLoader> loader;
 
     const std::unique_ptr<ScoreScreen> scoreScreen;

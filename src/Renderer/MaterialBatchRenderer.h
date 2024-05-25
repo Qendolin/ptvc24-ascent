@@ -6,9 +6,9 @@
 #include "../GL/Declarations.h"
 class Camera;
 class ShadowCaster;
-class IblEnvironment;
 namespace loader {
 class GraphicsData;
+class Environment;
 }
 #pragma endregion
 
@@ -24,5 +24,5 @@ class MaterialBatchRenderer {
     MaterialBatchRenderer();
     ~MaterialBatchRenderer();
 
-    void render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, IblEnvironment &env);
+    void render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, loader::Environment &env);
 };

@@ -37,4 +37,6 @@ struct TextureParameters {
 
 gl::Texture *texture(std::string filename, TextureParameters params = {});
 
+gl::Texture *texture(loader::Image &image, TextureParameters params = {});
+
 }  // namespace loader

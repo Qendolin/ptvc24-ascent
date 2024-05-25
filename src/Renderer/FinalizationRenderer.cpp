@@ -6,7 +6,7 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
-#include "IblEnvironment.h"
+#include "../Loader/Environment.h"
 
 FinalizationRenderer::FinalizationRenderer() {
     shader = new gl::ShaderPipeline(

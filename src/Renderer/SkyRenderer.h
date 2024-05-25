@@ -6,9 +6,8 @@
 #include "../GL/Declarations.h"
 class Camera;
 namespace loader {
-class IblEnv;
-struct FloatImage;
-}  // namespace loader
+class Environment;
+}
 #pragma endregion
 
 class SkyRenderer {
@@ -16,12 +15,10 @@ class SkyRenderer {
     gl::ShaderPipeline *shader;
     // A quad with dimensions(-1, -1) to(1, 1)
     gl::VertexArray *cube;
-    gl::Sampler *sampler;
-    gl::Texture *cubemap;
 
    public:
-    SkyRenderer(std::shared_ptr<loader::IblEnv> environment);
+    SkyRenderer();
     ~SkyRenderer();
 
-    void render(Camera &camera);
+    void render(Camera &camera, loader::Environment &env);
 };

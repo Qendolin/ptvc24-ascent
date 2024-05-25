@@ -31,8 +31,7 @@ loader::Image image(std::string filename) {
     };
 }
 
-gl::Texture *texture(std::string filename, TextureParameters params) {
-    loader::Image img = image(filename);
+gl::Texture *texture(loader::Image &img, TextureParameters params) {
     gl::Texture *texture = new gl::Texture(GL_TEXTURE_2D);
     GLenum internal_format = params.internalFormat;
     if (params.srgb) {
@@ -48,6 +47,11 @@ gl::Texture *texture(std::string filename, TextureParameters params) {
     if (params.mipmap)
         texture->generateMipmap();
     return texture;
+}
+
+gl::Texture *texture(std::string filename, TextureParameters params) {
+    loader::Image img = image(filename);
+    return texture(img, params);
 }
 
 }  // namespace loader

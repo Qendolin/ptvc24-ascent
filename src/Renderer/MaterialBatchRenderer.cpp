@@ -6,8 +6,8 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
+#include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
-#include "IblEnvironment.h"
 #include "ShadowRenderer.h"
 
 MaterialBatchRenderer::MaterialBatchRenderer() {
@@ -51,7 +51,7 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete shadowSampler;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, IblEnvironment &env) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, loader::Environment &env) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);

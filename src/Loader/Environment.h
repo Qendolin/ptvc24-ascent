@@ -4,12 +4,16 @@
 #include <string>
 #include <vector>
 
+#pragma region ForwardDecl
+#include "../GL/Declarations.h"
+#pragma endregion
+
 namespace loader {
 
 /**
  * An Image Based Lighting Environment
  */
-class IblEnv {
+class EnvironmentImage {
    private:
     std::vector<int> sizes_;
     std::vector<float> data_;
@@ -20,9 +24,10 @@ class IblEnv {
     const int32_t levels;
     const int32_t baseSize;
 
-    IblEnv(std::vector<float> data, int32_t size, int32_t levels);
+    EnvironmentImage(std::vector<float> data, int32_t size, int32_t levels);
+    ~EnvironmentImage();
 
-    std::vector<float>& all() {
+    std::vector<float> &all() {
         return data_;
     }
 
@@ -51,8 +56,45 @@ struct FloatImage {
     }
 };
 
-IblEnv* environment(std::string filename);
+EnvironmentImage *environment(std::string filename);
 
-FloatImage* floatImage(std::string filename);
+FloatImage *floatImage(std::string filename);
+
+class Environment {
+    gl::Texture *sky_;
+    gl::Texture *diffuse_;
+    gl::Texture *specular_;
+    gl::Texture *brdfLut_;
+    gl::Sampler *cubemapSampler_;
+    gl::Sampler *lutSampler_;
+
+   public:
+    Environment(
+        loader::EnvironmentImage &sky,
+        loader::EnvironmentImage &diffuse,
+        loader::EnvironmentImage &specular,
+        loader::FloatImage &brdf_lut);
+
+    ~Environment();
+
+    gl::Texture &sky() {
+        return *sky_;
+    }
+    gl::Texture &diffuse() {
+        return *diffuse_;
+    }
+    gl::Texture &specular() {
+        return *specular_;
+    }
+    gl::Texture &brdfLut() {
+        return *brdfLut_;
+    }
+    gl::Sampler &cubemapSampler() {
+        return *cubemapSampler_;
+    }
+    gl::Sampler &lutSampler() {
+        return *lutSampler_;
+    }
+};
 
 }  // namespace loader

@@ -4,8 +4,9 @@
 
 #pragma region ForwardDecl
 namespace loader {
-class IblEnv;
+class EnvironmentImage;
 struct FloatImage;
+struct TerrainData;
 }  // namespace loader
 namespace tinygltf {
 class Model;
@@ -17,12 +18,13 @@ class LoadingScreen;
 class MainControllerLoader {
    public:
     struct Data {
-        std::shared_ptr<loader::IblEnv> environment;
-        std::shared_ptr<loader::IblEnv> environmentSpecular;
-        std::shared_ptr<loader::IblEnv> environmentDiffuse;
-        std::shared_ptr<loader::FloatImage> iblBrdfLut;
+        std::unique_ptr<loader::EnvironmentImage> environment;
+        std::unique_ptr<loader::EnvironmentImage> environmentSpecular;
+        std::unique_ptr<loader::EnvironmentImage> environmentDiffuse;
+        std::unique_ptr<loader::FloatImage> iblBrdfLut;
 
-        std::shared_ptr<const tinygltf::Model> gltf;
+        std::unique_ptr<const tinygltf::Model> gltf;
+        std::unique_ptr<loader::TerrainData> terrain;
     };
 
    private:
