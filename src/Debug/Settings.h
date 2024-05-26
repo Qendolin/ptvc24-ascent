@@ -58,7 +58,6 @@ struct DebugSettings {
         struct Terrain {
             bool wireframe = false;
             bool fixedLodOrigin = false;
-            float heightScale = 1200.0;
         } terrain;
 
         struct AmbientOcclusion {

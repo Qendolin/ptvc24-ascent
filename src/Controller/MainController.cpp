@@ -47,12 +47,16 @@ MainController::MainController(Game &game)
 }
 
 MainController::~MainController() {
+    JPH::BodyInterface &physics = game.physics->interface();
     if (sceneData != nullptr) {
-        JPH::BodyInterface &physics = game.physics->interface();
         for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
             physics.RemoveBody(instance.id);
             physics.DestroyBody(instance.id);
         }
+    }
+    if (terrain != nullptr) {
+        physics.RemoveBody(terrain->physicsBody()->GetID());
+        terrain->destroyPhysicsBody(physics);
     }
 }
 
@@ -82,21 +86,30 @@ bool MainController::useHdr() {
 void MainController::applyLoadResult_() {
     LOG_INFO("Finished loading");
     MainControllerLoader::Data data = loader->result();
+    JPH::BodyInterface &physics = game.physics->interface();
 
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
     iblEnv = std::make_unique<loader::Environment>(*data.environment, *data.environmentDiffuse, *data.environmentSpecular, *data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>();
-    terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 20);
+
+    if (terrain != nullptr) {
+        physics.RemoveBody(terrain->physicsBody()->GetID());
+        terrain->destroyPhysicsBody(physics);
+    }
+    terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
+    terrain->createPhysicsBody(physics);
+    physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
 
     if (!data.gltf)
         return;
+
+    // Should only ever be called once per instance
 
     LOG_INFO("Creating scene from gltf data");
     fader->fade(1.0f, 0.0f, 0.3f);
     startScreen->open();
 
     sceneData = std::unique_ptr<loader::SceneData>(loader::scene(*data.gltf));
-    JPH::BodyInterface &physics = game.physics->interface();
     for (loader::PhysicsInstance &instance : sceneData->physics.instances) {
         JPH::BodyID id = physics.CreateAndAddBody(instance.settings, JPH::EActivation::DontActivate);
         if (!instance.id.IsInvalid()) PANIC("Instance already has a physics body id");

@@ -8,6 +8,12 @@
 
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
+namespace JPH {
+class HeightFieldShapeSettings;
+class BodyCreationSettings;
+class BodyInterface;
+class Body;
+}  // namespace JPH
 #pragma endregion
 
 namespace loader {
@@ -42,12 +48,14 @@ class Terrain {
     gl::Texture* occlusion_;
     gl::VertexArray* vao_;
     int subdivisions_;
+    glm::vec3 origin_;
+    float heightScale_;
+
+    JPH::HeightFieldShapeSettings* heightFieldShape_;
+    std::unique_ptr<JPH::Body> body_;
 
    public:
-    glm::vec3 position = glm::vec3{0.0, 0.0, 0.0};
-    float height = 1.0;
-
-    Terrain(TerrainData& data, float size, int subdivisions);
+    Terrain(TerrainData& data, float size, float heightScale, glm::vec3 origin, int subdivisions);
     ~Terrain();
 
     gl::VertexArray& meshVao() {
@@ -72,6 +80,22 @@ class Terrain {
 
     size_t patchCount() {
         return 4 * subdivisions_ * subdivisions_;
+    }
+
+    glm::vec3 origin() {
+        return origin_;
+    }
+
+    float heightScale() {
+        return heightScale_;
+    }
+
+    void createPhysicsBody(JPH::BodyInterface& physics);
+    
+    void destroyPhysicsBody(JPH::BodyInterface& physics);
+
+    JPH::Body* physicsBody() {
+        return body_.get();
     }
 };
 }  // namespace loader

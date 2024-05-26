@@ -62,17 +62,16 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, loader::E
     env.brdfLut().bind(6);
     env.lutSampler().bind(6);
 
-    shader->vertexStage()->setUniform("u_position", terrain.position);
+    shader->vertexStage()->setUniform("u_position", terrain.origin());
 
-    glm::vec3 origin = camera.position;
+    glm::vec3 camera_pos = camera.position;
     if (settings.fixedLodOrigin) {
-        origin = glm::vec3(0.0);
+        camera_pos = glm::vec3(0.0);
     }
-
-    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", origin);
+    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera_pos);
 
     shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_projection_mat", camera.viewProjectionMatrix());
-    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", settings.heightScale);
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", terrain.heightScale());
 
     shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
