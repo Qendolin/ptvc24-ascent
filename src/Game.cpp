@@ -119,8 +119,10 @@ void Game::resize(int width, int height) {
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     ui::set_scale(width, height, x_scale);
 
-    if (ui != nullptr)
+    if (ui != nullptr) {
         ui->setViewport(width, height);
+        ui->fonts()->generate();
+    }
 
     if (imgui != nullptr)
         imgui->setViewport(width, height);
@@ -163,6 +165,7 @@ void Game::load() {
     auto skin = ui::loadSkin();
     ui = std::make_unique<ui::Backend>(fonts, skin, new ui::Renderer());
     ui->setViewport(window.size.x, window.size.y);
+    ui->fonts()->generate();
 
     imgui = std::make_unique<ui::ImGuiBackend>();
     imgui->setViewport(window.size.x, window.size.y);

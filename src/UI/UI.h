@@ -74,11 +74,15 @@ class FontAtlas {
     std::map<std::string, struct nk_font*> fonts_ = {};
     gl::Texture* texture_ = nullptr;
     std::string defaultFont_ = "";
+    std::vector<FontEntry> entries_;
+    float generatedScale_ = 0.0;
 
    public:
     FontAtlas(std::initializer_list<FontEntry> entries, std::string default_font);
 
     ~FontAtlas();
+
+    void generate();
 
     struct nk_font* defaultFont() const {
         return fonts_.at(defaultFont_);
@@ -108,11 +112,11 @@ class Backend {
         return &context_;
     }
 
-    const FontAtlas* fonts() const {
+    FontAtlas* fonts() const {
         return fontAtlas_;
     }
 
-    const Skin* skin() const {
+    Skin* skin() const {
         return skin_;
     }
 
