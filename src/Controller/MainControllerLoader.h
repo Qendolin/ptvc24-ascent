@@ -1,6 +1,6 @@
 
 #include "../UI/Screens/Loading.h"
-#include "../Util/Task.h"
+#include "../Util/TaskPool.h"
 
 #pragma region ForwardDecl
 namespace loader {
@@ -29,11 +29,11 @@ class MainControllerLoader {
 
    private:
     bool firstTime_ = true;
-    std::unique_ptr<Task<Data>> task_;
+    std::unique_ptr<TaskPool<Data>> taskPool_;
     std::unique_ptr<LoadingScreen> screen_;
     bool loading_ = false;
 
-    static void load_(Data& out, bool load_gltf);
+    static void queueOperations_(TaskPool<Data>& pool, bool load_gltf);
 
    public:
     MainControllerLoader();
@@ -43,7 +43,7 @@ class MainControllerLoader {
 
     void update() {
         // isLoading is called multiple times per frame, but it must always return the same value;
-        loading_ = task_ != nullptr && !task_->isFinished();
+        loading_ = taskPool_ != nullptr && !taskPool_->isFinished();
     }
 
     bool isLoading() {
@@ -51,7 +51,7 @@ class MainControllerLoader {
     }
 
     bool isDone() {
-        return !loading_ && task_ != nullptr;
+        return !loading_ && taskPool_ != nullptr;
     }
 
     void draw();
