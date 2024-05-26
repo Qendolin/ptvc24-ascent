@@ -39,7 +39,8 @@ void main()
     vec2 t1 = (t11 - t10) * s + t10;
     vec2 tex_coord = (t1 - t0) * t + t0;
 
-    out_height = textureLod(u_height_map, tex_coord, 0).r;
+    float lod = MAX_TESS_LEVEL - log2(max(gl_TessLevelInner[0], gl_TessLevelInner[1]));
+    out_height = textureLod(u_height_map, tex_coord, lod).r;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;

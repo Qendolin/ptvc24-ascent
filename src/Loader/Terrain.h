@@ -14,6 +14,9 @@ class BodyCreationSettings;
 class BodyInterface;
 class Body;
 }  // namespace JPH
+namespace dds {
+struct Image;
+}
 #pragma endregion
 
 namespace loader {
@@ -32,12 +35,13 @@ struct TerrainData {
         std::string normal;
     };
 
-    loader::Image albedo;
+    std::shared_ptr<dds::Image> albedo;
     loader::Image occlusion;
     loader::Image normal;
     loader::TerrainHeightmap height;
 
     TerrainData(Files files);
+    ~TerrainData();
 };
 
 class Terrain {
@@ -91,7 +95,7 @@ class Terrain {
     }
 
     void createPhysicsBody(JPH::BodyInterface& physics);
-    
+
     void destroyPhysicsBody(JPH::BodyInterface& physics);
 
     JPH::Body* physicsBody() {

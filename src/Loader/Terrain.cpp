@@ -4,6 +4,7 @@
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <stb_image.h>
 
+#include <dds_image/dds.hpp>
 #include <vector>
 
 #include "../GL/Geometry.h"
@@ -27,10 +28,18 @@ TerrainData::TerrainData(TerrainData::Files files) {
         .data = std::shared_ptr<uint16_t>(height_pixels),
     };
 
-    albedo = loader::image(files.albedo);
+    dds::Image *albedo_dds = new dds::Image();
+    albedo_dds->data = loader::binary(files.albedo);
+    auto dds_read_result = dds::readImage(albedo_dds->data.data(), albedo_dds->data.size(), albedo_dds);
+    if (dds_read_result != dds::ReadResult::Success) {
+        PANIC("Failed to read terrain heightmap dds");
+    }
+    albedo = std::shared_ptr<dds::Image>(albedo_dds);
     normal = loader::image(files.normal);
     occlusion = loader::image(files.occlusion);
 }
+
+TerrainData::~TerrainData() = default;
 
 Terrain::Terrain(TerrainData &data, float size, float heightScale, glm::vec3 origin, int subdivisions)
     : subdivisions_(subdivisions),
@@ -38,11 +47,22 @@ Terrain::Terrain(TerrainData &data, float size, float heightScale, glm::vec3 ori
       heightScale_(heightScale) {
     height_ = new gl::Texture(GL_TEXTURE_2D);
     height_->setDebugLabel("terrain/height");
-    height_->allocate(1, GL_R16, data.height.width, data.height.height);
+    height_->allocate(0, GL_R16, data.height.width, data.height.height);
     height_->load(0, data.height.width, data.height.height, GL_RED, GL_UNSIGNED_SHORT, data.height.data.get());
+    height_->generateMipmap();
 
-    albedo_ = loader::texture(data.albedo, loader::TextureParameters{.mipmap = true, .srgb = true, .internalFormat = GL_SRGB8});
+    albedo_ = new gl::Texture(GL_TEXTURE_2D);
     albedo_->setDebugLabel("terrain/albedo");
+    uint32_t albedo_mips = std::min(static_cast<uint32_t>(std::log2(std::max(data.albedo->width, data.albedo->height))), data.albedo->numMips);
+    albedo_->allocate(albedo_mips, GL_COMPRESSED_SRGB_S3TC_DXT1_EXT, data.albedo->width, data.albedo->height);
+
+    for (uint32_t mip = 0; mip < albedo_mips; mip++) {
+        auto mip_data = data.albedo->mipmaps[mip];
+        int width = data.albedo->width >> mip;
+        int height = data.albedo->height >> mip;
+
+        albedo_->loadCompressed(mip, width, height, GL_COMPRESSED_SRGB_S3TC_DXT1_EXT, mip_data.size_bytes(), mip_data.data());
+    }
 
     normal_ = loader::texture(data.normal, loader::TextureParameters{.mipmap = true, .srgb = false, .internalFormat = GL_RGB8_SNORM});
     normal_->setDebugLabel("terrain/normal");

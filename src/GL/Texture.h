@@ -139,6 +139,16 @@ class Texture : public GLObject {
         load(level, width, 1, 1, format, type, data);
     }
 
+    void loadCompressed(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, size_t size, const void* data);
+
+    void loadCompressed(int level, uint32_t width, uint32_t height, GLenum format, size_t size, const void* data) {
+        loadCompressed(level, width, height, 1, format, size, data);
+    }
+
+    void loadCompressed(int level, uint32_t width, GLenum format, size_t size, const void* data) {
+        loadCompressed(level, width, 1, 1, format, size, data);
+    }
+
     /**
      * Generates the mipmap levels `base + 1` to `max` from the data in `base`.
      * See `mipmapLevels`

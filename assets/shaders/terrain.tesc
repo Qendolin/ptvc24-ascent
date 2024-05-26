@@ -1,7 +1,7 @@
 #version 450 core
 
 const int MAX_TESS_LEVEL = 6;
-const float MIN_DISTANCE = 200.0;
+const float MIN_DISTANCE = 10.0;
 const float MAX_DISTANCE = 10000.0;
 
 layout(vertices=4) out;
