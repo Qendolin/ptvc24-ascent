@@ -16,6 +16,7 @@ void SettingsManager::save() {
     const auto &section = ini["settings"];
     section["fov"] = settings_.fov;
     section["look_sensitivity"] = settings_.lookSensitivity;
+    section["max_fps"] = settings_.maxFps;
 
     std::fstream file = std::fstream(filename_, std::ios::out | std::ios::trunc);
     file << ini;
@@ -39,4 +40,5 @@ void SettingsManager::load() {
     const auto &section = ini["settings"];
     settings_.fov = section["fov"] | settings_.fov;
     settings_.lookSensitivity = section["look_sensitivity"] | settings_.lookSensitivity;
+    settings_.maxFps = section["max_fps"] | settings_.maxFps;
 }

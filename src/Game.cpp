@@ -27,6 +27,7 @@
 #include "UI/Renderer.h"
 #include "UI/Skin.h"
 #include "UI/UI.h"
+#include "Util/FpsLimit.h"
 #include "Util/Log.h"
 #include "Window.h"
 
@@ -91,6 +92,8 @@ Game::Game(Window &window)
 
     audio = std::make_unique<Audio>();
     audio->loadAssets();
+
+    fpsLimit_ = std::make_unique<FpsLimiter>();
 
     // at the end
     int vp_width, vp_height;
@@ -196,8 +199,11 @@ void Game::run() {
     glfwShowWindow(window);
     input->invalidate();
     while (!glfwWindowShouldClose(window)) {
+        fpsLimit_->start(glfwGetTime());
         update_();
         render_();
+        fpsLimit_->setTarget(1.0 / settings.get().maxFps);
+        fpsLimit_->end(glfwGetTime());
     }
 }
 
