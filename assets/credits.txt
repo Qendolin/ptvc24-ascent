@@ -1,8 +1,14 @@
 Textures
 ========
 
-Kenny's "Fantasy UI Borders" pack
+UI Borders
+https://kenney.nl/assets/fantasy-ui-borders
+
+PBR Materials
 freestylized.com
+
+Input Prompts
+https://thoseawesomeguys.com/prompts/
 
 Sounds
 ======
@@ -14,7 +20,6 @@ Music
 =====
 
 Boris Laaha
-
 
 Terrain
 =======

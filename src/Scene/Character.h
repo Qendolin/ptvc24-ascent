@@ -35,6 +35,7 @@ class CharacterEntity : public scene::Entity {
     inline static const float RESPAWN_TIME = 0.75f;
     inline static const float RESPAWN_SPEED_FACTOR = 0.6f;
     inline static const float RESPAWN_SPEED_MINIMUM = 7.5f;
+    inline static const float RESPAWN_BOOST_MINIMUM = 0.1f;
     inline static const float INVULNERABILITY_TIME = RESPAWN_TIME + 1.0f;
 
     Timer respawnInvulnerability;

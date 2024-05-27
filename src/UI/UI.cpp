@@ -3,6 +3,7 @@
 #include <initializer_list>
 
 #define NK_IMPLEMENTATION
+#define NK_NO_STB_RECT_PACK_IMPLEMENTATION
 #include <nuklear.h>
 
 #include <glm/glm.hpp>

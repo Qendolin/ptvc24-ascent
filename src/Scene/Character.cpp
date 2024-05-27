@@ -93,7 +93,7 @@ void CharacterEntity::respawn() {
     float speed = std::max(RESPAWN_SPEED_MINIMUM, respawn_point.speed * RESPAWN_SPEED_FACTOR);
     velocity_ = rotation * glm::vec3(0, 0, -speed);
 
-    boostMeter_ = respawn_point.boostMeter;
+    boostMeter_ = std::max(respawn_point.boostMeter, RESPAWN_BOOST_MINIMUM);
 }
 
 void CharacterEntity::setPosition_(glm::vec3 pos) {
@@ -133,6 +133,10 @@ void CharacterEntity::update(float time_delta) {
     // The physics body only moves at a fixed interval (60Hz) but the camera movement needs to be smooth.
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
+
+    if (input.isKeyDown(GLFW_KEY_R)) {
+        respawn();
+    }
 
     if (input.isKeyDown(GLFW_KEY_SPACE) || input.isKeyDown(GLFW_KEY_S)) {
         breakFlag_ = true;
