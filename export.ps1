@@ -6,8 +6,11 @@ $globPatterns = @(
     "assets/shaders/*.*",
     "assets/textures/*.png",
     "assets/textures/*.f32",
+    "assets/textures/*.dds",
     "assets/textures/skybox/*.iblenv",
     "assets/textures/ui/*.png"
+    "assets/textures/input/*.png"
+    "assets/textures/input/*.atlas"
     "assets/textures/particle/*.png"
     "assets/audio/music/*.ogg"
     "assets/audio/music/*.wav"
