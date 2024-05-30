@@ -36,6 +36,11 @@ https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-samp
 https://c0de517e.blogspot.com/2011/05/shadowmap-bias-notes.html
 https://www.thecodingfox.com/nuklear-usage-guide-lwjgl
 https://www.youtube.com/watch?v=5yhDb9dzJ58
+https://ameye.dev/notes/rendering-outlines/
+https://ogldev.org/www/tutorial49/tutorial49.html
+https://ogldev.org/www/tutorial23/tutorial23.html
+https://learnopengl.com/Guest-Articles/2021/CSM
+https://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
 
 
 GTAO
