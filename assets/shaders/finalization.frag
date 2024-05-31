@@ -149,14 +149,17 @@ const float FOG_MAX = 0.8;
 const vec3 FOG_COLOR = vec3(83, 110, 170) / 255.0;
 
 // Iquilezles fog
-vec3 applyFog(vec3 frag_color, float d, vec3 ray_origin, vec3 ray_direction) {
+vec3 applyFog(vec3 frag_color, float d, float d_xz, vec3 ray_origin, vec3 ray_direction) {
     // No fog for far plane
     if(isnan(d)) return frag_color;
     // height based fog
     float fog_amount = (FOG_EMISSION/FOG_DENSITY) * exp(-(ray_origin.y-FOG_HEIGHT) * FOG_DENSITY) * (1.0 - exp(-d * ray_direction.y * FOG_DENSITY)) / ray_direction.y;
-    // puerely distance based fog
-    fog_amount += FOG_LINEAR * FOG_EMISSION * FOG_DENSITY * d;
-    return mix(frag_color, FOG_COLOR, clamp(fog_amount, 0.0, FOG_MAX));
+    fog_amount = clamp(fog_amount, 0.0, FOG_MAX);
+    // puerely distance based fog, not clamped
+    // fog_amount += FOG_LINEAR * FOG_EMISSION * FOG_DENSITY * d;
+    // world border fog
+    fog_amount += pow(max(d_xz - 5000.0, 0.0)*0.0001, 2.0);
+    return mix(frag_color, FOG_COLOR, min(fog_amount, 1.0));
 }
 
 vec3 reconstruct_view_space_position(float depth, vec2 uv) {
@@ -185,7 +188,8 @@ void main() {
     vec3 view_position = load_and_reconstruct_view_space_position(in_uv);
     vec3 world_position = (u_inverse_view_mat * vec4(view_position, 1.0)).xyz;
     float view_distance = length(world_position - u_camera_pos);
-    color = applyFog(color, view_distance, u_camera_pos, (world_position - u_camera_pos) / view_distance);
+    float view_distance_xz = length(world_position.xz - u_camera_pos.xz);
+    color = applyFog(color, view_distance, view_distance_xz, u_camera_pos, (world_position - u_camera_pos) / view_distance);
 
     // out_color.rgb = vec3(view_distance) / 1000.0;
     // return;

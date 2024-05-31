@@ -1,24 +1,11 @@
 #pragma once
 
 #include "../Entity.h"
+#include "Propeller.h"
 
 class CheckpointEntity : public scene::NodeEntity {
    private:
-    class Propeller {
-        scene::NodeRef node;
-        glm::quat initial;
-        glm::quat delta;
-        float speed;
-        float angle = 0;
-
-       public:
-        Propeller() = default;
-        Propeller(scene::NodeRef node, float speed);
-
-        void update(float time_delta);
-    };
-
-    scene::NodeRef sensorRef_;
+        scene::NodeRef sensorRef_;
     scene::NodeRef nextCheckpointRef_;
     scene::TransformRef respawnTransformation_;
 
