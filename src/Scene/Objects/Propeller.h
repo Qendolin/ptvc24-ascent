@@ -3,12 +3,14 @@
 #include "../Entity.h"
 
 class Propeller {
-    scene::NodeRef node;
+    scene::NodeRef blades;
     glm::quat initial;
     float speed;
     float angle = 0;
 
    public:
+    scene::NodeRef node;
+    
     Propeller() = default;
     Propeller(scene::NodeRef node, float speed);
 

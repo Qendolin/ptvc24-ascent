@@ -4,6 +4,8 @@
 
 #include "../Entity.h"
 
+#include "Propeller.h"
+
 class BarrierObstacleEntity : public scene::NodeEntity {
    private:
     scene::NodeRef fromRef;
@@ -12,6 +14,9 @@ class BarrierObstacleEntity : public scene::NodeEntity {
 
     scene::NodeRef colliderRef;
     scene::NodeRef meshRef;
+
+    Propeller propellerLeft_;
+    Propeller propellerRight_;
 
    public:
     BarrierObstacleEntity(scene::SceneRef scene, scene::NodeRef node) : scene::NodeEntity(scene, node) {

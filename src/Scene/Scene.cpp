@@ -221,7 +221,7 @@ NodeRef SceneRef::byName(std::string name) const {
 }
 
 void GraphicsRef::setTransformFromNode() {
-    scene_->graphics[index_].attributes->transform = scene_->transforms[node_].matrix();
+    scene_->graphics[index_].attributes->transform = TransformRef(*scene_, node_).matrix();
 }
 
 void GraphicsRef::setTransform(const glm::mat4& matrix) {

@@ -22,6 +22,11 @@ void BarrierObstacleEntity::init() {
     tween = tweeny::from(from_pos.x, from_pos.y, from_pos.z)
                 .to(to_pos.x, to_pos.y, to_pos.z)
                 .during(cycle_time * 1000);
+
+    propellerLeft_ = Propeller(base.find("Propeller.Left"), -3);
+    propellerRight_ = Propeller(base.find("Propeller.Right"), 3);
+    propellerLeft_.node.transform().setParent(meshRef.transform());
+    propellerRight_.node.transform().setParent(meshRef.transform());
 }
 
 void BarrierObstacleEntity::update(float time_delta) {
@@ -36,6 +41,9 @@ void BarrierObstacleEntity::update(float time_delta) {
 
     meshRef.transform().setPosition(position[0], position[1], position[2]);
     meshRef.graphics().setTransformFromNode();
+
+    propellerLeft_.update(time_delta);
+    propellerRight_.update(time_delta);
 }
 
 void BarrierObstacleEntity::prePhysicsUpdate() {

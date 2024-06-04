@@ -22,8 +22,8 @@ void CheckpointEntity::init() {
     NodeRef respawn_ref = base.find("*.Respawn");
     respawnTransformation_ = respawn_ref.transform();
 
-    propellerLeft_ = Propeller(base.find("Propeller.Left/*.Blades.*"), -3);
-    propellerRight_ = Propeller(base.find("Propeller.Right/*.Blades.*"), 3);
+    propellerLeft_ = Propeller(base.find("Propeller.Left"), -3);
+    propellerRight_ = Propeller(base.find("Propeller.Right"), 3);
 }
 
 void CheckpointEntity::onTriggerActivated() {
