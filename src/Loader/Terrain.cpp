@@ -152,11 +152,11 @@ Terrain::~Terrain() {
     delete normal_;
     delete occlusion_;
     delete vao_;
-    // FIXME: heightFieldShape_ is already deleted automatically by jolt?
+    // heightFieldShape_ is already deleted automatically by jolt?
 }
 
-void Terrain::createPhysicsBody(JPH::BodyInterface &physics) {
-    auto settings = JPH::BodyCreationSettings(heightFieldShape_, ph::convert(origin_), JPH::Quat::sIdentity(), JPH::EMotionType::Static, ph::Layers::NON_MOVING);
+void Terrain::createPhysicsBody(JPH::BodyInterface &physics, glm::vec3 offset) {
+    auto settings = JPH::BodyCreationSettings(heightFieldShape_, ph::convert(origin_ + offset), JPH::Quat::sIdentity(), JPH::EMotionType::Static, ph::Layers::NON_MOVING);
     body_ = std::unique_ptr<JPH::Body>(physics.CreateBody(settings));
 }
 

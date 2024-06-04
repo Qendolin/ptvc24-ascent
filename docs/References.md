@@ -41,7 +41,7 @@ https://ogldev.org/www/tutorial49/tutorial49.html
 https://ogldev.org/www/tutorial23/tutorial23.html
 https://learnopengl.com/Guest-Articles/2021/CSM
 https://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
-
+https://youtu.be/tethAU66xaA
 
 GTAO
 https://github.com/bevyengine/bevy/blob/2aed777435d26c357ed71cdb8c7b858de35e582e/crates/bevy_pbr/src/ssao/gtao.wgsl

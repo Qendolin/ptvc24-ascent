@@ -97,11 +97,13 @@ void MainController::applyLoadResult_() {
         terrain->destroyPhysicsBody(physics);
     }
     terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
-    terrain->createPhysicsBody(physics);
+    terrain->createPhysicsBody(physics, glm::vec3(0.0, 5.0, 0.0));
     physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
+    if (scene && scene->nodesByName.count("terrain")) {
+        scene->physics[scene->nodes[scene->nodesByName.at("terrain")].physics].body = terrain->physicsBody()->GetID();
+    }
 
-    if (!data.gltf)
-        return;
+    if (!data.gltf) return;
 
     // Should only ever be called once per instance
 
@@ -121,6 +123,8 @@ void MainController::applyLoadResult_() {
     scene = std::make_unique<scene::Scene>(*sceneData, factory);
     character = scene::SceneRef(*scene).create<CharacterEntity>(*game.camera);
     scene->callEntityInit();
+
+    scene->createPhysicsNode("terrain", scene::Physics{.body = terrain->physicsBody()->GetID()});
 
     game.physics->system->OptimizeBroadPhase();
 

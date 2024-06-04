@@ -5,7 +5,8 @@
 class Camera;
 namespace JPH {
 class Character;
-}
+class Body;
+}  // namespace JPH
 namespace ph {
 struct SensorContact;
 }
@@ -42,6 +43,8 @@ class CharacterEntity : public scene::Entity {
     Timer respawnFreeze;
 
     JPH::Character* body_ = nullptr;
+    // used to interact with the world (basically the "hortbox" for others)
+    JPH::Body* kinematicBody_ = nullptr;
     glm::vec3 velocity_ = {};
     // Set when should apply air break
     bool breakFlag_ = false;

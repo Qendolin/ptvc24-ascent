@@ -94,7 +94,7 @@ class Terrain {
         return heightScale_;
     }
 
-    void createPhysicsBody(JPH::BodyInterface& physics);
+    void createPhysicsBody(JPH::BodyInterface& physics, glm::vec3 offset);
 
     void destroyPhysicsBody(JPH::BodyInterface& physics);
 

@@ -58,10 +58,10 @@ void StartScreen::draw_() {
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
     nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
-    if (nk_begin(nk, "start_screen_prompts", {0_vw, 0_vh, 100_vw, 100_vh}, NK_WINDOW_NO_SCROLLBAR)) {
+    if (nk_begin(nk, "start_screen_prompts", {5_vw, 5_vh, 95_vw, 95_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
 
-        float height = 40_dp;
+        float height = 60_dp;
         nk_layout_row_begin(nk, NK_STATIC, height, 4);
         auto w_sprite = inputSprite_("w");
         nk_layout_row_push(nk, height * w_sprite.region[2] / w_sprite.region[3]);
@@ -72,7 +72,7 @@ void StartScreen::draw_() {
         nk_layout_row_push(nk, 20_dp);
         nk_spacer(nk);
         nk_layout_row_push(nk, 120_dp);
-        nk_label(nk, "Boost", NK_TEXT_ALIGN_LEFT);
+        nk_label(nk, "Boost", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE);
 
         nk_layout_row_begin(nk, NK_STATIC, height, 4);
         auto s_sprite = inputSprite_("s");
@@ -84,7 +84,7 @@ void StartScreen::draw_() {
         nk_layout_row_push(nk, 20_dp);
         nk_spacer(nk);
         nk_layout_row_push(nk, 120_dp);
-        nk_label(nk, "Break", NK_TEXT_ALIGN_LEFT);
+        nk_label(nk, "Break", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE);
 
         nk_layout_row_begin(nk, NK_STATIC, height, 3);
         auto r_sprite = inputSprite_("r");
@@ -93,7 +93,7 @@ void StartScreen::draw_() {
         nk_layout_row_push(nk, 20_dp);
         nk_spacer(nk);
         nk_layout_row_push(nk, 120_dp);
-        nk_label(nk, "Respawn", NK_TEXT_ALIGN_LEFT);
+        nk_label(nk, "Respawn", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE);
 
         nk_layout_row_begin(nk, NK_STATIC, height, 3);
         auto esc_sprite = inputSprite_("esc");
@@ -102,7 +102,7 @@ void StartScreen::draw_() {
         nk_layout_row_push(nk, 20_dp);
         nk_spacer(nk);
         nk_layout_row_push(nk, 120_dp);
-        nk_label(nk, "Pause", NK_TEXT_ALIGN_LEFT);
+        nk_label(nk, "Pause", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE);
     }
     nk_end(nk);
 }

@@ -148,7 +148,7 @@ const float FOG_HEIGHT = 60.0;
 const float FOG_MAX = 0.8;
 const vec3 FOG_COLOR = vec3(83, 110, 170) / 255.0;
 
-// Iquilezles fog
+// Inigo Quilez's fog
 vec3 applyFog(vec3 frag_color, float d, float d_xz, vec3 ray_origin, vec3 ray_direction) {
     // No fog for far plane
     if(isnan(d)) return frag_color;
@@ -191,8 +191,6 @@ void main() {
     float view_distance_xz = length(world_position.xz - u_camera_pos.xz);
     color = applyFog(color, view_distance, view_distance_xz, u_camera_pos, (world_position - u_camera_pos) / view_distance);
 
-    // out_color.rgb = vec3(view_distance) / 1000.0;
-    // return;
 
     // Flares & Glare
     color += texture(u_flares_tex, in_uv).rgb * u_flares_fac;

@@ -2,12 +2,14 @@
 #include "Graphics.h"
 
 #include "../../../GL/Geometry.h"
+#include "../../../Util/Log.h"
 
 namespace gltf = tinygltf;
 
 namespace loader {
 
 void createVertexBuffers(GraphicsLoadingContext &context) {
+    LOG_DEBUG("Creating vertex buffers");
     // For performance all mesh sections are concatenated into a single, large, immutable buffer
 
     uint32_t vertex_count = context.totalVertexCount;
@@ -64,6 +66,7 @@ void createVertexBuffers(GraphicsLoadingContext &context) {
 }
 
 void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
+    LOG_DEBUG("Creating instance attributes");
     // Sorting the attributes ensures (I think) that the draw command base instance and count work properly
     int32_t attrib_index = 0;
     std::vector<InstanceAttributes> sorted_attributes;
@@ -96,6 +99,7 @@ void createInstanceAttributesBuffer(GraphicsLoadingContext &context) {
 }
 
 void createBatches(GraphicsLoadingContext &context) {
+    LOG_DEBUG("Creating batches");
     // sort all of the sections by material id
     // this allowes them to be drawn in larger batches
     std::sort(context.chunks.begin(), context.chunks.end(), [](Chunk const &a, Chunk const &b) {
@@ -166,6 +170,7 @@ void createBatches(GraphicsLoadingContext &context) {
 }
 
 void loadMaterials(GraphicsLoadingContext &context) {
+    LOG_DEBUG("Loading materials");
     context.materials.reserve(context.model.materials.size() + 1);
 
     for (const gltf::Material &gltf_material : context.model.materials) {
@@ -177,6 +182,7 @@ void loadMaterials(GraphicsLoadingContext &context) {
 }
 
 void loadMeshes(GraphicsLoadingContext &context) {
+    LOG_DEBUG("Loading meshes");
     context.meshIndexMap.reserve(context.model.meshes.size());
 
     for (const gltf::Mesh &gltf_mesh : context.model.meshes) {
@@ -191,6 +197,7 @@ void loadMeshes(GraphicsLoadingContext &context) {
 }
 
 void loadInstances(GraphicsLoadingContext &context, const gltf::Scene &scene) {
+    LOG_DEBUG("Loading instances");
     // this may allocate a little bit more than needed, but it doesn't matter
     context.attributes.reserve(context.model.nodes.size());
 
@@ -216,6 +223,8 @@ void loadInstances(GraphicsLoadingContext &context, const gltf::Scene &scene) {
 GraphicsData loadGraphics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     GraphicsLoadingContext context(model, nodes);
 
+    LOG_DEBUG("Loading GLTF graphics");
+
     loadMaterials(context);
     loadMeshes(context);
 
@@ -228,6 +237,8 @@ GraphicsData loadGraphics(const gltf::Model &model, std::map<std::string, loader
     createInstanceAttributesBuffer(context);
 
     createBatches(context);
+
+    LOG_DEBUG("Finished loading GLTF graphics");
 
     GraphicsData result(
         std::move(context.instances),

@@ -40,19 +40,31 @@ CharacterEntity::~CharacterEntity() {
         body_->RemoveFromPhysicsSystem();
     }
     delete body_;
+    if (kinematicBody_ != nullptr) {
+        physics().interface().RemoveBody(kinematicBody_->GetID());
+        physics().interface().DestroyBody(kinematicBody_->GetID());
+    }
+    // I'm not sure, but I guess Jolt already deletes it when I call DestroyBody
+    // delete kinematicBody_;
 }
 
 void CharacterEntity::init() {
-    JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
-    settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
-    settings->mLayer = ph::Layers::MOVING;
-    settings->mShape = new JPH::SphereShape(0.25f);
-    settings->mFriction = 0.0f;
-    settings->mGravityFactor = 0.0f;
+    JPH::Ref<JPH::CharacterSettings> character_settings = new JPH::CharacterSettings();
+    character_settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
+    character_settings->mLayer = ph::Layers::PLAYER;
+    character_settings->mShape = new JPH::SphereShape(0.25f);
+    character_settings->mFriction = 0.0f;
+    character_settings->mGravityFactor = 0.0f;
 
-    body_ = new JPH::Character(settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
+    body_ = new JPH::Character(character_settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
+
+    // the "hurtbox" is much larger than the hitbox
+    JPH::BodyCreationSettings kinematic_body_settings(new JPH::SphereShape(1.0f), JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, ph::Layers::PLAYER);
+    kinematic_body_settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+    kinematicBody_ = physics().interface().CreateBody(kinematic_body_settings);
+    physics().interface().AddBody(kinematicBody_->GetID(), JPH::EActivation::Activate);
 
     physics().contactListener->RegisterCallback(
         body_->GetBodyID(),
@@ -63,6 +75,10 @@ void CharacterEntity::init() {
 
 void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     NodeRef contactNode = scene.byPhysicsBody(contact.other);
+    if (contactNode.isInvalid()) {
+        LOG_WARN("Contact node was invalid.");
+        return;
+    }
     // The contact node should always have physics
     if (!contactNode.hasPhysics()) {
         LOG_WARN("Contact node did not have physics?!?");
@@ -70,6 +86,8 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     }
     // can't collide with triggers
     if (contactNode.physics().hasTrigger()) return;
+
+    if (contactNode.hasTag("non_killing")) return;
 
     if (!respawnInvulnerability.isZero()) return;
     game().audio->assets->thump.play2dEvent(0.5, 0);
@@ -99,6 +117,7 @@ void CharacterEntity::respawn() {
 void CharacterEntity::setPosition_(glm::vec3 pos) {
     camera.position = pos;
     body_->SetPosition(ph::convert(pos));
+    physics().interface().SetPosition(kinematicBody_->GetID(), ph::convert(pos), JPH::EActivation::Activate);
     cameraLerpStart_ = pos;
     cameraLerpEnd_ = pos;
 }
@@ -181,6 +200,8 @@ void CharacterEntity::postPhysicsUpdate() {
     if (!enabled) return;
 
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
+    // move kinematic body to character body
+    physics().interface().MoveKinematic(kinematicBody_->GetID(), body_->GetPosition(), body_->GetRotation(), ph::Physics::UPDATE_INTERVAL);
 }
 
 glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {

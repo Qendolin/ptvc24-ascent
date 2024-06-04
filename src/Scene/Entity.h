@@ -66,9 +66,7 @@ class NodeEntityFactory {
     std::map<std::string, std::function<NodeEntity*(SceneRef, NodeRef)>> registered_;
 
    public:
-    NodeEntity* create(std::string type, SceneRef scene, NodeRef base) const {
-        return registered_.at(type)(scene, base);
-    }
+    NodeEntity* create(std::string type, SceneRef scene, NodeRef base) const;
 
     template <typename T>
     void registerEntity(std::string type) {

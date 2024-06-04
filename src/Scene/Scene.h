@@ -127,6 +127,8 @@ class Scene {
 
     ~Scene();
 
+    Node& createPhysicsNode(std::string name, const scene::Physics& physics);
+
     void callEntityInit();
 
     bool initialized() {

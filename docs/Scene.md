@@ -36,6 +36,15 @@ Specifies the trigger action name.
 Nodes with this property will be created as Jolt sensors.
 Has no effect on non-physics nodes.
 
+### kinematic
+Creates the physics body as kinematic (controlled by script).
+
+### dynamic
+Creates the physics body as dynamic (controlled by physics).
+
+### dynamic.mass
+Mass in kg of the dynamic physics body (optional).
+
 ### prop.*
 Custom properties starting with `prop.` will be stored in a key-value map.
 The key is equal to the property name without the `prop.` prefix.
