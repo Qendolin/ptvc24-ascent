@@ -152,6 +152,7 @@ const vec3 FOG_COLOR = vec3(83, 110, 170) / 255.0;
 vec3 applyFog(vec3 frag_color, float d, float d_xz, vec3 ray_origin, vec3 ray_direction) {
     // No fog for far plane
     if(isnan(d)) return frag_color;
+    if(ray_direction.y == 0.0) ray_direction.y = 0.000001;
     // height based fog
     float fog_amount = (FOG_EMISSION/FOG_DENSITY) * exp(-(ray_origin.y-FOG_HEIGHT) * FOG_DENSITY) * (1.0 - exp(-d * ray_direction.y * FOG_DENSITY)) / ray_direction.y;
     fog_amount = clamp(fog_amount, 0.0, FOG_MAX);

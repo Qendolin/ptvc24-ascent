@@ -15,10 +15,10 @@
 
 TerrainRenderer::TerrainRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/terrain.vert"),
-         new gl::ShaderProgram("assets/shaders/terrain.frag"),
-         new gl::ShaderProgram("assets/shaders/terrain.tesc"),
-         new gl::ShaderProgram("assets/shaders/terrain.tese")});
+        {new gl::ShaderProgram("assets/shaders/terrain/terrain.vert"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.frag"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tesc"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tese")});
     shader->setDebugLabel("terrain_renderer/shader");
 
     sampler = new gl::Sampler();

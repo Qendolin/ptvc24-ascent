@@ -58,23 +58,23 @@ ParticleSystem::ParticleSystem(int capacity) {
     emitterBuffer_->allocateEmpty(MAX_EMITTERS * sizeof(EmitterShaderValues), GL_DYNAMIC_STORAGE_BIT);
 
     emitShader_ = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/particles_emitter.comp"),
+        new gl::ShaderProgram("assets/shaders/particles/particles_emitter.comp"),
     });
     emitShader_->setDebugLabel("particle_system/emit_shader");
 
     updateShader_ = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/particles.comp"),
+        new gl::ShaderProgram("assets/shaders/particles/particles.comp"),
     });
     updateShader_->setDebugLabel("particle_system/update_shader");
 
     drawShader_ = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/particles.vert"),
-        new gl::ShaderProgram("assets/shaders/particles.frag"),
+        new gl::ShaderProgram("assets/shaders/particles/particles.vert"),
+        new gl::ShaderProgram("assets/shaders/particles/particles.frag"),
     });
     drawShader_->setDebugLabel("particle_system/draw_shader");
 
     resetShader_ = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/particles_reset.comp"),
+        new gl::ShaderProgram("assets/shaders/particles/particles_reset.comp"),
     });
     resetShader_->setDebugLabel("particle_system/reset_shader");
 
