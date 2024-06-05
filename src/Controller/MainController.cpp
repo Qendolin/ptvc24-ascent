@@ -121,8 +121,16 @@ void MainController::applyLoadResult_() {
     scene::NodeEntityFactory factory;
     scene::registerEntityTypes(factory);
     scene = std::make_unique<scene::Scene>(*sceneData, factory);
-    character = scene::SceneRef(*scene).create<CharacterEntity>(*game.camera);
+
+    auto &characterNode = scene->createGenericNode("player");
+    character = scene::SceneRef(*scene).create<CharacterEntity>(scene::NodeRef(*scene, characterNode.index), *game.camera);
+
     scene->callEntityInit();
+
+    // Doing it this way is sooo stupid
+    characterNode.physics = scene->physics.size();
+    scene->physics.emplace_back(scene::Physics{.body = character->body()});
+    scene->nodesByBodyID[character->body()] = characterNode.index;
 
     scene->createPhysicsNode("terrain", scene::Physics{.body = terrain->physicsBody()->GetID()});
 

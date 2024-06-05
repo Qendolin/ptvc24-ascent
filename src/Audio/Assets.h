@@ -9,7 +9,9 @@ struct AudioAssets {
 
     Sound wind;
     Sound woosh;
+    Sound woosh2;
     Sound thump;
+    Sound boost;
 };
 
 class Audio {
@@ -31,7 +33,9 @@ class Audio {
             .bgm = Music(*musicBus, "assets/audio/music/shifting_dunes.ogg"),
             .wind = Sound(*soundBus, "assets/audio/sound/wind-loop.ogg"),
             .woosh = Sound(*soundBus, "assets/audio/sound/woosh.wav"),
-            .thump = Sound(*soundBus, "assets/audio/sound/thump.wav")}));
+            .woosh2 = Sound(*soundBus, "assets/audio/sound/woosh2.wav"),
+            .thump = Sound(*soundBus, "assets/audio/sound/thump.wav"),
+            .boost = Sound(*soundBus, "assets/audio/sound/boost.ogg")}));
         assets->mainMenu.setLooping(true);
         assets->mainMenu.setVolume(0.8f);
         assets->bgm.setLooping(true);

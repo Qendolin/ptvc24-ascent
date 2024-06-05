@@ -232,6 +232,8 @@ void main()
     // TODO: figure out physically based way for shadow contribution to ambient light
     const float shadow_ambient_factor = 0.66;
     vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao) * mix(1.0 - shadow_ambient_factor, 1.0, shadow);
+    // Limit reflection intensity, avoid flickering and extreme lens flare. Especially because the skybox has infinities.
+    ambient = min(ambient, vec3(100.0));
 
     vec3 color = ambient + Lo;
     out_color = vec4(color, 1.0);

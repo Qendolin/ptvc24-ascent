@@ -13,7 +13,7 @@ void CheckpointEntity::init() {
 
     physics().contactListener->RegisterCallback(sensorRef_.physics().body(), [this](ph::SensorContact contact) {
         if (contact.persistent) return;
-        this->onTriggerActivated();
+        this->onTriggerActivated(contact.other);
     });
 
     std::string next_name = base.prop<std::string>("next_checkpoint", "");
@@ -26,9 +26,10 @@ void CheckpointEntity::init() {
     propellerRight_ = Propeller(base.find("Propeller.Right"), 3);
 }
 
-void CheckpointEntity::onTriggerActivated() {
-    // FIXME: doesn't check if triggered by player
-    Trigger trigger = sensorRef_.physics().trigger();
+void CheckpointEntity::onTriggerActivated(JPH::BodyID& body) {
+    NodeRef contactNode = scene.byPhysicsBody(body);
+    if (contactNode.isInvalid() || !contactNode.hasTag("player"))
+        return;
 
     MainController& controller = dynamic_cast<MainController&>(*game().controller);
     controller.raceManager.onCheckpointEntered(this);

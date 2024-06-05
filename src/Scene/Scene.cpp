@@ -107,6 +107,21 @@ Node& Scene::createPhysicsNode(std::string name, const scene::Physics& physics) 
     return result;
 }
 
+Node& Scene::createGenericNode(std::string name) {
+    int32_t index = nodes.size();
+    Node& result = nodes.emplace_back();
+    result = {
+        .name = name,
+        .index = index,
+        .parent = 0,
+        .children = {},
+        .properties = Properties(),
+        .tags = Tags(),
+    };
+    nodesByName[name] = index;
+    return result;
+}
+
 void Scene::callEntityInit() {
     if (initialized_) {
         LOG_WARN("Scene::callEntityInit called after scene was already initialized");

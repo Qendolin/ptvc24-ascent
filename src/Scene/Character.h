@@ -16,7 +16,7 @@ class SoundInstance2d;
 
 // The character controller handles movement and mouse look.
 // It links the character physics body to the camera.
-class CharacterEntity : public scene::Entity {
+class CharacterEntity : public scene::NodeEntity {
    private:
     // Flying speed factor
     inline static const float SPEED = 10.0f;
@@ -53,9 +53,9 @@ class CharacterEntity : public scene::Entity {
     // how much boost is available
     float boostMeter_ = 1.0;
     float boostDynamicFov_ = 0.0;
+    bool boostSoundPlaying_ = false;
 
     bool frozen_ = false;
-    ;
 
     // The start and end position of the camera interpolation
     glm::vec3 cameraLerpStart_ = {};
@@ -63,6 +63,7 @@ class CharacterEntity : public scene::Entity {
 
     std::unique_ptr<SoundInstance2d> windSoundInstanceLeft_;
     std::unique_ptr<SoundInstance2d> windSoundInstanceRight_;
+    std::unique_ptr<SoundInstance2d> boostSoundInstance_;
 
     // called as a callback by the physics engine
     void onBodyContact_(ph::SensorContact& contact);
@@ -80,7 +81,7 @@ class CharacterEntity : public scene::Entity {
     Camera& camera;
     bool enabled = true;
 
-    CharacterEntity(scene::SceneRef scene, Camera& camera);
+    CharacterEntity(scene::SceneRef scene, scene::NodeRef node, Camera& camera);
 
     virtual ~CharacterEntity();
 
@@ -104,4 +105,6 @@ class CharacterEntity : public scene::Entity {
     float boostMeter() const {
         return boostMeter_;
     }
+
+    JPH::BodyID body() const;
 };

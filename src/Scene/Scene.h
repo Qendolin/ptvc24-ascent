@@ -58,6 +58,11 @@ class Tags {
     bool has(const std::string& tag) const {
         return std::find(tags_.cbegin(), tags_.cend(), tag) != tags_.cend();
     }
+
+    void add(const std::string& tag) {
+        if (has(tag)) return;
+        tags_.push_back(tag);
+    }
 };
 
 struct Node {
@@ -132,6 +137,8 @@ class Scene {
     ~Scene();
 
     Node& createPhysicsNode(std::string name, const scene::Physics& physics);
+
+    Node& createGenericNode(std::string name);
 
     void callEntityInit();
 
@@ -397,6 +404,10 @@ class NodeRef {
 
     bool hasTag(const std::string& tag) const {
         return scene_->nodes[index_].tags.has(tag);
+    }
+
+    void addTag(const std::string& tag) {
+        return scene_->nodes[index_].tags.add(tag);
     }
 
     template <typename T>

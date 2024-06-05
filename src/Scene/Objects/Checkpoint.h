@@ -5,7 +5,7 @@
 
 class CheckpointEntity : public scene::NodeEntity {
    private:
-        scene::NodeRef sensorRef_;
+    scene::NodeRef sensorRef_;
     scene::NodeRef nextCheckpointRef_;
     scene::TransformRef respawnTransformation_;
 
@@ -22,7 +22,7 @@ class CheckpointEntity : public scene::NodeEntity {
 
     void update(float time_delta) override;
 
-    void onTriggerActivated();
+    void onTriggerActivated(JPH::BodyID& body);
 
     void debugDraw() override;
 

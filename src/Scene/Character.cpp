@@ -28,11 +28,12 @@ using namespace scene;
 
 glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
-CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
+CharacterEntity::CharacterEntity(SceneRef scene, NodeRef node, Camera& camera) : NodeEntity(scene, node), camera(camera) {
     auto& windSound = game().audio->assets->wind;
     windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, -0.5));
     windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, 0.5));
     windSoundInstanceLeft_->seek(windSound.duration() * 0.5);
+    boostSoundInstance_ = std::unique_ptr<SoundInstance2d>(game().audio->assets->boost.play2d(0, 0.0));
 }
 
 CharacterEntity::~CharacterEntity() {
@@ -49,6 +50,8 @@ CharacterEntity::~CharacterEntity() {
 }
 
 void CharacterEntity::init() {
+    base.addTag("player");
+
     JPH::Ref<JPH::CharacterSettings> character_settings = new JPH::CharacterSettings();
     character_settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
     character_settings->mLayer = ph::Layers::PLAYER;
@@ -125,6 +128,7 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
 void CharacterEntity::terminate() {
     this->windSoundInstanceLeft_->stop();
     this->windSoundInstanceRight_->stop();
+    this->boostSoundInstance_->stop();
 }
 
 void CharacterEntity::update(float time_delta) {
@@ -137,6 +141,7 @@ void CharacterEntity::update(float time_delta) {
     if (isFrozen_()) {
         windSoundInstanceLeft_->setVolume(0);
         windSoundInstanceRight_->setVolume(0);
+        boostSoundInstance_->setVolume(0);
         return;
     }
     // Camera movement
@@ -170,8 +175,15 @@ void CharacterEntity::update(float time_delta) {
 
     if (boostFlag_ && boostMeter_ > 0) {
         boostDynamicFov_ += BOOST_DYN_FOV_CHANGE * time_delta;
+        if (!boostSoundPlaying_) {
+            boostSoundPlaying_ = true;
+            boostSoundInstance_->seek(0.0);
+        }
+        boostSoundInstance_->setVolume(1.0);
     } else {
         boostDynamicFov_ -= BOOST_DYN_FOV_CHANGE * time_delta;
+        boostSoundInstance_->setVolume(0.0);
+        boostSoundPlaying_ = false;
     }
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
@@ -265,7 +277,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
 }
 
 // calculate azimuth and elevation from quaternion. (assuming -z forward)
-glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
+static glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     // Calculate elevation
     float sin_pitch = 2.0f * (q.x * q.w - q.z * q.y);
     float elevation = glm::asin(sin_pitch);
@@ -279,4 +291,8 @@ glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     }
 
     return glm::vec2(azimuth, elevation);
+}
+
+JPH::BodyID CharacterEntity::body() const {
+    return body_->GetBodyID();
 }
