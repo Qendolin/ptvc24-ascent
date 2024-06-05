@@ -1,6 +1,7 @@
 #version 450 core
 
 const int MAX_TESS_LEVEL = 6;
+const float SHADOW_HEIGHT_BIAS = -3.0;
 
 layout(quads, equal_spacing, ccw) in;
 
@@ -45,7 +46,7 @@ void main()
     const vec4 up = vec4(0.0, 1.0, 0.0, 0.0);
     vec4 p0 = (p01 - p00) * s + p00;
     vec4 p1 = (p11 - p10) * s + p10;
-    vec4 p = (p1 - p0) * t + p0 + up * height * u_height_scale;
+    vec4 p = (p1 - p0) * t + p0 + up * (height * u_height_scale + SHADOW_HEIGHT_BIAS);
 
     gl_Position = u_view_projection_mat * p;
 }

@@ -51,8 +51,6 @@ class MainController : public AbstractController {
     CharacterEntity* character = nullptr;
     std::unique_ptr<FreeCamEntity> freeCam;
 
-    std::unique_ptr<OrthoShadowCaster> sunShadow = std::make_unique<OrthoShadowCaster>(1024 * 2, 225.0f, 1.0f, 250.0f);
-
     /**
      * Draw the on screen hud (timer, score, etc.)
      */

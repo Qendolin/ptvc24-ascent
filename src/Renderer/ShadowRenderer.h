@@ -99,8 +99,11 @@ class CSM {
     gl::Framebuffer* shadowMap_;
     gl::Texture* depthTexture_;
 
+    float updateInterval_;
+    float lastUpdateElapsed_ = 0.0f;
+
    public:
-    CSM(int resolution);
+    CSM(int resolution, float update_interval);
     ~CSM();
 
     CSMShadowCaster* cascade(int index) {
@@ -111,7 +114,11 @@ class CSM {
         return depthTexture_;
     }
 
-    void update(Camera& camera, glm::vec2 light_dir_polar);
+    /**
+     * Update the shadow caster frustums using the update interval.
+     * @returns true when an update happened
+     */
+    bool update(Camera& camera, glm::vec2 light_dir_polar, float time_delta);
 
     void bind();
 };

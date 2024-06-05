@@ -26,6 +26,7 @@ Use mouse to look.
 | `Space`, `S` | Air Break                  |
 | `R`          | Respawn at last Checkpoint |
 | `ESC`        | Pause Menu                 |
+| `F2`         | Hide GUI                   |
 | `F3`         | Toggle debug menu          |
 | `F5`         | Reload assets / shaders    |
 

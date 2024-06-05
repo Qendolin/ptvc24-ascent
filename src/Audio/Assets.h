@@ -41,6 +41,7 @@ class Audio {
         assets->bgm.setLooping(true);
         assets->bgm.setVolume(0.2f);
         assets->wind.setLooping(true);
+        assets->boost.setLooping(true);
     }
 
     std::unique_ptr<Music> createMusic(std::string filename);

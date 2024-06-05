@@ -101,6 +101,7 @@ class Backend {
     Renderer* renderer_ = nullptr;
     FontAtlas* fontAtlas_ = nullptr;
     Skin* skin_ = nullptr;
+    bool hidden_ = false;
 
    public:
     Backend(FontAtlas* font_atlas, Skin* skin, Renderer* renderer);
@@ -123,6 +124,14 @@ class Backend {
     void setViewport(int width, int height);
 
     void render();
+
+    void setHidden(bool hidden) {
+        this->hidden_ = hidden;
+    }
+
+    bool hidden() {
+        return this->hidden_;
+    }
 };
 
 }  // namespace ui

@@ -74,7 +74,7 @@ void MainController::load() {
 
     shadowRenderer = std::make_unique<ShadowMapRenderer>();
     terrainRenderer = std::make_unique<TerrainRenderer>();
-    csm = std::make_unique<CSM>(2048);
+    csm = std::make_unique<CSM>(2048, 1.0f / 30.0f);
 
     game.audio->assets->bgm.pause();
     game.audio->assets->bgm.seek(0);
@@ -98,7 +98,7 @@ void MainController::applyLoadResult_() {
         terrain->destroyPhysicsBody(physics);
     }
     terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
-    terrain->createPhysicsBody(physics, glm::vec3(0.0, 5.0, 0.0));
+    terrain->createPhysicsBody(physics, glm::vec3(0.0, 1.0, 0.0));
     physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
     if (scene && scene->nodesByName.count("terrain")) {
         scene->physics[scene->nodes[scene->nodesByName.at("terrain")].physics].body = terrain->physicsBody()->GetID();
@@ -315,21 +315,11 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
-    // sunShadow->lookAt(
-    //     glm::make_vec3(&game.debugSettings.rendering.shadow.sunTarget[0]),
-    //     glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
-    //     glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1]),
-    //     game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
-    // shadowRenderer->render(*sunShadow, sceneData->graphics);
-
-    // Note: this worked great
-    // static unsigned int frame = 0;
-    // if (frame++ % 16 == 0) {
-    csm->update(*game.camera, glm::vec2(
-                                  glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
-                                  glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1])));
-    shadowRenderer->render(*csm, *game.camera, sceneData->graphics, *terrain);
-    // }
+    if (csm->update(*game.camera,
+                    glm::vec2(glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]), glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1])),
+                    game.input->timeDelta())) {
+        shadowRenderer->render(*csm, *game.camera, sceneData->graphics, *terrain);
+    }
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
     game.hdrFramebuffer().bindTargets({0, 1});

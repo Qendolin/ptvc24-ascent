@@ -190,6 +190,10 @@ void Backend::setViewport(int width, int height) {
 }
 
 void Backend::render() {
+    if (hidden_) {
+        nk_clear(&context_);
+        return;
+    }
     renderer_->render(&context_, &commands_);
 }
 

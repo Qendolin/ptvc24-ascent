@@ -106,7 +106,7 @@ void CSMShadowCaster::bind() {
     shadowMap_->attachTexture(GL_DEPTH_ATTACHMENT, depthTexture_);
 }
 
-CSM::CSM(int resolution) {
+CSM::CSM(int resolution, float update_interval) : updateInterval_(update_interval) {
     shadowMap_ = new gl::Framebuffer();
     shadowMap_->setDebugLabel("csm/fbo");
     shadowMap_->bindTargets({});
@@ -133,7 +133,13 @@ CSM::~CSM() {
     delete depthTexture_;
 }
 
-void CSM::update(Camera& camera, glm::vec2 light_dir_polar) {
+bool CSM::update(Camera& camera, glm::vec2 light_dir_polar, float time_delta) {
+    lastUpdateElapsed_ += time_delta;
+    if (lastUpdateElapsed_ < updateInterval_) {
+        return false;
+    }
+    lastUpdateElapsed_ = 0.0f;
+
     float nearClip = 1.0;
     float farClip = 1000.0;
     float clipRange = farClip - nearClip;
@@ -231,6 +237,7 @@ void CSM::update(Camera& camera, glm::vec2 light_dir_polar) {
 
         lastSplitDist = cascadeSplits[i];
     }
+    return true;
 }
 
 void CSM::bind() {

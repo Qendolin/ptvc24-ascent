@@ -36,9 +36,9 @@ uniform float u_shadow_normal_bias;
 // see pbr.vert
 vec3 shadowSamplePosition(in mat4 view, in mat4 projection, vec3 position, vec3 normal, vec3 direction, float texel_size) {
 	vec4 shadow_ws = vec4(position, 1.0);
-	float n_dot_l = dot(normal, direction);
-    vec3 offset = u_shadow_normal_bias * (1.0 - n_dot_l) * texel_size * normal;
-	shadow_ws.xyz += offset;
+	// float n_dot_l = dot(normal, direction);
+    // vec3 offset = u_shadow_normal_bias * (1.0 - n_dot_l) * texel_size * normal;
+	// shadow_ws.xyz += offset;
 
 	vec4 shadow_ndc = projection * view * shadow_ws;
 	return shadow_ndc.xyz;

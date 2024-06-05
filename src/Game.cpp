@@ -223,6 +223,10 @@ void Game::processInput_() {
         debugMenu_->open = !debugMenu_->open;
         debugMenu_->open ? input->releaseMouse() : input->captureMouse();
     }
+
+    if (input->isKeyPress(GLFW_KEY_F2)) {
+        ui->setHidden(!ui->hidden());
+    }
 }
 
 void Game::update_() {
