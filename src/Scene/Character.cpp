@@ -26,7 +26,7 @@
 
 using namespace scene;
 
-glm::vec2 quatToAzimuthElevation(const glm::quat& q);
+static glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
 CharacterEntity::CharacterEntity(SceneRef scene, NodeRef node, Camera& camera) : NodeEntity(scene, node), camera(camera) {
     auto& windSound = game().audio->assets->wind;

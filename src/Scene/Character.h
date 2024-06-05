@@ -100,6 +100,10 @@ class CharacterEntity : public scene::NodeEntity {
         return velocity_;
     }
 
+    void setVelocity(glm::vec3 velocity) {
+        velocity_ = velocity;
+    }
+
     void terminate();
 
     float boostMeter() const {

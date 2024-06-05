@@ -128,9 +128,11 @@ void MainController::applyLoadResult_() {
     scene->callEntityInit();
 
     // Doing it this way is sooo stupid
+    // TODO: clean this up
     characterNode.physics = scene->physics.size();
     scene->physics.emplace_back(scene::Physics{.body = character->body()});
     scene->nodesByBodyID[character->body()] = characterNode.index;
+    characterNode.entity = scene->entities.size() - 1;
 
     scene->createPhysicsNode("terrain", scene::Physics{.body = terrain->physicsBody()->GetID()});
 

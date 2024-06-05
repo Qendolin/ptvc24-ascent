@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../Util/Timer.h"
 #include "../Entity.h"
 
 class BoostRingEntity : public scene::NodeEntity {
@@ -7,6 +8,7 @@ class BoostRingEntity : public scene::NodeEntity {
     scene::NodeRef sensorRef;
     scene::NodeRef meshRef;
     glm::quat initialRotation;
+    Timer cooldown = {};
     float angle = 0;
 
    public:
