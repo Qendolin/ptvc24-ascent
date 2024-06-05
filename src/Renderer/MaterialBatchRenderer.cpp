@@ -51,7 +51,7 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete shadowSampler;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, loader::Environment &env) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);
@@ -59,7 +59,8 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 
     shader->bind();
-    shader->vertexStage()->setUniform("u_view_projection_mat", camera.viewProjectionMatrix());
+    shader->vertexStage()->setUniform("u_projection_mat", camera.projectionMatrix());
+    shader->vertexStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
 
     albedoSampler->bind(0);
@@ -68,18 +69,23 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
     env.cubemapSampler().bind(3);
     env.cubemapSampler().bind(4);
     env.lutSampler().bind(5);
-    shadowSampler->bind(6);
 
     env.diffuse().bind(3);
     env.specular().bind(4);
     env.brdfLut().bind(5);
 
-    shadow.depthTexture()->bind(6);
+    shadowSampler->bind(6);
+    csm.depthTexture()->bind(6);
+
     shader->fragmentStage()->setUniform("u_shadow_depth_bias", Game::get().debugSettings.rendering.shadow.depthBias);
     shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->vertexStage()->setUniform("u_shadow_normal_bias", Game::get().debugSettings.rendering.shadow.normalBias);
-    shader->vertexStage()->setUniform("u_shadow_view_mat", shadow.viewMatrix());
-    shader->vertexStage()->setUniform("u_shadow_projection_mat", shadow.projectionMatrix());
+    for (size_t i = 0; i < CSM::CASCADE_COUNT; i++) {
+        CSMShadowCaster &caster = *csm.cascade(i);
+        shader->fragmentStage()->setUniformIndexed("u_shadow_splits", i, caster.splitDistance);
+        shader->vertexStage()->setUniformIndexed("u_shadow_view_mat", i, caster.viewMatrix());
+        shader->vertexStage()->setUniformIndexed("u_shadow_projection_mat", i, caster.projectionMatrix());
+    }
 
     graphics.bind();
     for (auto &&batch : graphics.batches) {

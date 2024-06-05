@@ -46,6 +46,7 @@ struct DebugSettings {
             bool debugDrawEnabled = false;
             std::array<float, 3> sunTarget = {-27, 0, -70};
             std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
+            float cascadeSplitLambda = 0.75f;
             float sunDistance = 175;
             float normalBias = 300.0f;
             float sizeBias = 10.0f;

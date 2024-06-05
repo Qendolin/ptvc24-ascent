@@ -1,12 +1,15 @@
 #version 450 core
 
+const int SHADOW_CASCADE_COUNT = 4;
+
 layout(early_fragment_tests) in;
 
-layout(location = 0) in vec3 in_position_ws; // world space
-layout(location = 1) in vec2 in_uv;
-layout(location = 2) in mat3 in_tbn;
-layout(location = 5) in vec3 in_shadow_position; // shadow ndc space
-layout(location = 6) in vec3 in_shadow_direction;
+layout(location = 0)  in vec3 in_position_ws; // world space
+layout(location = 1)  in vec3 in_position_vs; // view space
+layout(location = 2)  in vec2 in_uv;
+layout(location = 3)  in mat3 in_tbn;
+layout(location = 6)  in vec3 in_shadow_position[SHADOW_CASCADE_COUNT]; // shadow ndc space
+layout(location = 10) in vec3 in_shadow_direction;
 
 layout(location = 0) out vec4 out_color;
 layout(location = 1) out vec2 out_normal;
@@ -19,7 +22,7 @@ layout(binding = 3) uniform samplerCube u_ibl_diffuse;
 layout(binding = 4) uniform samplerCube u_ibl_specualr;
 layout(binding = 5) uniform sampler2D u_ibl_brdf_lut;
 
-layout(binding = 6) uniform sampler2DShadow u_shadow_map;
+layout(binding = 6) uniform sampler2DArrayShadow u_shadow_map;
 
 uniform vec3 u_camera_pos;
 uniform vec3 u_albedo_fac;
@@ -28,6 +31,7 @@ uniform float u_normal_fac;
 uniform mat4 u_view_mat;
 
 uniform float u_shadow_depth_bias;
+uniform float u_shadow_splits[SHADOW_CASCADE_COUNT];
 
 const float PI = 3.14159265359;
 
@@ -125,8 +129,8 @@ vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metal
     return (kD * diffuse + specular) * ao; 
 }
 
-float sampleShadow(vec3 P_shadow_ndc, float n_dot_l) {
-    vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
+float sampleShadow(float index, vec3 P_shadow_ndc, float n_dot_l) {
+    vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0).xy;
     // z is seperate because we are using 0..1 depth, not the usual -1..1
     vec3 shadow_uvz = vec3(P_shadow_ndc.xy * 0.5 + 0.5, P_shadow_ndc.z);
 
@@ -140,10 +144,10 @@ float sampleShadow(vec3 P_shadow_ndc, float n_dot_l) {
     if (offset.y > 1.1) offset.y = 0;
     float shadow = 0.0;
     // + bias instead of - bias becase we are using reversed depth and the GL_GEQUAL compare mode.
-    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(-1.5, 0.5)) * texel_size, shadow_uvz.z + bias));
-    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(0.5, 0.5)) * texel_size, shadow_uvz.z + bias));
-    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(-1.5, -1.5)) * texel_size, shadow_uvz.z + bias));
-    shadow += texture(u_shadow_map, vec3(shadow_uvz.xy + (offset + vec2(0.5, -1.5)) * texel_size, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec4(shadow_uvz.xy + (offset + vec2(-1.5, 0.5)) * texel_size, index, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec4(shadow_uvz.xy + (offset + vec2(0.5, 0.5)) * texel_size, index, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec4(shadow_uvz.xy + (offset + vec2(-1.5, -1.5)) * texel_size, index, shadow_uvz.z + bias));
+    shadow += texture(u_shadow_map, vec4(shadow_uvz.xy + (offset + vec2(0.5, -1.5)) * texel_size, index, shadow_uvz.z + bias));
 
     return shadow * 0.25;
 }
@@ -226,12 +230,21 @@ void main()
         Lo += (kD * albedo / PI + specular) * radiance * n_dot_l;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
 
-    float shadow = sampleShadow(in_shadow_position, dot(tbn[2], in_shadow_direction));
+    int shadow_index = 0;
+    for (int i = 0; i < SHADOW_CASCADE_COUNT - 1; i++) {
+        if (in_position_vs.z < u_shadow_splits[i]) {
+            shadow_index = i + 1;
+        }
+    }
+    float shadow = sampleShadow(float(shadow_index), in_shadow_position[shadow_index], dot(tbn[2], in_shadow_direction));
 
     // ambient lighting
+    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao);
     // TODO: figure out physically based way for shadow contribution to ambient light
-    const float shadow_ambient_factor = 0.66;
-    vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao) * mix(1.0 - shadow_ambient_factor, 1.0, shadow);
+    // not pbr but looks great
+    const float shadow_ambient_factor = 0.8;
+    const vec3 shadow_ambient_color = vec3(0.03, 0.05, 0.1) * 0.05;
+    ambient = mix(ambient, shadow_ambient_color, (1.0 - shadow) * shadow_ambient_factor);
     // Limit reflection intensity, avoid flickering and extreme lens flare. Especially because the skybox has infinities.
     ambient = min(ambient, vec3(100.0));
 

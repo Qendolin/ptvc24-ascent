@@ -18,6 +18,7 @@ class PauseScreen;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
+class CSM;
 namespace loader {
 class SceneData;
 class Terrain;
@@ -41,6 +42,7 @@ class MainController : public AbstractController {
     std::unique_ptr<loader::Environment> iblEnv;
     std::unique_ptr<loader::Terrain> terrain;
     std::unique_ptr<MainControllerLoader> loader;
+    std::unique_ptr<CSM> csm;
 
     const std::unique_ptr<ScoreScreen> scoreScreen;
     const std::unique_ptr<StartScreen> startScreen;

@@ -5,11 +5,11 @@
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
 class Camera;
-class ShadowCaster;
+class CSM;
 namespace loader {
 class GraphicsData;
 class Environment;
-}
+}  // namespace loader
 #pragma endregion
 
 class MaterialBatchRenderer {
@@ -24,5 +24,5 @@ class MaterialBatchRenderer {
     MaterialBatchRenderer();
     ~MaterialBatchRenderer();
 
-    void render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow, loader::Environment &env);
+    void render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env);
 };

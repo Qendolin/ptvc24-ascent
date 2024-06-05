@@ -127,6 +127,7 @@ void DebugMenu::drawDebugWindow_() {
             TableNextColumn();
             SliderFloat("El", &settings.rendering.shadow.sunAzimuthElevation[1], -90, 90, "%.1f °");
             EndTable();
+            SliderFloat("Split Lambda", &settings.rendering.shadow.cascadeSplitLambda, 0.0, 1.0);
             SliderFloat("Distance", &settings.rendering.shadow.sunDistance, 0, 1000);
             DragFloat("Normal Bias", &settings.rendering.shadow.normalBias);
             SliderFloat("Size Bias", &settings.rendering.shadow.sizeBias, -300, 300);

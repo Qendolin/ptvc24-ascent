@@ -10,7 +10,7 @@
 
 // calculate number of sides for a given radius
 int circleSides(float r) {
-    return 24 + (int)(0.6 * r);
+    return std::min(24 + (int)(0.6 * r), 128);
 }
 
 // calculate a perpendicular vector
@@ -293,6 +293,12 @@ void DirectBuffer::uvSphere(glm::vec3 c, float r) {
         currRing.swap(prevRing);
     }
     autoShade_ = false;
+}
+
+void DirectBuffer::uvSphereLine(glm::vec3 c, float r) {
+    circleLine(c, glm::vec3{1, 0, 0}, r);
+    circleLine(c, glm::vec3{0, 1, 0}, r);
+    circleLine(c, glm::vec3{0, 0, 1}, r);
 }
 
 void DirectBuffer::box(glm::vec3 c, glm::vec3 d) {

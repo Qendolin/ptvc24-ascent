@@ -12,6 +12,7 @@
 #include "../Loader/Environment.h"
 #include "../Loader/Terrain.h"
 #include "../Util/Log.h"
+#include "ShadowRenderer.h"
 
 TerrainRenderer::TerrainRenderer() {
     shader = new gl::ShaderPipeline(
@@ -21,18 +22,25 @@ TerrainRenderer::TerrainRenderer() {
          new gl::ShaderProgram("assets/shaders/terrain/terrain.tese")});
     shader->setDebugLabel("terrain_renderer/shader");
 
-    sampler = new gl::Sampler();
-    sampler->setDebugLabel("terrain_renderer/sampler");
-    sampler->wrapMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT, 0);
-    sampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
+    terrainSampler = new gl::Sampler();
+    terrainSampler->setDebugLabel("terrain_renderer/terrainSampler");
+    terrainSampler->wrapMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT, 0);
+    terrainSampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
+
+    shadowSampler = new gl::Sampler();
+    shadowSampler->setDebugLabel("terrain_renderer/shadow_sampler");
+    shadowSampler->filterMode(GL_LINEAR, GL_LINEAR);
+    shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+    shadowSampler->borderColor(glm::vec4(0));
+    shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
 }
 
 TerrainRenderer::~TerrainRenderer() {
     delete shader;
-    delete sampler;
+    delete terrainSampler;
 }
 
-void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, loader::Environment &env) {
+void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm, loader::Environment &env) {
     gl::pushDebugGroup("TerrainRenderer::render");
     auto settings = Game::get().debugSettings.rendering.terrain;
 
@@ -47,13 +55,13 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, loader::E
     shader->bind();
 
     terrain.heightTexture().bind(0);
-    sampler->bind(0);
+    terrainSampler->bind(0);
     terrain.albedoTexture().bind(1);
-    sampler->bind(1);
+    terrainSampler->bind(1);
     terrain.normalTexture().bind(2);
-    sampler->bind(2);
+    terrainSampler->bind(2);
     terrain.occlusionTexture().bind(3);
-    sampler->bind(3);
+    terrainSampler->bind(3);
 
     env.diffuse().bind(4);
     env.cubemapSampler().bind(4);
@@ -61,6 +69,9 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, loader::E
     env.cubemapSampler().bind(5);
     env.brdfLut().bind(6);
     env.lutSampler().bind(6);
+
+    shadowSampler->bind(7);
+    csm.depthTexture()->bind(7);
 
     shader->vertexStage()->setUniform("u_position", terrain.origin());
 
@@ -70,11 +81,19 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, loader::E
     }
     shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera_pos);
 
-    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_projection_mat", camera.viewProjectionMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_projection_mat", camera.projectionMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_mat", camera.viewMatrix());
     shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", terrain.heightScale());
 
     shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
+
+    for (size_t i = 0; i < CSM::CASCADE_COUNT; i++) {
+        CSMShadowCaster &caster = *csm.cascade(i);
+        shader->fragmentStage()->setUniformIndexed("u_shadow_splits", i, caster.splitDistance);
+        shader->get(GL_TESS_EVALUATION_SHADER)->setUniformIndexed("u_shadow_view_mat", i, caster.viewMatrix());
+        shader->get(GL_TESS_EVALUATION_SHADER)->setUniformIndexed("u_shadow_projection_mat", i, caster.projectionMatrix());
+    }
 
     glPatchParameteri(GL_PATCH_VERTICES, 4);
     glDrawArrays(GL_PATCHES, 0, terrain.patchCount());

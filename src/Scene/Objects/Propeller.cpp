@@ -11,6 +11,7 @@ Propeller::Propeller(scene::NodeRef node, float speed) {
 }
 
 void Propeller::update(float time_delta) {
+    // FIXME: Axis wrong on checkpoints
     angle += speed * time_delta * glm::pi<float>();
     angle = glm::wrapAngle(angle);
 

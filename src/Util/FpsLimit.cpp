@@ -20,6 +20,7 @@ void FpsLimiter::start(double current_time_sec) {
 }
 
 void FpsLimiter::end(double current_time_sec) {
+    return;
     double elapsed = current_time_sec - startTime_;
     double ms_left = (target_ - elapsed) * 1000.0;
     if (ms_left <= 0.1) return;

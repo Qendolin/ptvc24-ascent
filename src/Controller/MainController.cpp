@@ -74,6 +74,7 @@ void MainController::load() {
 
     shadowRenderer = std::make_unique<ShadowMapRenderer>();
     terrainRenderer = std::make_unique<TerrainRenderer>();
+    csm = std::make_unique<CSM>(2048);
 
     game.audio->assets->bgm.pause();
     game.audio->assets->bgm.seek(0);
@@ -314,17 +315,26 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
-    sunShadow->lookAt(
-        glm::make_vec3(&game.debugSettings.rendering.shadow.sunTarget[0]),
-        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
-        glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1]),
-        game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
-    shadowRenderer->render(*sunShadow, sceneData->graphics);
+    // sunShadow->lookAt(
+    //     glm::make_vec3(&game.debugSettings.rendering.shadow.sunTarget[0]),
+    //     glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
+    //     glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1]),
+    //     game.debugSettings.rendering.shadow.sunDistance, glm::vec3{0, 1, 0});
+    // shadowRenderer->render(*sunShadow, sceneData->graphics);
+
+    // Note: this worked great
+    // static unsigned int frame = 0;
+    // if (frame++ % 16 == 0) {
+    csm->update(*game.camera, glm::vec2(
+                                  glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]),
+                                  glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1])));
+    shadowRenderer->render(*csm, *game.camera, sceneData->graphics, *terrain);
+    // }
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
     game.hdrFramebuffer().bindTargets({0, 1});
-    terrainRenderer->render(*game.camera, *terrain, *iblEnv);
-    materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow, *iblEnv);
+    terrainRenderer->render(*game.camera, *terrain, *csm, *iblEnv);
+    materialBatchRenderer->render(*game.camera, sceneData->graphics, *csm, *iblEnv);
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera, *iblEnv);
