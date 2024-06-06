@@ -60,6 +60,7 @@ void CharacterEntity::init() {
     character_settings->mGravityFactor = 0.0f;
 
     body_ = new JPH::Character(character_settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
+    physics().interface().SetMotionQuality(body_->GetBodyID(), JPH::EMotionQuality::LinearCast);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
 
@@ -225,6 +226,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     float pitch_cos = glm::cos(camera.angles.x);  // up, down = 0, horizontal = 1
     float pitch_sin = glm::sin(camera.angles.x);  // down = -1, horizontal = 0, up = 1
     float pitch_cos_sqr = pitch_cos * pitch_cos;
+    float pitch_sin_sqr = pitch_sin * pitch_sin;
     float horizontal_speed = glm::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
     if (boostFlag_) {
@@ -246,15 +248,26 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
         if (velocity.y < 0) {
             float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
             result.y += lift;
-            result.x += looking.x * 1.1f * lift / pitch_cos;
-            result.z += looking.z * 1.1f * lift / pitch_cos;
+            result.x += looking.x * lift / pitch_cos;
+            result.z += looking.z * lift / pitch_cos;
         }
-        // convert horizontal to vertical velocity
+        // convert horizontal to vertical upwards velocity
+        // allows for flying up
         if (camera.angles.x > 0) {
             float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
-            result.y += lift;
-            result.x -= looking.x * 0.9f * lift / pitch_cos;
-            result.z -= looking.z * 0.9f * lift / pitch_cos;
+            // Unrealistic but makes gaining hight easier.
+            // One problem is that this allows for infinite height gain.
+            result.y += lift * 1.5f;
+            result.x -= looking.x * lift / pitch_cos;
+            result.z -= looking.z * lift / pitch_cos;
+        }
+        // convert horizontal to vertical downwards velocity
+        // allows for better height control
+        if (camera.angles.x < 0) {
+            float anti_lift = horizontal_speed * pitch_sin_sqr * -0.075f * time_delta * SPEED;
+            result.y += anti_lift;
+            result.x += looking.x * anti_lift / pitch_cos;
+            result.z += looking.z * anti_lift / pitch_cos;
         }
 
         // steering / turning
