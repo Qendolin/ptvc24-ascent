@@ -61,7 +61,7 @@ void Skin::apply(nk_context* nk) {
 
 Skin* loadSkin() {
     Skin* skin = new Skin();
-    auto widgets = loader::texture("assets/textures/ui/widgets.png", {.srgb = true});
+    auto widgets = loader::texture("assets/textures/ui/widgets.png", {.mipmap = false, .srgb = true});
     skin->resources.push_back(widgets);
 
     // clang-format off
@@ -74,6 +74,9 @@ Skin* loadSkin() {
 
     skin->progressNormalBackground = nine_slice(widgets, 16, {3, 0 * 3, 3, 3}, {1, 1, 1, 1});
     skin->progressNormalCursor     = nine_slice(widgets, 16, {3, 5 * 3, 3, 3}, {1, 1, 1, 1});
+
+    skin->timerBackground       = nine_slice(widgets, 16, {3 * 3, 3 * 3, 3, 5}, {1, 0, 1, 0});
+    skin->speedometerBackground = nine_slice(widgets, 16, {3 * 3, 2 * 3, 3, 3}, {1, 0, 1, 0});
     // clang-format on
 
     return skin;

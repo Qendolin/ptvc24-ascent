@@ -24,12 +24,12 @@
 #include "../Scene/Objects.h"
 #include "../Scene/Scene.h"
 #include "../UI/Screens/Fade.h"
+#include "../UI/Screens/Hud.h"
 #include "../UI/Screens/Pause.h"
 #include "../UI/Screens/Score.h"
 #include "../UI/Screens/Start.h"
 #include "../UI/Skin.h"
 #include "../UI/UI.h"
-#include "../Util/Format.h"
 #include "../Util/Log.h"
 #include "../Window.h"
 #include "MainControllerLoader.h"
@@ -40,7 +40,8 @@ MainController::MainController(Game &game)
       scoreScreen(std::make_unique<ScoreScreen>()),
       startScreen(std::make_unique<StartScreen>()),
       pauseScreen(std::make_unique<PauseScreen>()),
-      fader(std::make_unique<FadeOverlay>())  //
+      fader(std::make_unique<FadeOverlay>()),
+      hud(std::make_unique<Hud>())  //
 {
     loader = std::make_unique<MainControllerLoader>();
     freeCam = std::make_unique<FreeCamEntity>(*game.camera);
@@ -222,71 +223,6 @@ void MainController::update() {
     }
 }
 
-void MainController::drawHud_() {
-    using namespace ui::literals;
-    nk_context *nk = game.ui->context();
-    // make window semi transparent
-    nk->style.window.background = nk_rgba(0, 0, 0, 0);
-    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-
-    nk_style_push_vec2(nk, &nk->style.window.padding, nk_vec2(0, 0));
-    nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
-    nk->style.text.color = nk_rgb(255, 255, 255);
-    if (nk_begin(nk, "hud", nk_rect(0, 0, 100_vw, 100_vh), NK_WINDOW_NO_SCROLLBAR)) {
-        nk_layout_space_begin(nk, NK_STATIC, 100_vh, 2);
-        auto bounds = nk_layout_space_bounds(nk);
-
-        // timer
-        nk_layout_space_push(nk, nk_rect(bounds.w - 180_dp, 0, 180_dp, 90_dp));
-        nk->style.window.background = nk_rgba(0, 0, 0, 120);
-        nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
-        nk_style_push_vec2(nk, &nk->style.window.group_padding, nk_vec2(14, 4));
-        if (nk_group_begin(nk, "timer", NK_WINDOW_NO_SCROLLBAR)) {
-            nk_layout_row_dynamic(nk, 30_dp, 1);
-
-            std::string time_str = formatTimeRaceClock(raceManager.timer());
-            nk_label(nk, time_str.c_str(), NK_TEXT_ALIGN_RIGHT);
-
-            nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
-            nk_layout_row_dynamic(nk, 30_dp, 1);
-            float split_time = raceManager.splitTimer();
-            std::string split_str = (split_time < 0 ? "-" : "+") + formatTimeRaceClock(split_time);
-            nk_label(nk, split_str.c_str(), NK_TEXT_ALIGN_RIGHT);
-
-            // TODO: show last split for a little longer
-
-            nk_group_end(nk);
-        }
-        nk_style_pop_vec2(nk);  // group padding
-
-        // boost meter
-        const float boost_meter_height = 180_dp;
-        const float boost_meter_width = 30_dp;
-        nk_layout_space_push(nk, nk_rect(bounds.w / 2 + bounds.w / 10, bounds.h / 2 - boost_meter_height / 2, boost_meter_width, boost_meter_height));
-        nk->style.window.background = nk_rgba(0, 0, 0, 0);
-        nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-        if (nk_group_begin(nk, "boost", NK_WINDOW_NO_SCROLLBAR)) {
-            auto canvas_space = nk_window_get_content_region(nk);
-            nk_layout_row_dynamic(nk, boost_meter_height, 1);
-            auto canvas = nk_window_get_canvas(nk);
-            // note: don't use _dp here, I think
-            auto meter_space = nk_rect(canvas_space.x + 5, canvas_space.y + 8, canvas_space.w - 10, canvas_space.h - 8 * 2);
-
-            const ui::Skin &skin = *game.ui->skin();
-            // background
-            nk_draw_nine_slice(canvas, nk_rect(canvas_space.x, canvas_space.y, canvas_space.w, canvas_space.h), &skin.progressNormalBackground, nk_rgba_f(1, 1, 1, 1));
-            // meter
-            float meter_height = meter_space.h * character->boostMeter();
-            nk_fill_rect(canvas, nk_rect(meter_space.x, meter_space.y + (meter_space.h - meter_height), meter_space.w, meter_height), 0, nk_rgba_f(1, 1, 1, 0.7f));
-
-            nk_group_end(nk);
-        }
-        nk_layout_space_end(nk);
-    }
-    nk_style_pop_vec2(nk);
-    nk_end(nk);
-}
-
 void MainController::render() {
     // still loading
     if (loader->isLoading()) {
@@ -304,7 +240,7 @@ void MainController::render() {
     } else if (pauseScreen->opened()) {
         pauseScreen->draw();
     } else {
-        drawHud_();
+        hud->draw();
     }
 
     fader->draw();

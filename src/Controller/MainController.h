@@ -15,6 +15,7 @@ class FadeOverlay;
 class ScoreScreen;
 class StartScreen;
 class PauseScreen;
+class Hud;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
@@ -47,14 +48,9 @@ class MainController : public AbstractController {
     const std::unique_ptr<ScoreScreen> scoreScreen;
     const std::unique_ptr<StartScreen> startScreen;
     const std::unique_ptr<PauseScreen> pauseScreen;
+    const std::unique_ptr<Hud> hud;
 
-    CharacterEntity* character = nullptr;
     std::unique_ptr<FreeCamEntity> freeCam;
-
-    /**
-     * Draw the on screen hud (timer, score, etc.)
-     */
-    void drawHud_();
 
     /**
      * Is called after loading is finished
@@ -65,6 +61,7 @@ class MainController : public AbstractController {
     const std::unique_ptr<FadeOverlay> fader;
 
     RaceManager raceManager;
+    CharacterEntity* character = nullptr;
 
     MainController(Game& game);
 

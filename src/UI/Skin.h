@@ -24,6 +24,8 @@ struct Skin {
     struct nk_color buttonNormalText;
     struct nk_color buttonHoverText;
     struct nk_color buttonActiveText;
+    struct nk_nine_slice timerBackground;
+    struct nk_nine_slice speedometerBackground;
 
     void apply(nk_context* nk);
 };
