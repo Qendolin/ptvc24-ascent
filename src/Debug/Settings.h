@@ -64,7 +64,7 @@ struct DebugSettings {
         struct AmbientOcclusion {
             bool enabled = true;
             float factor = 1.0;
-            float radius = 0.5;
+            float radius = 1.0;
             float power = 2.0;
         } ao;
     };
