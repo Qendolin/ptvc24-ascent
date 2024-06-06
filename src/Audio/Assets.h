@@ -30,7 +30,7 @@ class Audio {
     void loadAssets() {
         assets = std::make_unique<AudioAssets>(std::move(AudioAssets{
             .mainMenu = Music(*musicBus, "assets/audio/music/title_theme.ogg"),
-            .bgm = Music(*musicBus, "assets/audio/music/shifting_dunes.ogg"),
+            .bgm = Music(*musicBus, "assets/audio/music/chiblee.ogg"),
             .wind = Sound(*soundBus, "assets/audio/sound/wind-loop.ogg"),
             .woosh = Sound(*soundBus, "assets/audio/sound/woosh.wav"),
             .woosh2 = Sound(*soundBus, "assets/audio/sound/woosh2.wav"),
