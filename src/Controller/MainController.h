@@ -18,6 +18,7 @@ class PauseScreen;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
+class WaterRenderer;
 namespace loader {
 class SceneData;
 }
@@ -32,6 +33,7 @@ class MainController : public AbstractController {
     std::unique_ptr<SkyRenderer> skyRenderer;
     std::unique_ptr<TerrainRenderer> terrainRenderer;
     std::unique_ptr<ShadowMapRenderer> shadowRenderer;
+    std::unique_ptr<WaterRenderer> waterRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;

@@ -60,6 +60,12 @@ struct DebugSettings {
             bool fixedLodOrigin = false;
             float heightScale = 64.0;
         } terrain;
+
+        struct Water {
+            bool wireframe = false;
+            bool fixedLodOrigin = false;
+            float heightScale = 64.0;
+        } water;
     };
     Entity entity;
     Rendering rendering;
