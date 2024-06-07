@@ -38,6 +38,7 @@ TerrainRenderer::TerrainRenderer() {
 TerrainRenderer::~TerrainRenderer() {
     delete shader;
     delete terrainSampler;
+    delete shadowSampler;
 }
 
 void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm, loader::Environment &env) {
@@ -50,7 +51,7 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm,
     terrain.meshVao().bind();
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
-    gl::manager->depthMask(true);
+    gl::manager->depthMask(false);
     gl::manager->cullBack();
     shader->bind();
 

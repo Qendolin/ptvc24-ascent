@@ -12,8 +12,8 @@
 
 MaterialBatchRenderer::MaterialBatchRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/pbr.vert"),
-         new gl::ShaderProgram("assets/shaders/pbr.frag")});
+        {new gl::ShaderProgram("assets/shaders/objects/pbr.vert"),
+         new gl::ShaderProgram("assets/shaders/objects/pbr.frag")});
     shader->setDebugLabel("pbr_renderer/shader");
 
     shadowSampler = new gl::Sampler();
@@ -54,7 +54,7 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
 void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
-    gl::manager->depthMask(true);
+    gl::manager->depthMask(false);
     gl::manager->cullBack();
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
 

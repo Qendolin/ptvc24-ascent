@@ -14,5 +14,5 @@ out gl_PerVertex {
 };
 
 void main() {
-	gl_Position = u_projection_mat * u_view_mat * in_model_mat * vec4(in_position - in_normal * u_size_bias, 1);
+	gl_Position = u_projection_mat * u_view_mat * in_model_mat * vec4(in_position - in_normal * u_size_bias, 1.0);
 }

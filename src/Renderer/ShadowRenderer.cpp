@@ -246,14 +246,14 @@ void CSM::bind() {
 
 ShadowMapRenderer::ShadowMapRenderer() {
     objectShader = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/shadow.vert"),
+        new gl::ShaderProgram("assets/shaders/objects/shadow.vert"),
         new gl::ShaderProgram("assets/shaders/empty.frag"),
     });
     objectShader->setDebugLabel("shadow_map_renderer/object_shader");
     terrainShader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.vert"),
+        {new gl::ShaderProgram("assets/shaders/terrain/terrain.vert"),
          new gl::ShaderProgram("assets/shaders/empty.frag"),
-         new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.tesc"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tesc"),
          new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.tese")});
     terrainShader->setDebugLabel("shadow_map_renderer/terrain_shader");
 
@@ -271,8 +271,6 @@ ShadowMapRenderer::~ShadowMapRenderer() {
 
 void ShadowMapRenderer::render(CSM& csm, Camera& camera, loader::GraphicsData& graphics, loader::Terrain& terrain) {
     gl::pushDebugGroup("ShadowMapRenderer::render");
-
-    // TODO: Investigate frame reprojection (don't render every frame)
 
     auto settings = Game::get().debugSettings.rendering.shadow;
 

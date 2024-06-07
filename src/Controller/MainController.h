@@ -10,6 +10,7 @@
 class MaterialBatchRenderer;
 class SkyRenderer;
 class TerrainRenderer;
+class DepthPrepassRenderer;
 class MainControllerLoader;
 class FadeOverlay;
 class ScoreScreen;
@@ -37,6 +38,7 @@ class MainController : public AbstractController {
     std::unique_ptr<SkyRenderer> skyRenderer;
     std::unique_ptr<TerrainRenderer> terrainRenderer;
     std::unique_ptr<ShadowMapRenderer> shadowRenderer;
+    std::unique_ptr<DepthPrepassRenderer> depthPrepassRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
