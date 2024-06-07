@@ -17,6 +17,7 @@
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
+#include "../Renderer/WaterRenderer.h"
 #include "../Scene/Character.h"
 #include "../Scene/Entity.h"
 #include "../Scene/FreeCam.h"
@@ -83,7 +84,7 @@ void MainController::applyLoadResult_() {
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>(data.environmentDiffuse, data.environmentSpecular, data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>(data.environment);
     terrainRenderer = std::make_unique<TerrainRenderer>();
-
+    waterRenderer = std::make_unique<WaterRenderer>();
     if (!data.gltf)
         return;
 
@@ -293,6 +294,7 @@ void MainController::render() {
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
     game.hdrFramebuffer().bindTargets({0});
     terrainRenderer->render(*game.camera);
+    waterRenderer->render(*game.camera);
     game.hdrFramebuffer().bindTargets({0, 1});
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *sunShadow);
     game.hdrFramebuffer().bindTargets({0});
