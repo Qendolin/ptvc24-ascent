@@ -1,3 +1,4 @@
+#pragma once
 
 #pragma region ForwardDecl
 #include "../../GL/Declarations.h"

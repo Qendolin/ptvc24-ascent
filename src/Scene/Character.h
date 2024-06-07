@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Util/Timer.h"
 #include "Entity.h"
 
