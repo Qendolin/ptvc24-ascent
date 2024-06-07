@@ -3,6 +3,8 @@
 #include "../../GL/Texture.h"
 #include "../../Game.h"
 #include "../../Input.h"
+#include "../../ScoreManager.h"
+#include "../../Util/Format.h"
 #include "../../Window.h"
 #include "../UI.h"
 
@@ -58,7 +60,7 @@ void StartScreen::draw_() {
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
     nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
-    if (nk_begin(nk, "start_screen_prompts", {5_vw, 5_vh, 95_vw, 95_vh}, NK_WINDOW_NO_SCROLLBAR)) {
+    if (nk_begin(nk, "start_screen_prompts", {5_vw, 5_vh, 90_vw, 90_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
 
         float height = 60_dp;
@@ -103,6 +105,28 @@ void StartScreen::draw_() {
         nk_spacer(nk);
         nk_layout_row_push(nk, 120_dp);
         nk_label(nk, "Pause", NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE);
+    }
+    nk_end(nk);
+
+    // transparent background
+    nk->style.window.background = nk_rgba(0, 0, 0, 0);
+    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
+    nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
+    auto& scores = *game.scores;
+    const ScoreEntry& hi_score = scores.highScore();
+    if (nk_begin(nk, "start_screen_prev_highscore", {5_vw, 5_vh, 90_vw, 90_vh}, NK_WINDOW_NO_SCROLLBAR | (hi_score.valid ? 0 : NK_WINDOW_HIDDEN))) {
+        nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
+
+        nk_layout_row_template_begin(nk, 30_dp);
+        nk_layout_row_template_push_dynamic(nk);
+        nk_layout_row_template_push_static(nk, 200_dp);
+        nk_layout_row_template_end(nk);
+        nk_spacer(nk);
+        nk_label(nk, "High Score", NK_TEXT_ALIGN_RIGHT | NK_TEXT_ALIGN_TOP);
+
+        nk_spacer(nk);
+        std::string total_str = formatTimeRaceClock(hi_score.total);
+        nk_label(nk, total_str.c_str(), NK_TEXT_ALIGN_RIGHT | NK_TEXT_ALIGN_TOP);
     }
     nk_end(nk);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../Util/Timer.h"
+
 #pragma region ForwardDecl
 #include "../../GL/Declarations.h"
 
@@ -11,6 +13,9 @@ class Game;
 class Hud {
    private:
     gl::Texture *crosshairImage_ = nullptr;
+
+    Timer lastCheckpointSplitExtension_;
+    int lastCheckpointPassedIndex_ = 0;
 
     void drawBoostMeter_(Game &game, struct nk_context *nk, struct nk_rect &bounds);
     void drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds);

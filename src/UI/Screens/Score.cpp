@@ -102,8 +102,8 @@ void ScoreScreen::drawPerformance_() {
     Game& game = Game::get();
     nk_context* nk = game.ui->context();
 
-    auto& scores = *Game::get().scores;
-    auto& recent = Game::get().scores->recentScores();
+    auto& scores = *game.scores;
+    auto& recent = game.scores->recentScores();
 
     const ScoreEntry& hi_score = scores.lastHighScore();
 

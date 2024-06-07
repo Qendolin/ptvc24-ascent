@@ -159,8 +159,9 @@ void CharacterEntity::update(float time_delta) {
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
 
-    if (input.isKeyDown(GLFW_KEY_R)) {
+    if (input.isKeyDown(GLFW_KEY_R) || camera.position.y < 0.0) {
         respawn();
+        return;
     }
 
     if (input.isKeyDown(GLFW_KEY_SPACE) || input.isKeyDown(GLFW_KEY_S)) {

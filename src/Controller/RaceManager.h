@@ -56,6 +56,18 @@ class RaceManager {
     // @return time difference to best split of next checkpoint
     float splitTimer() const;
 
+    // @return split time of the given checkpoint index
+    float splitTime(int index) const;
+
+    // @return the index of the last passed checkpoint, or -1
+    int checkpointIndex() const {
+        return lastPassedCheckpoint_;
+    }
+
+    int checkpointCount() const {
+        return checkpoints_.size();
+    }
+
     // @return penalty time in seconds
     float penalty() const {
         return penaltyTime_;

@@ -99,7 +99,16 @@ float RaceManager::splitTimer() const {
     if (ended_) return time - best.flight;
     int index = std::min(lastPassedCheckpoint_ + 1, static_cast<int>(best.splits.size() - 1));
     if (index < 0) return 0;
+    if (index >= best.splits.size()) return 0;
     return time - best.splits[index];
+}
+
+float RaceManager::splitTime(int index) const {
+    if (index < 0 || index >= timeSplits_.size()) return 0.0;
+    ScoreEntry best = Game::get().scores->highScore();
+    if (!best.valid) return 0;
+    if (index >= best.splits.size()) return 0;
+    return timeSplits_[index] - best.splits[index];
 }
 
 ScoreEntry RaceManager::score() {
