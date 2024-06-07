@@ -3,18 +3,22 @@
 #pragma region FrowardDecl
 #include "../GL/Declarations.h"
 class Camera;
+class CSM;
+namespace loader {
+class Terrain;
+class Environment;
+}  // namespace loader
 #pragma endregion
 
 class TerrainRenderer {
    private:
     gl::ShaderPipeline* shader;
-    gl::VertexArray* vao;
-    gl::Texture* heightMap;
-    gl::Sampler* sampler;
-    int resolution = 20;
+    gl::Sampler* terrainSampler;
+    gl::Sampler* shadowSampler;
 
    public:
-    void render(Camera& camera);
     TerrainRenderer();
     ~TerrainRenderer();
+
+    void render(Camera& camera, loader::Terrain& terrain, CSM& csm, loader::Environment& env);
 };

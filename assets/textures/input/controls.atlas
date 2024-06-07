@@ -1,0 +1,7 @@
+key;file;x;y;width;height
+esc;assets/textures/input/Esc_Key.png;300;0;100;100
+r;assets/textures/input/R_Key.png;0;0;100;100
+s;assets/textures/input/S_Key.png;100;0;100;100
+shift;assets/textures/input/Shift_Key.png;400;0;100;80
+space;assets/textures/input/Space_Key.png;400;80;100;62
+w;assets/textures/input/W_Key.png;200;0;100;100

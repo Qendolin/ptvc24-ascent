@@ -24,7 +24,7 @@ class LensEffectsRenderer;
 class ScoreManager;
 class ParticleSystem;
 class Audio;
-
+class FpsLimiter;
 namespace ph {
 class Physics;
 }
@@ -36,7 +36,8 @@ class ImGuiBackend;
 
 namespace loader {
 class SceneData;
-}
+class Environment;
+}  // namespace loader
 
 namespace scene {
 class Scene;
@@ -56,6 +57,8 @@ class Game {
     std::unique_ptr<GtaoRenderer> gtaoRenderer_;
     std::unique_ptr<DebugRenderer> debugRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
+    std::unique_ptr<FpsLimiter> fpsLimit_;
+
     //  Process user input
     void processInput_();
 

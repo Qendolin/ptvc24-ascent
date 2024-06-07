@@ -16,6 +16,8 @@ struct PhysicsBodyParameters {
     PhysicsShape shape = PhysicsShape::None;
     // if the shape is a mesh shape this will be the index of the mesh
     int32_t mesh = -1;
+    // if the body has a custom mass this will be the mass in kg. Negative values means automatic mass.
+    float mass = -1.0;
 };
 
 /**

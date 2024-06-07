@@ -7,7 +7,7 @@
 #include "../GL/Texture.h"
 #include "../Loader/Environment.h"
 
-SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
+SkyRenderer::SkyRenderer() {
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/sky.vert"),
          new gl::ShaderProgram("assets/shaders/sky.frag")});
@@ -44,26 +44,14 @@ SkyRenderer::SkyRenderer(std::shared_ptr<loader::IblEnv> environment) {
     cube->layout(0, 0, 3, GL_FLOAT, false, 0);
     cube->bindBuffer(0, *vbo, 0, 3 * sizeof(float));
     cube->own(vbo);
-
-    sampler = new gl::Sampler();
-    sampler->setDebugLabel("sky_renderer/sampler");
-    sampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-    sampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-
-    cubemap = new gl::Texture(GL_TEXTURE_CUBE_MAP);
-    cubemap->setDebugLabel("sky_renderer/cubemap");
-    cubemap->allocate(1, GL_RGB16F, environment->baseSize, environment->baseSize);
-    cubemap->load(0, environment->baseSize, environment->baseSize, 6, GL_RGB, GL_FLOAT, environment->all().data());
 }
 
 SkyRenderer::~SkyRenderer() {
     delete shader;
     delete cube;
-    delete sampler;
-    delete cubemap;
 }
 
-void SkyRenderer::render(Camera &camera) {
+void SkyRenderer::render(Camera &camera, loader::Environment &env) {
     gl::pushDebugGroup("SkyRenderer::render");
 
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::DepthClamp});
@@ -73,8 +61,8 @@ void SkyRenderer::render(Camera &camera) {
     cube->bind();
     shader->bind();
 
-    sampler->bind(0);
-    cubemap->bind(0);
+    env.cubemapSampler().bind(0);
+    env.sky().bind(0);
 
     shader->vertexStage()->setUniform("u_rotation_projection_mat", camera.projectionMatrix() * glm::mat4(glm::mat3(camera.viewMatrix())));
 

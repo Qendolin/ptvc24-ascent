@@ -5,7 +5,7 @@
 namespace ph {
 
 bool SensorContactListener::CanLayerReceiveCallbacks_(const JPH::ObjectLayer &layer) {
-    return (layer == Layers::SENSOR || layer == Layers::MOVING);
+    return (layer == Layers::SENSOR || layer == Layers::MOVING || layer == Layers::PLAYER);
 }
 
 void SensorContactListener::OnContactAdded(const JPH::Body &body_a, const JPH::Body &body_b, const JPH::ContactManifold &manifold, JPH::ContactSettings &settings) {
@@ -104,14 +104,18 @@ Physics::Physics(PhysicsSetupConfig config) {
     // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
     JPH::ObjectLayerPairFilterTable *obj_vs_obj_filter = new JPH::ObjectLayerPairFilterTable(Layers::NUM_LAYERS);
     obj_vs_obj_filter->EnableCollision(Layers::MOVING, Layers::NON_MOVING);
+    obj_vs_obj_filter->EnableCollision(Layers::PLAYER, Layers::NON_MOVING);
     obj_vs_obj_filter->EnableCollision(Layers::MOVING, Layers::MOVING);
+    obj_vs_obj_filter->EnableCollision(Layers::PLAYER, Layers::MOVING);
     obj_vs_obj_filter->EnableCollision(Layers::MOVING, Layers::SENSOR);
+    obj_vs_obj_filter->EnableCollision(Layers::PLAYER, Layers::SENSOR);
 
     // Create mapping table from object layer to broadphase layer
     // Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
     JPH::BroadPhaseLayerInterfaceTable *bp_layer_interface = new JPH::BroadPhaseLayerInterfaceTable(Layers::NUM_LAYERS, BroadPhaseLayers::NUM_LAYERS);
     bp_layer_interface->MapObjectToBroadPhaseLayer(Layers::NON_MOVING, BroadPhaseLayers::NON_MOVING);
     bp_layer_interface->MapObjectToBroadPhaseLayer(Layers::MOVING, BroadPhaseLayers::MOVING);
+    bp_layer_interface->MapObjectToBroadPhaseLayer(Layers::PLAYER, BroadPhaseLayers::MOVING);
     bp_layer_interface->MapObjectToBroadPhaseLayer(Layers::SENSOR, BroadPhaseLayers::NON_MOVING);
 
     // Create class that filters object vs broadphase layers

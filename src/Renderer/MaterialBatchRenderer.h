@@ -5,32 +5,24 @@
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
 class Camera;
-class ShadowCaster;
+class CSM;
 namespace loader {
-class IblEnv;
-struct FloatImage;
 class GraphicsData;
+class Environment;
 }  // namespace loader
 #pragma endregion
 
 class MaterialBatchRenderer {
    private:
     gl::ShaderPipeline *shader;
-    gl::Texture *iblDiffuse;
-    gl::Texture *iblSpecular;
-    gl::Texture *iblBrdfLut;
     gl::Sampler *albedoSampler;
     gl::Sampler *normalSampler;
     gl::Sampler *ormSampler;
-    gl::Sampler *lutSampler;
-    gl::Sampler *cubemapSampler;
     gl::Sampler *shadowSampler;
 
    public:
-    MaterialBatchRenderer(std::shared_ptr<loader::IblEnv> diffuse,
-                          std::shared_ptr<loader::IblEnv> specular,
-                          std::shared_ptr<loader::FloatImage> brdf_lut);
+    MaterialBatchRenderer();
     ~MaterialBatchRenderer();
 
-    void render(Camera &camera, loader::GraphicsData &graphics, ShadowCaster &shadow);
+    void render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env);
 };

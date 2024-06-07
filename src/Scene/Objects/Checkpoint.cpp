@@ -1,7 +1,5 @@
 #include "Checkpoint.h"
 
-#include <glm/gtx/fast_trigonometry.hpp>
-
 #include "../../Controller/MainController.h"
 #include "../../Debug/Direct.h"
 #include "../../Game.h"
@@ -15,7 +13,7 @@ void CheckpointEntity::init() {
 
     physics().contactListener->RegisterCallback(sensorRef_.physics().body(), [this](ph::SensorContact contact) {
         if (contact.persistent) return;
-        this->onTriggerActivated();
+        this->onTriggerActivated(contact.other);
     });
 
     std::string next_name = base.prop<std::string>("next_checkpoint", "");
@@ -24,33 +22,17 @@ void CheckpointEntity::init() {
     NodeRef respawn_ref = base.find("*.Respawn");
     respawnTransformation_ = respawn_ref.transform();
 
-    propellerLeft_ = Propeller(base.find("Propeller.Left/*.Blades.*"), -3);
-    propellerRight_ = Propeller(base.find("Propeller.Right/*.Blades.*"), 3);
+    propellerLeft_ = Propeller(base.find("Propeller.Left"), -3);
+    propellerRight_ = Propeller(base.find("Propeller.Right"), 3);
 }
 
-void CheckpointEntity::onTriggerActivated() {
-    // FIXME: doesn't check if triggered by player
-    Trigger trigger = sensorRef_.physics().trigger();
+void CheckpointEntity::onTriggerActivated(JPH::BodyID& body) {
+    NodeRef contactNode = scene.byPhysicsBody(body);
+    if (contactNode.isInvalid() || !contactNode.hasTag("player"))
+        return;
 
     MainController& controller = dynamic_cast<MainController&>(*game().controller);
     controller.raceManager.onCheckpointEntered(this);
-}
-
-CheckpointEntity::Propeller::Propeller(scene::NodeRef node, float speed) {
-    this->node = node;
-    this->speed = speed;
-    initial = node.transform().rotation();
-}
-
-void CheckpointEntity::Propeller::update(float time_delta) {
-    angle += speed * time_delta * glm::pi<float>();
-    angle = glm::wrapAngle(angle);
-
-    glm::quat rotation_local = glm::angleAxis(angle, glm::vec3(0, 1, 0));
-    glm::quat rotation_world = initial * rotation_local;
-
-    node.transform().setRotation(rotation_world);
-    node.graphics().setTransformFromNode();
 }
 
 void CheckpointEntity::update(float time_delta) {

@@ -5,7 +5,8 @@
 class Camera;
 namespace JPH {
 class Character;
-}
+class Body;
+}  // namespace JPH
 namespace ph {
 struct SensorContact;
 }
@@ -15,7 +16,7 @@ class SoundInstance2d;
 
 // The character controller handles movement and mouse look.
 // It links the character physics body to the camera.
-class CharacterEntity : public scene::Entity {
+class CharacterEntity : public scene::NodeEntity {
    private:
     // Flying speed factor
     inline static const float SPEED = 10.0f;
@@ -35,12 +36,15 @@ class CharacterEntity : public scene::Entity {
     inline static const float RESPAWN_TIME = 0.75f;
     inline static const float RESPAWN_SPEED_FACTOR = 0.6f;
     inline static const float RESPAWN_SPEED_MINIMUM = 7.5f;
+    inline static const float RESPAWN_BOOST_MINIMUM = 0.1f;
     inline static const float INVULNERABILITY_TIME = RESPAWN_TIME + 1.0f;
 
     Timer respawnInvulnerability;
     Timer respawnFreeze;
 
     JPH::Character* body_ = nullptr;
+    // used to interact with the world (basically the "hortbox" for others)
+    JPH::Body* kinematicBody_ = nullptr;
     glm::vec3 velocity_ = {};
     // Set when should apply air break
     bool breakFlag_ = false;
@@ -49,9 +53,9 @@ class CharacterEntity : public scene::Entity {
     // how much boost is available
     float boostMeter_ = 1.0;
     float boostDynamicFov_ = 0.0;
+    bool boostSoundPlaying_ = false;
 
     bool frozen_ = false;
-    ;
 
     // The start and end position of the camera interpolation
     glm::vec3 cameraLerpStart_ = {};
@@ -59,6 +63,7 @@ class CharacterEntity : public scene::Entity {
 
     std::unique_ptr<SoundInstance2d> windSoundInstanceLeft_;
     std::unique_ptr<SoundInstance2d> windSoundInstanceRight_;
+    std::unique_ptr<SoundInstance2d> boostSoundInstance_;
 
     // called as a callback by the physics engine
     void onBodyContact_(ph::SensorContact& contact);
@@ -76,7 +81,7 @@ class CharacterEntity : public scene::Entity {
     Camera& camera;
     bool enabled = true;
 
-    CharacterEntity(scene::SceneRef scene, Camera& camera);
+    CharacterEntity(scene::SceneRef scene, scene::NodeRef node, Camera& camera);
 
     virtual ~CharacterEntity();
 
@@ -95,9 +100,15 @@ class CharacterEntity : public scene::Entity {
         return velocity_;
     }
 
+    void setVelocity(glm::vec3 velocity) {
+        velocity_ = velocity;
+    }
+
     void terminate();
 
     float boostMeter() const {
         return boostMeter_;
     }
+
+    JPH::BodyID body() const;
 };

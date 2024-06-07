@@ -22,14 +22,16 @@ const float HALF_PI = PI / 2.0;
 
 layout(binding = 0) uniform sampler2D in_depth_mips;
 layout(binding = 1) uniform sampler2D in_view_normals;
-// layout(binding = 0, r16f) uniform writeonly restrict image2D ambient_occlusion;
-layout(binding = 0, rgba16f) uniform writeonly restrict image2D ambient_occlusion;
+layout(binding = 0, r16f) uniform writeonly restrict image2D ambient_occlusion;
 layout(binding = 1, r32ui) uniform writeonly restrict uimage2D depth_differences;
 layout(binding = 2, r16ui) uniform readonly restrict uimage2D hilbert_index_lut;
 
 uniform uint u_frame;
 uniform mat4 u_inverse_projection_mat;
 uniform mat4 u_projection_mat;
+uniform float u_power;
+uniform float u_factor;
+uniform float u_radius;
 
 // Approximates single-bounce ambient occlusion to multi-bounce ambient occlusion
 // https://blog.selfshadow.com/publications/s2016-shading-course/activision/s2016_pbs_activision_occlusion.pdf#page=78
@@ -125,11 +127,12 @@ vec3 load_and_reconstruct_view_space_position(vec2 uv, float sample_mip_level) {
 
 #define SLICE_COUNT 3
 #define SAMPLES_PER_SLICE_SIDE 7
+#define Z_CUTOFF 0.00001
 
 void main() {
     float slice_count = float(SLICE_COUNT);
     float samples_per_slice_side = float(SAMPLES_PER_SLICE_SIDE);
-    float effect_radius = 0.5 * 1.457;
+    float effect_radius = u_radius * 1.457; // TODO: Why 1.475?
     float min_sample_distance = 1.3; // this is the min distance to start sampling from to avoid sampling from the center pixel (no useful data obtained from sampling center pixel)
     float falloff_range = 0.615 * effect_radius;
     float falloff_from = effect_radius * (1.0 - 0.615);
@@ -142,11 +145,11 @@ void main() {
     vec2 uv = (vec2(tex_coords) + 0.5) * texel_size;
 
     float pixel_depth = calculate_neighboring_depth_differences(tex_coords, texel_size);
-    if(pixel_depth <= 0.00001) {
+    if(pixel_depth <= Z_CUTOFF) { // far plane cutoff
+        // Avoid depth precision issues
         imageStore(ambient_occlusion, tex_coords, vec4(1.0, 0.0, 0.0, 0.0));
         return;
     }
-    // pixel_depth += 0.000001; // Avoid depth precision issues
 
     vec3 pixel_position = reconstruct_view_space_position(pixel_depth, uv);
     vec3 pixel_normal = load_normal_view_space(uv);
@@ -232,14 +235,17 @@ void main() {
         visibility += projected_normal_length * (v1 + v2);
     }
     visibility /= slice_count;
+    visibility = min(visibility, 1.0);
+
+    // Fade out at great distance to avoid artifacts
+    // TODO: test if this works as intendet
+    visibility = mix(1.0, visibility, clamp(pixel_depth / Z_CUTOFF - 1.0, 0.0, 1.0));
+
     // pow allows for adjustment of the look
-    visibility = pow(visibility, 2.2);
+    visibility = pow(visibility, u_power);
+    visibility = 1.0 - (1.0 - visibility) * u_factor;
     // disallow total occlusion
-    visibility = clamp(visibility, 0.03, 1.0);
+    visibility = max(visibility, 0.03);
 
     imageStore(ambient_occlusion, tex_coords, vec4(visibility, 0.0, 0.0, 0.0));
-    // vec4 color = vec4(0.0);
-    // color.xyz = (pixel_normal) * 0.5 + 0.5;
-    // color.a = visibility;
-    // imageStore(ambient_occlusion, tex_coords, color);
 }

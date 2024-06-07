@@ -42,7 +42,6 @@ void DebugRenderer::render(Game &game) {
     gl::pushDebugGroup("DebugRenderer::render");
 
     gl::Framebuffer &hdr_fbo = game.hdrFramebuffer();
-    gl::Texture &color_attachment = *hdr_fbo.getTexture(0);
     gl::Texture &normals_attachment = *hdr_fbo.getTexture(1);
     gl::Texture &depth_attachment = *hdr_fbo.getTexture(GL_DEPTH_ATTACHMENT);
     Camera &camera = *game.camera;
@@ -50,7 +49,6 @@ void DebugRenderer::render(Game &game) {
     quad->bind();
     shader->bind();
     shader->fragmentStage()->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
-    shader->fragmentStage()->setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
     sampler->bind(0);
     sampler->bind(1);
 

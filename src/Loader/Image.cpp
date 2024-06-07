@@ -27,12 +27,12 @@ loader::Image image(std::string filename) {
         .width = w,
         .height = h,
         .channels = 4,
+        .length = static_cast<size_t>(w * h * 4),
         .data = std::shared_ptr<uint8_t>(image),
     };
 }
 
-gl::Texture *texture(std::string filename, TextureParameters params) {
-    loader::Image img = image(filename);
+gl::Texture *texture(loader::Image &img, TextureParameters params) {
     gl::Texture *texture = new gl::Texture(GL_TEXTURE_2D);
     GLenum internal_format = params.internalFormat;
     if (params.srgb) {
@@ -48,6 +48,27 @@ gl::Texture *texture(std::string filename, TextureParameters params) {
     if (params.mipmap)
         texture->generateMipmap();
     return texture;
+}
+
+gl::Texture *texture(std::string filename, TextureParameters params) {
+    loader::Image img = image(filename);
+    return texture(img, params);
+}
+
+void writeImage(std::string filename, loader::Image image) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        PANIC("Error opening file: " + filename);
+    }
+    std::string ext = filename.substr(filename.find_last_of("."));
+
+    if (ext == ".jpg") {
+        stbi_write_jpg(filename.c_str(), image.width, image.height, image.channels, image.data.get(), 80);
+    } else if (ext == ".png") {
+        stbi_write_png(filename.c_str(), image.width, image.height, image.channels, image.data.get(), image.width * image.channels);
+    } else {
+        PANIC("Unsupported image file extension '" + ext + "'");
+    }
 }
 
 }  // namespace loader

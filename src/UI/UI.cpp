@@ -3,6 +3,7 @@
 #include <initializer_list>
 
 #define NK_IMPLEMENTATION
+#define NK_NO_STB_RECT_PACK_IMPLEMENTATION
 #include <nuklear.h>
 
 #include <glm/glm.hpp>
@@ -61,17 +62,34 @@ float operator"" _vh(unsigned long long value) {
 }  // namespace literals
 
 FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string default_font)
-    : defaultFont_(default_font) {
+    : defaultFont_(default_font), entries_(entries) {
+    generate();
+}
+
+FontAtlas::~FontAtlas() {
+    nk_font_atlas_clear(&baker_);
+
+    delete texture_;
+}
+
+void FontAtlas::generate() {
+    // For performance
+    if (generatedScale_ == dp_to_px) {
+        return;
+    }
+    generatedScale_ = dp_to_px;
+
     nk_font_atlas_init_default(&baker_);
     nk_font_atlas_begin(&baker_);
 
-    const float default_height = 16.0f;
+    const float default_height = 16.0f * dp_to_px;
     struct nk_font_config config = nk_font_config(default_height);
 
-    for (auto &entry : entries) {
+    for (auto &entry : entries_) {
         std::vector<uint8_t> data = loader::binary(entry.filename);
         for (auto &size : entry.sizes) {
-            struct nk_font *font = nk_font_atlas_add_from_memory(&baker_, data.data(), data.size(), size.size, &config);
+            float font_size = size.size * dp_to_px;
+            struct nk_font *font = nk_font_atlas_add_from_memory(&baker_, data.data(), data.size(), font_size, &config);
             fonts_[size.name] = font;
         }
     }
@@ -81,6 +99,7 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     // The difference between NK_FONT_ATLAS_ALPHA8 and NK_FONT_ATLAS_RGBA32
     // is that ALPHA8 uses less memory but doesn't support colors (for icons & emojis)
     atlas_data = nk_font_atlas_bake(&baker_, &atlas_width, &atlas_height, NK_FONT_ATLAS_RGBA32);
+    delete texture_;
     texture_ = new gl::Texture(GL_TEXTURE_2D);
     texture_->setDebugLabel("nk/font");
     texture_->allocate(1, GL_RGBA8, atlas_width, atlas_height, 1);
@@ -89,12 +108,6 @@ FontAtlas::FontAtlas(std::initializer_list<FontEntry> entries, std::string defau
     // cleanup
     nk_font_atlas_end(&baker_, nk_handle_id(texture_->id()), nullptr);
     nk_font_atlas_cleanup(&baker_);
-}
-
-FontAtlas::~FontAtlas() {
-    nk_font_atlas_clear(&baker_);
-
-    delete texture_;
 }
 
 Backend::Backend(FontAtlas *font_atlas, Skin *skin, Renderer *renderer)
@@ -177,6 +190,10 @@ void Backend::setViewport(int width, int height) {
 }
 
 void Backend::render() {
+    if (hidden_) {
+        nk_clear(&context_);
+        return;
+    }
     renderer_->render(&context_, &commands_);
 }
 

@@ -98,19 +98,27 @@ SceneData *scene(const gltf::Model &model) {
 namespace util {
 
 template <>
-std::string getJsonValue<std::string>(const gltf::Value &object, const std::string &key) {
-    if (!object.IsObject()) return "";
+std::string getJsonValue<std::string>(const gltf::Value &object, const std::string &key, std::string default_value) {
+    if (!object.IsObject()) return default_value;
     gltf::Value element = object.Get(key);
-    if (!element.IsString()) return "";
+    if (!element.IsString()) return default_value;
     return element.Get<std::string>();
 }
 
 template <>
-bool getJsonValue<bool>(const gltf::Value &object, const std::string &key) {
-    if (!object.IsObject()) return false;
+bool getJsonValue<bool>(const gltf::Value &object, const std::string &key, bool default_value) {
+    if (!object.IsObject()) return default_value;
     gltf::Value element = object.Get(key);
-    if (!element.IsBool()) return false;
+    if (!element.IsBool()) return default_value;
     return element.Get<bool>();
+}
+
+template <>
+float getJsonValue<float>(const gltf::Value &object, const std::string &key, float default_value) {
+    if (!object.IsObject()) return default_value;
+    gltf::Value element = object.Get(key);
+    if (!element.IsReal()) return default_value;
+    return static_cast<float>(element.Get<double>());
 }
 
 }  // namespace util
