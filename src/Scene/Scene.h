@@ -7,6 +7,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/matrix_operation.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -57,6 +58,11 @@ class Tags {
     bool has(const std::string& tag) const {
         return std::find(tags_.cbegin(), tags_.cend(), tag) != tags_.cend();
     }
+
+    void add(const std::string& tag) {
+        if (has(tag)) return;
+        tags_.push_back(tag);
+    }
 };
 
 struct Node {
@@ -94,11 +100,14 @@ struct Transform {
     glm::quat r = glm::quat();
     glm::vec3 s = glm::vec3(1.0);
 
-    glm::mat4 matrix() {
+    int32_t parent = -1;
+
+    glm::mat4 matrix(glm::mat4 parent) {
         glm::mat4 scale = glm::scale(glm::mat4(1.0), s);
         glm::mat4 rotation = glm::mat4_cast(r);
         glm::mat4 translation = glm::translate(glm::mat4(1.0), t);
-        return translation * rotation * scale;
+        glm::mat4 trs = translation * rotation * scale;
+        return parent * trs;
     }
 };
 
@@ -126,6 +135,10 @@ class Scene {
     Scene(const loader::SceneData& scene, NodeEntityFactory& factory);
 
     ~Scene();
+
+    Node& createPhysicsNode(std::string name, const scene::Physics& physics);
+
+    Node& createGenericNode(std::string name);
 
     void callEntityInit();
 
@@ -195,7 +208,47 @@ class TransformRef {
     }
 
     glm::mat4 matrix() {
-        return scene_->transforms[index_].matrix();
+        Transform& transform = scene_->transforms[index_];
+
+        if (transform.parent >= 0) {
+            return transform.matrix(TransformRef(*scene_, transform.parent).matrix());
+        } else {
+            return transform.matrix(glm::mat4(1.0));
+        }
+    }
+
+    void setMatrix(glm::mat4 matrix) {
+        // undo parent transform
+        Transform& transform = scene_->transforms[index_];
+        if (transform.parent >= 0) {
+            // might not be correct
+            matrix = glm::inverse(TransformRef(*scene_, transform.parent).matrix()) * matrix;
+        }
+
+        // https://math.stackexchange.com/a/1463487/1014081
+        glm::vec3 scale = {glm::length(matrix[0]), glm::length(matrix[1]), glm::length(matrix[2])};
+        glm::mat3 rotation_mat = matrix * glm::diagonal4x4(glm::vec4(1.0 / scale.x, 1.0 / scale.y, 1.0 / scale.z, 1.0));
+        glm::quat rotation = glm::quat_cast(rotation_mat);
+        glm::vec3 translation = matrix[3];
+        setScale(scale);
+        setRotation(rotation);
+        setPosition(translation);
+    }
+
+    void clearParent() {
+        glm::mat4 matrix = this->matrix();
+        scene_->transforms[index_].parent = -1;
+        setMatrix(matrix);
+    }
+
+    void setParent(TransformRef parent) {
+        if (parent.isInvalid()) {
+            clearParent();
+            return;
+        }
+        glm::mat4 matrix = this->matrix();
+        scene_->transforms[index_].parent = parent.index_;
+        setMatrix(matrix);
     }
 };
 
@@ -351,6 +404,10 @@ class NodeRef {
 
     bool hasTag(const std::string& tag) const {
         return scene_->nodes[index_].tags.has(tag);
+    }
+
+    void addTag(const std::string& tag) {
+        return scene_->nodes[index_].tags.add(tag);
     }
 
     template <typename T>

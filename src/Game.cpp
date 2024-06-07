@@ -27,6 +27,7 @@
 #include "UI/Renderer.h"
 #include "UI/Skin.h"
 #include "UI/UI.h"
+#include "Util/FpsLimit.h"
 #include "Util/Log.h"
 #include "Window.h"
 
@@ -92,6 +93,8 @@ Game::Game(Window &window)
     audio = std::make_unique<Audio>();
     audio->loadAssets();
 
+    fpsLimit_ = std::make_unique<FpsLimiter>();
+
     // at the end
     int vp_width, vp_height;
     glfwGetFramebufferSize(window, &vp_width, &vp_height);
@@ -119,8 +122,10 @@ void Game::resize(int width, int height) {
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     ui::set_scale(width, height, x_scale);
 
-    if (ui != nullptr)
+    if (ui != nullptr) {
         ui->setViewport(width, height);
+        ui->fonts()->generate();
+    }
 
     if (imgui != nullptr)
         imgui->setViewport(width, height);
@@ -163,6 +168,7 @@ void Game::load() {
     auto skin = ui::loadSkin();
     ui = std::make_unique<ui::Backend>(fonts, skin, new ui::Renderer());
     ui->setViewport(window.size.x, window.size.y);
+    ui->fonts()->generate();
 
     imgui = std::make_unique<ui::ImGuiBackend>();
     imgui->setViewport(window.size.x, window.size.y);
@@ -193,8 +199,11 @@ void Game::run() {
     glfwShowWindow(window);
     input->invalidate();
     while (!glfwWindowShouldClose(window)) {
+        fpsLimit_->start(glfwGetTime());
         update_();
         render_();
+        fpsLimit_->setTarget(1.0 / settings.get().maxFps);
+        fpsLimit_->end(glfwGetTime());
     }
 }
 
@@ -213,6 +222,10 @@ void Game::processInput_() {
         LOG_INFO("Toggle Debug Menu");
         debugMenu_->open = !debugMenu_->open;
         debugMenu_->open ? input->releaseMouse() : input->captureMouse();
+    }
+
+    if (input->isKeyPress(GLFW_KEY_F2)) {
+        ui->setHidden(!ui->hidden());
     }
 }
 
@@ -281,6 +294,7 @@ void Game::render_() {
         gl::manager->depthMask(true);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
+            *camera,
             hdrFramebuffer_->getTexture(0),
             hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT),
             bloomRenderer_->result(),

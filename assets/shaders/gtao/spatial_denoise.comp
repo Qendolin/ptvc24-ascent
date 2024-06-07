@@ -19,6 +19,8 @@ layout(binding = 0) uniform sampler2D in_ambient_occlusion_noisy;
 layout(binding = 1) uniform usampler2D in_depth_differences;
 layout(binding = 0, r16f) uniform restrict writeonly image2D out_ambient_occlusion;
 
+// FIXME: incorrectly changes visibility. Set ao factor to zero to see the effect
+
 void main() {
     ivec2 pixel_coordinates = ivec2(gl_GlobalInvocationID.xy);
     vec2 uv = vec2(pixel_coordinates) / imageSize(out_ambient_occlusion).xy;

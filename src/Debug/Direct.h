@@ -192,6 +192,13 @@ class DirectBuffer {
     void uvSphere(glm::vec3 c, float r);
 
     /**
+     * Adds the outline of an uv sphere to the buffer.
+     * @param c center
+     * @param r radius
+     */
+    void uvSphereLine(glm::vec3 c, float r);
+
+    /**
      * Adds a box to the bufffer.
      * @param c center
      * @param d dimensions

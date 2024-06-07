@@ -16,6 +16,8 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
     Mesh &result = context.newMesh();
     result.name = mesh.name;
 
+    LOG_DEBUG("Loading mesh '" + mesh.name + "'");
+
     uint32_t total_vertex_count = 0, total_element_count = 0, chunk_count = 0;
     for (const gltf::Primitive &primitive : mesh.primitives) {
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES) {
@@ -42,8 +44,20 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
             }
         }
 
-        if (position_access_ref < 0 || normal_access_ref < 0 || texcoord_access_ref < 0 || tangent_access_ref < 0) {
-            LOG_WARN("Primitive is missing a required attribute");
+        if (position_access_ref < 0) {
+            LOG_WARN("Primitive is missing the required 'position' attribute");
+            continue;
+        }
+        if (normal_access_ref < 0) {
+            LOG_WARN("Primitive is missing the required 'normal' attribute");
+            continue;
+        }
+        if (texcoord_access_ref < 0) {
+            LOG_WARN("Primitive is missing the required 'texcoord' attribute");
+            continue;
+        }
+        if (tangent_access_ref < 0) {
+            LOG_WARN("Primitive is missing the required 'tangent' attribute");
             continue;
         }
 
@@ -54,27 +68,27 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         const gltf::Accessor &index_access = model.accessors[primitive.indices];
 
         if (position_access.componentType != GL_FLOAT || position_access.type != TINYGLTF_TYPE_VEC3 || position_access.sparse.isSparse || position_access.bufferView < 0) {
-            LOG_WARN("Primitive position attribute has invalid access");
+            LOG_WARN("Primitive 'position' attribute has invalid access");
             continue;
         }
         if (normal_access.componentType != GL_FLOAT || normal_access.type != TINYGLTF_TYPE_VEC3 || normal_access.sparse.isSparse || normal_access.bufferView < 0) {
-            LOG_WARN("Primitive normal attribute has invalid access");
+            LOG_WARN("Primitive 'normal' attribute has invalid access");
             continue;
         }
         if (tangent_access.componentType != GL_FLOAT || tangent_access.type != TINYGLTF_TYPE_VEC4 || tangent_access.sparse.isSparse || tangent_access.bufferView < 0) {
-            LOG_WARN("Primitive tangent attribute has invalid access");
+            LOG_WARN("Primitive 'tangent' attribute has invalid access");
             continue;
         }
         if (texcoord_access.componentType != GL_FLOAT || texcoord_access.type != TINYGLTF_TYPE_VEC2 || texcoord_access.sparse.isSparse || texcoord_access.bufferView < 0) {
-            LOG_WARN("Primitive texcoord attribute has invalid access");
+            LOG_WARN("Primitive 'texcoord' attribute has invalid access");
             continue;
         }
         if ((index_access.componentType != GL_UNSIGNED_SHORT && index_access.componentType != GL_UNSIGNED_INT) || index_access.type != TINYGLTF_TYPE_SCALAR || index_access.sparse.isSparse || index_access.bufferView < 0) {
-            LOG_WARN("Primitive index has invalid access");
+            LOG_WARN("Primitive 'index' attribute has invalid access");
             continue;
         }
         if (index_access.count % 3 != 0) {
-            LOG_WARN("Primitive index count not a multiple of three");
+            LOG_WARN("Primitive 'index' count not a multiple of three");
             continue;
         }
 
@@ -85,23 +99,23 @@ Mesh &loadMesh(GraphicsLoadingContext &context, const gltf::Mesh &mesh) {
         const gltf::BufferView &index_view = model.bufferViews[index_access.bufferView];
 
         if (position_view.target != GL_ARRAY_BUFFER || position_view.byteStride != 0) {
-            LOG_WARN("Primitive position attribute has invalid view");
+            LOG_WARN("Primitive 'position' attribute has invalid view");
             continue;
         }
         if (normal_view.target != GL_ARRAY_BUFFER || normal_view.byteStride != 0) {
-            LOG_WARN("Primitive normal attribute has invalid view");
+            LOG_WARN("Primitive 'normal' attribute has invalid view");
             continue;
         }
         if (tangent_view.target != GL_ARRAY_BUFFER || tangent_view.byteStride != 0) {
-            LOG_WARN("Primitive tangent attribute has invalid view");
+            LOG_WARN("Primitive 'tangent' attribute has invalid view");
             continue;
         }
         if (texcoord_view.target != GL_ARRAY_BUFFER || texcoord_view.byteStride != 0) {
-            LOG_WARN("Primitive texcoord attribute has invalid view");
+            LOG_WARN("Primitive 'texcoord' attribute has invalid view");
             continue;
         }
         if (index_view.target != GL_ELEMENT_ARRAY_BUFFER || index_view.byteStride != 0) {
-            LOG_WARN("Primitive index has invalid view");
+            LOG_WARN("Primitive 'index' attribute has invalid view");
             continue;
         }
 

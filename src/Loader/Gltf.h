@@ -249,8 +249,10 @@ struct Node {
     // custom tags, contains arbitrary strings
     std::vector<std::string> tags = {};
 
-    // if the node is kinematic (moveable) or static
+    // if the node is kinematic (moveable by script)
     bool isKinematic = false;
+    // if the node is dynamic (moved by physics)
+    bool isDynamic = false;
 
     bool isRoot() { return name == "#root"; }
 };
@@ -335,7 +337,7 @@ SceneData *scene(const gltf::Model &model);
 namespace util {
 
 template <typename T>
-T getJsonValue(const gltf::Value &object, const std::string &key);
+T getJsonValue(const gltf::Value &object, const std::string &key, T default_value);
 
 }  // namespace util
 

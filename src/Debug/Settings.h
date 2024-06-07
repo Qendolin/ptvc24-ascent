@@ -46,6 +46,7 @@ struct DebugSettings {
             bool debugDrawEnabled = false;
             std::array<float, 3> sunTarget = {-27, 0, -70};
             std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
+            float cascadeSplitLambda = 0.75f;
             float sunDistance = 175;
             float normalBias = 300.0f;
             float sizeBias = 10.0f;
@@ -58,7 +59,6 @@ struct DebugSettings {
         struct Terrain {
             bool wireframe = false;
             bool fixedLodOrigin = false;
-            float heightScale = 64.0;
         } terrain;
 
         struct Water {
@@ -66,6 +66,13 @@ struct DebugSettings {
             bool fixedLodOrigin = false;
             float heightScale = 64.0;
         } water;
+
+        struct AmbientOcclusion {
+            bool enabled = true;
+            float factor = 1.0;
+            float radius = 1.0;
+            float power = 2.0;
+        } ao;
     };
     Entity entity;
     Rendering rendering;

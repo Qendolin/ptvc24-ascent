@@ -141,6 +141,20 @@ void Texture::load(int level, uint32_t width, uint32_t height, uint32_t depth, G
     }
 }
 
+void Texture::loadCompressed(int level, uint32_t width, uint32_t height, uint32_t depth, GLenum format, size_t size, const void* data) {
+    switch (dimensions()) {
+        case 1:
+            glCompressedTextureSubImage1D(id_, level, 0, width, format, size, data);
+            break;
+        case 2:
+            glCompressedTextureSubImage2D(id_, level, 0, 0, width, height, format, size, data);
+            break;
+        case 3:
+            glCompressedTextureSubImage3D(id_, level, 0, 0, 0, width, height, depth, format, size, data);
+            break;
+    }
+}
+
 void Texture::generateMipmap() {
     glGenerateTextureMipmap(id_);
 }

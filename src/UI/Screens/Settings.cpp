@@ -60,6 +60,12 @@ void SettingsScreen::draw_() {
             nk_style_set_font(nk, font_sm);
             nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.3f", settings_.lookSensitivity);
 
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "FPS Limit", NK_TEXT_ALIGN_LEFT);
+            nk_slider_float(nk, 30.0f, &settings_.maxFps, 1000.0f, 10.0f);
+            nk_style_set_font(nk, font_sm);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f", settings_.maxFps);
+
             nk_group_end(nk);
         }
 

@@ -26,13 +26,14 @@
 
 using namespace scene;
 
-glm::vec2 quatToAzimuthElevation(const glm::quat& q);
+static glm::vec2 quatToAzimuthElevation(const glm::quat& q);
 
-CharacterEntity::CharacterEntity(SceneRef scene, Camera& camera) : Entity(scene), camera(camera) {
+CharacterEntity::CharacterEntity(SceneRef scene, NodeRef node, Camera& camera) : NodeEntity(scene, node), camera(camera) {
     auto& windSound = game().audio->assets->wind;
     windSoundInstanceLeft_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, -0.5));
     windSoundInstanceRight_ = std::unique_ptr<SoundInstance2d>(windSound.play2d(0, 0.5));
     windSoundInstanceLeft_->seek(windSound.duration() * 0.5);
+    boostSoundInstance_ = std::unique_ptr<SoundInstance2d>(game().audio->assets->boost.play2d(0, 0.0));
 }
 
 CharacterEntity::~CharacterEntity() {
@@ -40,19 +41,34 @@ CharacterEntity::~CharacterEntity() {
         body_->RemoveFromPhysicsSystem();
     }
     delete body_;
+    if (kinematicBody_ != nullptr) {
+        physics().interface().RemoveBody(kinematicBody_->GetID());
+        physics().interface().DestroyBody(kinematicBody_->GetID());
+    }
+    // I'm not sure, but I guess Jolt already deletes it when I call DestroyBody
+    // delete kinematicBody_;
 }
 
 void CharacterEntity::init() {
-    JPH::Ref<JPH::CharacterSettings> settings = new JPH::CharacterSettings();
-    settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
-    settings->mLayer = ph::Layers::MOVING;
-    settings->mShape = new JPH::SphereShape(0.25f);
-    settings->mFriction = 0.0f;
-    settings->mGravityFactor = 0.0f;
+    base.addTag("player");
 
-    body_ = new JPH::Character(settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
+    JPH::Ref<JPH::CharacterSettings> character_settings = new JPH::CharacterSettings();
+    character_settings->mMaxSlopeAngle = JPH::DegreesToRadians(45.0f);
+    character_settings->mLayer = ph::Layers::PLAYER;
+    character_settings->mShape = new JPH::SphereShape(0.25f);
+    character_settings->mFriction = 0.0f;
+    character_settings->mGravityFactor = 0.0f;
+
+    body_ = new JPH::Character(character_settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
+    physics().interface().SetMotionQuality(body_->GetBodyID(), JPH::EMotionQuality::LinearCast);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
+
+    // the "hurtbox" is much larger than the hitbox
+    JPH::BodyCreationSettings kinematic_body_settings(new JPH::SphereShape(1.0f), JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), JPH::EMotionType::Kinematic, ph::Layers::PLAYER);
+    kinematic_body_settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+    kinematicBody_ = physics().interface().CreateBody(kinematic_body_settings);
+    physics().interface().AddBody(kinematicBody_->GetID(), JPH::EActivation::Activate);
 
     physics().contactListener->RegisterCallback(
         body_->GetBodyID(),
@@ -63,6 +79,10 @@ void CharacterEntity::init() {
 
 void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     NodeRef contactNode = scene.byPhysicsBody(contact.other);
+    if (contactNode.isInvalid()) {
+        LOG_WARN("Contact node was invalid.");
+        return;
+    }
     // The contact node should always have physics
     if (!contactNode.hasPhysics()) {
         LOG_WARN("Contact node did not have physics?!?");
@@ -70,6 +90,8 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     }
     // can't collide with triggers
     if (contactNode.physics().hasTrigger()) return;
+
+    if (contactNode.hasTag("non_killing")) return;
 
     if (!respawnInvulnerability.isZero()) return;
     game().audio->assets->thump.play2dEvent(0.5, 0);
@@ -93,12 +115,13 @@ void CharacterEntity::respawn() {
     float speed = std::max(RESPAWN_SPEED_MINIMUM, respawn_point.speed * RESPAWN_SPEED_FACTOR);
     velocity_ = rotation * glm::vec3(0, 0, -speed);
 
-    boostMeter_ = respawn_point.boostMeter;
+    boostMeter_ = std::max(respawn_point.boostMeter, RESPAWN_BOOST_MINIMUM);
 }
 
 void CharacterEntity::setPosition_(glm::vec3 pos) {
     camera.position = pos;
     body_->SetPosition(ph::convert(pos));
+    physics().interface().SetPosition(kinematicBody_->GetID(), ph::convert(pos), JPH::EActivation::Activate);
     cameraLerpStart_ = pos;
     cameraLerpEnd_ = pos;
 }
@@ -106,6 +129,7 @@ void CharacterEntity::setPosition_(glm::vec3 pos) {
 void CharacterEntity::terminate() {
     this->windSoundInstanceLeft_->stop();
     this->windSoundInstanceRight_->stop();
+    this->boostSoundInstance_->stop();
 }
 
 void CharacterEntity::update(float time_delta) {
@@ -118,6 +142,7 @@ void CharacterEntity::update(float time_delta) {
     if (isFrozen_()) {
         windSoundInstanceLeft_->setVolume(0);
         windSoundInstanceRight_->setVolume(0);
+        boostSoundInstance_->setVolume(0);
         return;
     }
     // Camera movement
@@ -134,6 +159,10 @@ void CharacterEntity::update(float time_delta) {
     // That's why interpolation is needed, so the camera updates its position every frame.
     camera.position = glm::mix(cameraLerpStart_, cameraLerpEnd_, physics().partialTicks());
 
+    if (input.isKeyDown(GLFW_KEY_R)) {
+        respawn();
+    }
+
     if (input.isKeyDown(GLFW_KEY_SPACE) || input.isKeyDown(GLFW_KEY_S)) {
         breakFlag_ = true;
     }
@@ -147,8 +176,15 @@ void CharacterEntity::update(float time_delta) {
 
     if (boostFlag_ && boostMeter_ > 0) {
         boostDynamicFov_ += BOOST_DYN_FOV_CHANGE * time_delta;
+        if (!boostSoundPlaying_) {
+            boostSoundPlaying_ = true;
+            boostSoundInstance_->seek(0.0);
+        }
+        boostSoundInstance_->setVolume(1.0);
     } else {
         boostDynamicFov_ -= BOOST_DYN_FOV_CHANGE * time_delta;
+        boostSoundInstance_->setVolume(0.0);
+        boostSoundPlaying_ = false;
     }
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
@@ -177,6 +213,8 @@ void CharacterEntity::postPhysicsUpdate() {
     if (!enabled) return;
 
     cameraLerpEnd_ = ph::convert(body_->GetPosition());
+    // move kinematic body to character body
+    physics().interface().MoveKinematic(kinematicBody_->GetID(), body_->GetPosition(), body_->GetRotation(), ph::Physics::UPDATE_INTERVAL);
 }
 
 glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
@@ -188,6 +226,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     float pitch_cos = glm::cos(camera.angles.x);  // up, down = 0, horizontal = 1
     float pitch_sin = glm::sin(camera.angles.x);  // down = -1, horizontal = 0, up = 1
     float pitch_cos_sqr = pitch_cos * pitch_cos;
+    float pitch_sin_sqr = pitch_sin * pitch_sin;
     float horizontal_speed = glm::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
     if (boostFlag_) {
@@ -209,15 +248,26 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
         if (velocity.y < 0) {
             float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
             result.y += lift;
-            result.x += looking.x * 1.1f * lift / pitch_cos;
-            result.z += looking.z * 1.1f * lift / pitch_cos;
+            result.x += looking.x * lift / pitch_cos;
+            result.z += looking.z * lift / pitch_cos;
         }
-        // convert horizontal to vertical velocity
+        // convert horizontal to vertical upwards velocity
+        // allows for flying up
         if (camera.angles.x > 0) {
             float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
-            result.y += lift;
-            result.x -= looking.x * 0.9f * lift / pitch_cos;
-            result.z -= looking.z * 0.9f * lift / pitch_cos;
+            // Unrealistic but makes gaining hight easier.
+            // One problem is that this allows for infinite height gain.
+            result.y += lift * 1.5f;
+            result.x -= looking.x * lift / pitch_cos;
+            result.z -= looking.z * lift / pitch_cos;
+        }
+        // convert horizontal to vertical downwards velocity
+        // allows for better height control
+        if (camera.angles.x < 0) {
+            float anti_lift = horizontal_speed * pitch_sin_sqr * -0.075f * time_delta * SPEED;
+            result.y += anti_lift;
+            result.x += looking.x * anti_lift / pitch_cos;
+            result.z += looking.z * anti_lift / pitch_cos;
         }
 
         // steering / turning
@@ -240,7 +290,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
 }
 
 // calculate azimuth and elevation from quaternion. (assuming -z forward)
-glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
+static glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     // Calculate elevation
     float sin_pitch = 2.0f * (q.x * q.w - q.z * q.y);
     float elevation = glm::asin(sin_pitch);
@@ -254,4 +304,8 @@ glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
     }
 
     return glm::vec2(azimuth, elevation);
+}
+
+JPH::BodyID CharacterEntity::body() const {
+    return body_->GetBodyID();
 }

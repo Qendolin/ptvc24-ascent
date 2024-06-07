@@ -11,7 +11,7 @@ class FreeCamEntity {
     // Flying speed in m/s
     inline static const float BASE_SPEED = 10.0f;
     inline static const float MIN_SPEED = 0.1f;
-    inline static const float MAX_SPEED = 100.0f;
+    inline static const float MAX_SPEED = 1000.0f;
     // Change speed by scrolling
     float speed_ = BASE_SPEED;
 

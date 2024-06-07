@@ -7,6 +7,8 @@ class Camera {
    private:
     // vertical field of view, in radians
     float fov_;
+    // aspect ratio (width / height)
+    float aspect_;
     glm::vec2 viewportSize_ = {1600, 900};
     float nearPlane_;
 
@@ -67,6 +69,13 @@ class Camera {
      */
     float fov() const {
         return fov_;
+    }
+
+    /**
+     * @return the frustum aspect ratio (width / height)
+     */
+    float aspect() const {
+        return aspect_;
     }
 
     glm::mat4 projectionMatrix() const {

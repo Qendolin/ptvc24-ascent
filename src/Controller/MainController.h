@@ -15,13 +15,18 @@ class FadeOverlay;
 class ScoreScreen;
 class StartScreen;
 class PauseScreen;
+class Hud;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
 class WaterRenderer;
+class CSM;
 namespace loader {
 class SceneData;
-}
+class Terrain;
+class Environment;
+
+}  // namespace loader
 namespace scene {
 class Scene;
 }
@@ -37,21 +42,17 @@ class MainController : public AbstractController {
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
+    std::unique_ptr<loader::Environment> iblEnv;
+    std::unique_ptr<loader::Terrain> terrain;
     std::unique_ptr<MainControllerLoader> loader;
+    std::unique_ptr<CSM> csm;
 
     const std::unique_ptr<ScoreScreen> scoreScreen;
     const std::unique_ptr<StartScreen> startScreen;
     const std::unique_ptr<PauseScreen> pauseScreen;
+    const std::unique_ptr<Hud> hud;
 
-    CharacterEntity* character = nullptr;
     std::unique_ptr<FreeCamEntity> freeCam;
-
-    std::unique_ptr<OrthoShadowCaster> sunShadow = std::make_unique<OrthoShadowCaster>(1024 * 2, 225.0f, 1.0f, 250.0f);
-
-    /**
-     * Draw the on screen hud (timer, score, etc.)
-     */
-    void drawHud_();
 
     /**
      * Is called after loading is finished
@@ -62,6 +63,7 @@ class MainController : public AbstractController {
     const std::unique_ptr<FadeOverlay> fader;
 
     RaceManager raceManager;
+    CharacterEntity* character = nullptr;
 
     MainController(Game& game);
 

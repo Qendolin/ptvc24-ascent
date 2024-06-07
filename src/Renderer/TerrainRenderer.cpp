@@ -9,113 +9,94 @@
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
-#include "../Loader/Loader.h"
+#include "../Loader/Environment.h"
+#include "../Loader/Terrain.h"
+#include "../Util/Log.h"
+#include "ShadowRenderer.h"
 
 TerrainRenderer::TerrainRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/terrain.vert"),
-         new gl::ShaderProgram("assets/shaders/terrain.frag"),
-         new gl::ShaderProgram("assets/shaders/terrain.tesc"),
-         new gl::ShaderProgram("assets/shaders/terrain.tese")});
-    shader->setDebugLabel("Tessellation_renderer/shader");
+        {new gl::ShaderProgram("assets/shaders/terrain/terrain.vert"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.frag"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tesc"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tese")});
+    shader->setDebugLabel("terrain_renderer/shader");
 
-    // load and create a texture
-    // -------------------------
-    sampler = new gl::Sampler();
-    // height will be 0 outside of image bounds
-    sampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
-    sampler->borderColor(glm::vec4(0.0));
-    sampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
+    terrainSampler = new gl::Sampler();
+    terrainSampler->setDebugLabel("terrain_renderer/terrainSampler");
+    terrainSampler->wrapMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT, 0);
+    terrainSampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
 
-    loader::Image image = loader::image("assets/textures/iceland_heightmap.png");
-    int width = image.width, height = image.height;
-
-    heightMap = new gl::Texture(GL_TEXTURE_2D);
-    heightMap->allocate(0, GL_R8, width, height);
-    heightMap->load(0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.data.get());
-    // mip levels are for normals
-    heightMap->generateMipmap();
-    std::cout << "Loaded heightmap of size " << width << " x " << height << std::endl;
-
-    std::vector<float> vertices;
-    std::cout << "values of width and height are: " << height << ", " << width << std::endl;
-    for (int y = 0; y <= resolution - 1; y++) {
-        for (int x = 0; x <= resolution - 1; x++) {
-            vertices.push_back(-width / 2.0f + width * x / (float)resolution);    // v.x
-            vertices.push_back(0.0f);                                             // v.y
-            vertices.push_back(-height / 2.0f + height * y / (float)resolution);  // v.z
-            vertices.push_back(x / (float)resolution);                            // u
-            vertices.push_back(y / (float)resolution);                            // v
-
-            vertices.push_back(-width / 2.0f + width * x / (float)resolution);          // v.x
-            vertices.push_back(0.0f);                                                   // v.y
-            vertices.push_back(-height / 2.0f + height * (y + 1) / (float)resolution);  // v.z
-            vertices.push_back(x / (float)resolution);                                  // u
-            vertices.push_back((y + 1) / (float)resolution);                            // v
-
-            vertices.push_back(-width / 2.0f + width * (x + 1) / (float)resolution);  // v.x
-            vertices.push_back(0.0f);                                                 // v.y
-            vertices.push_back(-height / 2.0f + height * y / (float)resolution);      // v.z
-            vertices.push_back((x + 1) / (float)resolution);                          // u
-            vertices.push_back(y / (float)resolution);                                // v
-
-            vertices.push_back(-width / 2.0f + width * (x + 1) / (float)resolution);    // v.x
-            vertices.push_back(0.0f);                                                   // v.y
-            vertices.push_back(-height / 2.0f + height * (y + 1) / (float)resolution);  // v.z
-            vertices.push_back((x + 1) / (float)resolution);                            // u
-            vertices.push_back((y + 1) / (float)resolution);                            // v
-        }
-    }
-
-    std::cout << "Loaded " << resolution * resolution << " patches of 4 control points each" << std::endl;
-    std::cout << "Processing " << resolution * resolution * 4 << " vertices in vertex shader" << std::endl;
-
-    vao = new gl::VertexArray();
-    vao->layout(0, 0, 3, GL_FLOAT, false, 0);
-    vao->layout(0, 1, 2, GL_FLOAT, false, 3 * sizeof(float));
-
-    gl::Buffer *vbo = new gl::Buffer();
-    vbo->allocate(vertices.data(), sizeof(float) * vertices.size(), 0);
-
-    vao->bindBuffer(0, *vbo, 0, 5 * sizeof(float));
-    vao->own(vbo);  // vao will delete the vbo
+    shadowSampler = new gl::Sampler();
+    shadowSampler->setDebugLabel("terrain_renderer/shadow_sampler");
+    shadowSampler->filterMode(GL_LINEAR, GL_LINEAR);
+    shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+    shadowSampler->borderColor(glm::vec4(0));
+    shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
 }
 
 TerrainRenderer::~TerrainRenderer() {
     delete shader;
-    delete sampler;
-    delete heightMap;
-    delete vao;
+    delete terrainSampler;
 }
 
-void TerrainRenderer::render(Camera &camera) {
+void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm, loader::Environment &env) {
     gl::pushDebugGroup("TerrainRenderer::render");
     auto settings = Game::get().debugSettings.rendering.terrain;
 
     if (settings.wireframe)
         gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    vao->bind();
+    terrain.meshVao().bind();
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
     gl::manager->depthMask(true);
     gl::manager->cullBack();
     shader->bind();
 
-    heightMap->bind(0);
-    sampler->bind(0);
+    terrain.heightTexture().bind(0);
+    terrainSampler->bind(0);
+    terrain.albedoTexture().bind(1);
+    terrainSampler->bind(1);
+    terrain.normalTexture().bind(2);
+    terrainSampler->bind(2);
+    terrain.occlusionTexture().bind(3);
+    terrainSampler->bind(3);
 
-    glm::vec3 origin = camera.position;
+    env.diffuse().bind(4);
+    env.cubemapSampler().bind(4);
+    env.specular().bind(5);
+    env.cubemapSampler().bind(5);
+    env.brdfLut().bind(6);
+    env.lutSampler().bind(6);
+
+    shadowSampler->bind(7);
+    csm.depthTexture()->bind(7);
+
+    shader->vertexStage()->setUniform("u_position", terrain.origin());
+
+    glm::vec3 camera_pos = camera.position;
     if (settings.fixedLodOrigin) {
-        origin = glm::vec3(0.0);
+        camera_pos = glm::vec3(0.0);
     }
-    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", origin);
+    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera_pos);
 
-    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_projection_mat", camera.viewProjectionMatrix());
-    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", settings.heightScale);
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_projection_mat", camera.projectionMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_mat", camera.viewMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", terrain.heightScale());
+
+    shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
+    shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
+
+    for (size_t i = 0; i < CSM::CASCADE_COUNT; i++) {
+        CSMShadowCaster &caster = *csm.cascade(i);
+        shader->fragmentStage()->setUniformIndexed("u_shadow_splits", i, caster.splitDistance);
+        shader->get(GL_TESS_EVALUATION_SHADER)->setUniformIndexed("u_shadow_view_mat", i, caster.viewMatrix());
+        shader->get(GL_TESS_EVALUATION_SHADER)->setUniformIndexed("u_shadow_projection_mat", i, caster.projectionMatrix());
+    }
 
     glPatchParameteri(GL_PATCH_VERTICES, 4);
-    glDrawArrays(GL_PATCHES, 0, 4 * resolution * resolution);
+    glDrawArrays(GL_PATCHES, 0, terrain.patchCount());
 
     if (settings.wireframe)
         gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);

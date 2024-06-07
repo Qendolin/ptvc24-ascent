@@ -44,11 +44,21 @@ JPH::BodyCreationSettings createBodySettings(const PhysicsLoadingContext &contex
         motion_type = JPH::EMotionType::Kinematic;
         object_layer = ph::Layers::MOVING;
     }
+    if (node.isDynamic) {
+        motion_type = JPH::EMotionType::Dynamic;
+        object_layer = ph::Layers::MOVING;
+    }
     if (instance.isTrigger) {
         object_layer = ph::Layers::SENSOR;
     }
     JPH::BodyCreationSettings settings(shape, ph::convert(node.initialPosition), ph::convert(node.initialOrientation), motion_type, object_layer);
     settings.mIsSensor = instance.isTrigger;
+
+    if (params.mass >= 0.0) {
+        settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+        settings.mMassPropertiesOverride.mMass = std::any_cast<float>(params.mass);
+    }
+
     return settings;
 }
 
@@ -66,7 +76,7 @@ PhysicsInstance &loadPhysicsInstance(PhysicsLoadingContext &context, const gltf:
     PhysicsInstance &result = context.newInstance();
     result.name = node.name;
 
-    std::string trigger_string = util::getJsonValue<std::string>(node.extras, "trigger");
+    std::string trigger_string = util::getJsonValue<std::string>(node.extras, "trigger", "");
     if (!trigger_string.empty()) {
         std::pair<std::string, std::string> action_and_arg = parseTriggerString(trigger_string);
         result.trigger.action = action_and_arg.first;
@@ -92,10 +102,13 @@ PhysicsBodyParameters loadBodyParameters(PhysicsLoadingContext &context, const g
     else if (node.name.contains("Sphere"))
         params.shape = PhysicsShape::Sphere;
 
+    params.mass = util::getJsonValue<float>(node.extras, "dynamic.mass", params.mass);
+
     return params;
 }
 
 void loadMeshes(PhysicsLoadingContext &context) {
+    LOG_DEBUG("Loading meshes");
     context.meshIndexMap.reserve(context.model.meshes.size());
     for (const gltf::Mesh &gltf_mesh : context.model.meshes) {
         if (!gltf_mesh.name.starts_with("Phys")) {
@@ -103,12 +116,15 @@ void loadMeshes(PhysicsLoadingContext &context) {
             continue;
         }
 
+        LOG_DEBUG("Loading mesh '" + gltf_mesh.name + "'");
+
         JPH::RefConst<JPH::MeshShapeSettings> mesh = loadMesh(context, gltf_mesh);
         context.addMeshIndex(context.meshes.size() - 1);
     }
 }
 
 void loadInstances(PhysicsLoadingContext &context, const gltf::Scene &scene) {
+    LOG_DEBUG("Loading instances");
     loadNodes(context.model, scene, [&](const gltf::Node &node, const glm::mat4 &transform) {
         if (!node.name.starts_with("Phys")) return;
 
@@ -125,11 +141,14 @@ void loadInstances(PhysicsLoadingContext &context, const gltf::Scene &scene) {
 
 PhysicsData loadPhysics(const gltf::Model &model, std::map<std::string, loader::Node> &nodes) {
     PhysicsLoadingContext context(model, nodes);
+    LOG_DEBUG("Loading GLTF physics");
 
     loadMeshes(context);
 
     const gltf::Scene &scene = context.model.scenes[context.model.defaultScene];
     loadInstances(context, scene);
+
+    LOG_DEBUG("Finished loading GLTF physics");
 
     PhysicsData result = {
         context.instances,

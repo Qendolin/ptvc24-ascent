@@ -74,11 +74,15 @@ class FontAtlas {
     std::map<std::string, struct nk_font*> fonts_ = {};
     gl::Texture* texture_ = nullptr;
     std::string defaultFont_ = "";
+    std::vector<FontEntry> entries_;
+    float generatedScale_ = 0.0;
 
    public:
     FontAtlas(std::initializer_list<FontEntry> entries, std::string default_font);
 
     ~FontAtlas();
+
+    void generate();
 
     struct nk_font* defaultFont() const {
         return fonts_.at(defaultFont_);
@@ -97,6 +101,7 @@ class Backend {
     Renderer* renderer_ = nullptr;
     FontAtlas* fontAtlas_ = nullptr;
     Skin* skin_ = nullptr;
+    bool hidden_ = false;
 
    public:
     Backend(FontAtlas* font_atlas, Skin* skin, Renderer* renderer);
@@ -108,17 +113,25 @@ class Backend {
         return &context_;
     }
 
-    const FontAtlas* fonts() const {
+    FontAtlas* fonts() const {
         return fontAtlas_;
     }
 
-    const Skin* skin() const {
+    Skin* skin() const {
         return skin_;
     }
 
     void setViewport(int width, int height);
 
     void render();
+
+    void setHidden(bool hidden) {
+        this->hidden_ = hidden;
+    }
+
+    bool hidden() {
+        return this->hidden_;
+    }
 };
 
 }  // namespace ui

@@ -1,11 +1,12 @@
 
 #include "../UI/Screens/Loading.h"
-#include "../Util/Task.h"
+#include "../Util/TaskPool.h"
 
 #pragma region ForwardDecl
 namespace loader {
-class IblEnv;
+class EnvironmentImage;
 struct FloatImage;
+struct TerrainData;
 }  // namespace loader
 namespace tinygltf {
 class Model;
@@ -17,21 +18,22 @@ class LoadingScreen;
 class MainControllerLoader {
    public:
     struct Data {
-        std::shared_ptr<loader::IblEnv> environment;
-        std::shared_ptr<loader::IblEnv> environmentSpecular;
-        std::shared_ptr<loader::IblEnv> environmentDiffuse;
-        std::shared_ptr<loader::FloatImage> iblBrdfLut;
+        std::unique_ptr<loader::EnvironmentImage> environment;
+        std::unique_ptr<loader::EnvironmentImage> environmentSpecular;
+        std::unique_ptr<loader::EnvironmentImage> environmentDiffuse;
+        std::unique_ptr<loader::FloatImage> iblBrdfLut;
 
-        std::shared_ptr<const tinygltf::Model> gltf;
+        std::unique_ptr<const tinygltf::Model> gltf;
+        std::unique_ptr<loader::TerrainData> terrain;
     };
 
    private:
     bool firstTime_ = true;
-    std::unique_ptr<Task<Data>> task_;
+    std::unique_ptr<TaskPool<Data>> taskPool_;
     std::unique_ptr<LoadingScreen> screen_;
     bool loading_ = false;
 
-    static void load_(Data& out, bool load_gltf);
+    static void queueOperations_(TaskPool<Data>& pool, bool load_gltf);
 
    public:
     MainControllerLoader();
@@ -41,7 +43,7 @@ class MainControllerLoader {
 
     void update() {
         // isLoading is called multiple times per frame, but it must always return the same value;
-        loading_ = task_ != nullptr && !task_->isFinished();
+        loading_ = taskPool_ != nullptr && !taskPool_->isFinished();
     }
 
     bool isLoading() {
@@ -49,7 +51,7 @@ class MainControllerLoader {
     }
 
     bool isDone() {
-        return !loading_ && task_ != nullptr;
+        return !loading_ && taskPool_ != nullptr;
     }
 
     void draw();

@@ -5,7 +5,6 @@
 #include "../../Loader/Environment.h"
 #include "../../Loader/Gltf.h"
 #include "../../Util/Log.h"
-#include "../../Util/Task.h"
 #include "../../Window.h"
 #include "../UI.h"
 

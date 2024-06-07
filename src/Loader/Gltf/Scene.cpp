@@ -1,5 +1,6 @@
 #include <sstream>
 
+#include "../../Util/Log.h"
 #include "../Gltf.h"
 
 // later
@@ -138,10 +139,16 @@ std::map<std::string, loader::Node> loadNodeTree(const gltf::Model &model) {
             }
         }
 
-        bool kinematic = util::getJsonValue<bool>(node.extras, "kinematic");
+        bool kinematic = util::getJsonValue<bool>(node.extras, "kinematic", false);
+        bool dynamic = util::getJsonValue<bool>(node.extras, "dynamic", false);
+
+        if (kinematic && dynamic) {
+            LOG_WARN("Node '" + node.name + "' is marked as both kineamtic and dynamic, it will be kinematic.");
+            dynamic = false;
+        }
 
         std::vector<std::string> tags;
-        std::string tags_string = util::getJsonValue<std::string>(node.extras, "tags");
+        std::string tags_string = util::getJsonValue<std::string>(node.extras, "tags", "");
         if (!tags_string.empty()) {
             tags = parseTagsString(tags_string);
         }
@@ -158,10 +165,11 @@ std::map<std::string, loader::Node> loadNodeTree(const gltf::Model &model) {
             .initialPosition = translation,
             .initialScale = scale,
             .initialOrientation = rotation,
-            .entityClass = util::getJsonValue<std::string>(node.extras, "entity"),
+            .entityClass = util::getJsonValue<std::string>(node.extras, "entity", ""),
             .properties = std::move(properties),
             .tags = std::move(tags),
             .isKinematic = kinematic,
+            .isDynamic = dynamic,
         };
     });
 

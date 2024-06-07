@@ -20,13 +20,15 @@ Opengl 4.5
 Click to focus the window. Escape to release the focus.  
 Use mouse to look.  
 
-| Key          | Action            |
-| ------------ | ----------------- |
-| `Shift`, `W` | Boost             |
-| `Space`, `S` | Air Break         |
-| `ESC`        | Pause Menu        |
-| `F3`         | Toggle debug menu |
-| `F5`         | Reload assets     |
+| Key          | Action                     |
+| ------------ | -------------------------- |
+| `Shift`, `W` | Boost                      |
+| `Space`, `S` | Air Break                  |
+| `R`          | Respawn at last Checkpoint |
+| `ESC`        | Pause Menu                 |
+| `F2`         | Hide GUI                   |
+| `F3`         | Toggle debug menu          |
+| `F5`         | Reload assets / shaders    |
 
 The FreeCam™ mode uses WASD movement and the scrolling to change speed.
 

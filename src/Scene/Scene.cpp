@@ -88,6 +88,40 @@ int32_t Scene::convertNodes_(const loader::SceneData& scene, const NodeEntityFac
     return index;
 }
 
+Node& Scene::createPhysicsNode(std::string name, const scene::Physics& physics) {
+    int32_t index = nodes.size();
+    Node& result = nodes.emplace_back();
+    result = {
+        .name = name,
+        .index = index,
+        .parent = 0,
+        .children = {},
+        .properties = Properties(),
+        .tags = Tags(),
+    };
+    nodesByName[name] = index;
+
+    result.physics = this->physics.size();
+    this->physics.emplace_back(physics);
+    nodesByBodyID[physics.body] = index;
+    return result;
+}
+
+Node& Scene::createGenericNode(std::string name) {
+    int32_t index = nodes.size();
+    Node& result = nodes.emplace_back();
+    result = {
+        .name = name,
+        .index = index,
+        .parent = 0,
+        .children = {},
+        .properties = Properties(),
+        .tags = Tags(),
+    };
+    nodesByName[name] = index;
+    return result;
+}
+
 void Scene::callEntityInit() {
     if (initialized_) {
         LOG_WARN("Scene::callEntityInit called after scene was already initialized");
@@ -202,7 +236,7 @@ NodeRef SceneRef::byName(std::string name) const {
 }
 
 void GraphicsRef::setTransformFromNode() {
-    scene_->graphics[index_].attributes->transform = scene_->transforms[node_].matrix();
+    scene_->graphics[index_].attributes->transform = TransformRef(*scene_, node_).matrix();
 }
 
 void GraphicsRef::setTransform(const glm::mat4& matrix) {
