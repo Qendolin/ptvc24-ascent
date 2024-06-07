@@ -1,6 +1,7 @@
 #version 450 core
 
 const int SHADOW_CASCADE_COUNT = 4;
+const int LIGHT_COUNT = 1;
 
 layout(early_fragment_tests) in;
 
@@ -32,6 +33,9 @@ uniform mat4 u_view_mat;
 
 uniform float u_shadow_depth_bias;
 uniform float u_shadow_splits[SHADOW_CASCADE_COUNT];
+
+uniform vec3 u_light_dir[LIGHT_COUNT];
+uniform vec3 u_light_radiance[LIGHT_COUNT];
 
 const float PI = 3.14159265359;
 
@@ -179,26 +183,20 @@ void main()
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
+    int shadow_index = 0;
+    for (int i = 0; i < SHADOW_CASCADE_COUNT - 1; i++) {
+        if (in_position_vs.z < u_shadow_splits[i]) {
+            shadow_index = i + 1;
+        }
+    }
+    float shadow = sampleShadow(float(shadow_index), in_shadow_position[shadow_index], dot(tbn[2], in_shadow_direction));
+
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    // for(int i = 0; i < ORTHO_LIGHT_COUNT + POINT_LIGHT_COUNT; ++i)
-    // Note: currently disabled (just using ibl)
-    for(int i = 0; i < 0; ++i)
+    for(int i = 0; i < LIGHT_COUNT; ++i)
     {
-        vec3 L, radiance;
-        L = normalize(vec3(0.0, 1.0, -1.0));
-        radiance = vec3(5.0);
-        // if(i < ORTHO_LIGHT_COUNT) {
-        //     DirectionalLight light = u_directional_lights[i];
-        //     L = normalize(-light.direction.xyz);
-        //     radiance = light.color.rgb * light.color.a;
-        // } else {
-        //     PointLight light = u_point_lights[i-ORTHO_LIGHT_COUNT];
-        //     L = normalize(light.position.xyz - P);
-        //     float d = length(light.position.xyz - P) + 1e-5;
-        //     float attenuation = light.attenuation.x + light.attenuation.y * d + light.attenuation.z * d * d;
-        //     radiance = (light.color.rgb * light.color.a) / attenuation;
-        // }
+        vec3 L = normalize(u_light_dir[i]);
+        vec3 radiance = u_light_radiance[i] * shadow;
 
         // The half way vector
         vec3 H = normalize(V + L);
@@ -229,14 +227,6 @@ void main()
         // add to outgoing radiance Lo
         Lo += (kD * albedo / PI + specular) * radiance * n_dot_l;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
-
-    int shadow_index = 0;
-    for (int i = 0; i < SHADOW_CASCADE_COUNT - 1; i++) {
-        if (in_position_vs.z < u_shadow_splits[i]) {
-            shadow_index = i + 1;
-        }
-    }
-    float shadow = sampleShadow(float(shadow_index), in_shadow_position[shadow_index], dot(tbn[2], in_shadow_direction));
 
     // ambient lighting
     vec3 ambient = sampleAmbient(N, V, R, F0, roughness, metallic, albedo, ao);

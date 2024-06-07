@@ -117,18 +117,23 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Sun")) {
+            PushID("sun");
+            BeginTable("dir_input", 2);
+            TableNextColumn();
+            SliderFloat("Az", &settings.rendering.sun.azimuth, 0, 360, "%.1f °");
+            TableNextColumn();
+            SliderFloat("El", &settings.rendering.sun.elevation, -90, 90, "%.1f °");
+            EndTable();
+            ColorEdit3("Color", glm::value_ptr(settings.rendering.sun.color), ImGuiColorEditFlags_Float);
+            SliderFloat("Brightness", &settings.rendering.sun.brightness, 0, 10);
+            PopID();
+        }
+
         if (CollapsingHeader("Shadow")) {
             PushID("shadow");
             Checkbox("Debug Draw", &settings.rendering.shadow.debugDrawEnabled);
-            DragFloat3("Target", &settings.rendering.shadow.sunTarget[0]);
-            BeginTable("dir_input", 2);
-            TableNextColumn();
-            SliderFloat("Az", &settings.rendering.shadow.sunAzimuthElevation[0], 0, 360, "%.1f °");
-            TableNextColumn();
-            SliderFloat("El", &settings.rendering.shadow.sunAzimuthElevation[1], -90, 90, "%.1f °");
-            EndTable();
             SliderFloat("Split Lambda", &settings.rendering.shadow.cascadeSplitLambda, 0.0, 1.0);
-            SliderFloat("Distance", &settings.rendering.shadow.sunDistance, 0, 1000);
             DragFloat("Normal Bias", &settings.rendering.shadow.normalBias);
             SliderFloat("Size Bias", &settings.rendering.shadow.sizeBias, -300, 300);
             DragFloat("Depth Bias", &settings.rendering.shadow.depthBias);

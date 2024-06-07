@@ -11,6 +11,7 @@
 #include "../Game.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Terrain.h"
+#include "../Scene/Light.h"
 #include "../Util/Log.h"
 #include "ShadowRenderer.h"
 
@@ -41,7 +42,7 @@ TerrainRenderer::~TerrainRenderer() {
     delete shadowSampler;
 }
 
-void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm, loader::Environment &env) {
+void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm, loader::Environment &env, OrthoLight &sun) {
     gl::pushDebugGroup("TerrainRenderer::render");
     auto settings = Game::get().debugSettings.rendering.terrain;
 
@@ -51,7 +52,7 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm,
     terrain.meshVao().bind();
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
-    gl::manager->depthMask(false);
+    gl::manager->depthMask(true);
     gl::manager->cullBack();
     shader->bind();
 
@@ -88,6 +89,8 @@ void TerrainRenderer::render(Camera &camera, loader::Terrain &terrain, CSM &csm,
 
     shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
     shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
+    shader->fragmentStage()->setUniform("u_light_dir[0]", sun.direction());
+    shader->fragmentStage()->setUniform("u_light_radiance[0]", sun.radiance());
 
     for (size_t i = 0; i < CSM::CASCADE_COUNT; i++) {
         CSMShadowCaster &caster = *csm.cascade(i);

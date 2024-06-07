@@ -62,12 +62,13 @@ vec3 agx(vec3 val) {
 
     const float min_ev = -12.47393;
     const float max_ev = 4.026069;
+    const float mid_gray = 1.0;
 
     // Input transform
     val = agx_mat * val;
 
     // Log2 space encoding
-    val = clamp(log2(val), min_ev, max_ev);
+    val = clamp(log2(val / mid_gray), min_ev, max_ev);
     val = (val - min_ev) / (max_ev - min_ev);
 
     // Apply sigmoid function approximation

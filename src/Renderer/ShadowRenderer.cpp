@@ -133,7 +133,7 @@ CSM::~CSM() {
     delete depthTexture_;
 }
 
-bool CSM::update(Camera& camera, glm::vec2 light_dir_polar, float time_delta) {
+bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
     lastUpdateElapsed_ += time_delta;
     if (lastUpdateElapsed_ < updateInterval_) {
         return false;
@@ -209,12 +209,6 @@ bool CSM::update(Camera& camera, glm::vec2 light_dir_polar, float time_delta) {
 
         glm::vec3 maxExtents = glm::vec3(radius);
         glm::vec3 minExtents = -maxExtents;
-
-        glm::vec3 light_dir = glm::vec3{
-            glm::sin(light_dir_polar.x) * glm::cos(light_dir_polar.y),
-            glm::sin(light_dir_polar.y),
-            glm::cos(light_dir_polar.x) * glm::cos(light_dir_polar.y),
-        };
 
         glm::vec3 eye = frustumCenter - (light_dir * -minExtents.z);
         glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
