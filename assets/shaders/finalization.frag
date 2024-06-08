@@ -20,6 +20,12 @@ uniform mat4 u_inverse_projection_mat;
 uniform mat4 u_inverse_view_mat;
 uniform vec3 u_camera_pos;
 
+uniform float u_fog_density;
+uniform float u_fog_emission;
+uniform float u_fog_height;
+uniform float u_fog_max;
+uniform vec3 u_fog_color;
+
 // dither matrix, use as dither_matrix[y][x] / 256.0
 const float dither_matrix[16][16] = {
     {  0., 128.,  32., 160.,   8., 136.,  40., 168.,   2., 130.,  34., 162.,  10., 138.,  42., 170.},
@@ -141,27 +147,28 @@ float vignette(vec2 uv) {
     return 1.0 - vignette;
 }
 
-// TODO: pass as uniform
-const float FOG_DENSITY = 0.0065;
-const float FOG_EMISSION = 0.002;
-const float FOG_LINEAR = 7.0;
-const float FOG_HEIGHT = 60.0;
-const float FOG_MAX = 0.8;
-const vec3 FOG_COLOR = vec3(83, 110, 170) / 255.0;
-
 // Inigo Quilez's fog
 vec3 applyFog(vec3 frag_color, float d, float d_xz, vec3 ray_origin, vec3 ray_direction) {
-    // No fog for far plane
-    if(isnan(d)) return frag_color;
     if(ray_direction.y == 0.0) ray_direction.y = 0.000001;
+
+    if(d > 100000.0) { // skybox
+        // Looks kinda bad when inside the height based fog
+    	float fog = clamp(ray_direction.y + 0.1, 0.0, 1.0);
+        fog = pow(1.0-fog, 7.0);
+        return mix(frag_color, u_fog_color, fog);
+    }
+
     // height based fog
-    float fog_amount = (FOG_EMISSION/FOG_DENSITY) * exp(-(ray_origin.y-FOG_HEIGHT) * FOG_DENSITY) * (1.0 - exp(-d * ray_direction.y * FOG_DENSITY)) / ray_direction.y;
-    fog_amount = clamp(fog_amount, 0.0, FOG_MAX);
-    // puerely distance based fog, not clamped
-    // fog_amount += FOG_LINEAR * FOG_EMISSION * FOG_DENSITY * d;
+    // FIXME: breaks whe the camera is too high because the exponentail values get too extreme
+    float fog_amount = (u_fog_emission/u_fog_density) * exp(-(ray_origin.y-u_fog_height) * u_fog_density) * (1.0 - exp(-d * ray_direction.y * u_fog_density)) / ray_direction.y;
+
+    fog_amount = clamp(fog_amount, 0.0, u_fog_max);
+
     // world border fog
     fog_amount += pow(max(d_xz - 5000.0, 0.0)*0.0001, 2.0);
-    return mix(frag_color, FOG_COLOR, min(fog_amount, 1.0));
+
+    // const float fog_bloom_brightness_correction = 1.52; // simply estimated
+    return mix(frag_color, u_fog_color, min(fog_amount, 1.0));
 }
 
 vec3 reconstruct_view_space_position(float depth, vec2 uv) {
@@ -173,19 +180,24 @@ vec3 reconstruct_view_space_position(float depth, vec2 uv) {
 
 vec3 load_and_reconstruct_view_space_position(vec2 uv) {
     float depth = texture(u_depth_tex, uv).r;
+    depth = max(depth, 0.000001); // prevent infinity issues 
     return reconstruct_view_space_position(depth, uv);
 }
 
 void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
 
-    // GTAO (todo: apply in pbr shader)
+    // GTAO (TODO: apply in pbr shader)
     color *= clamp(texture(u_ao_tex, in_uv).r, 0.0, 1.0);
     // FIXME: ao looks bad on terrain
 
     // Bloom
     color += texture(u_bloom_tex, in_uv).rgb * u_bloom_fac;
 
+    // Flares & Glare
+    color += texture(u_flares_tex, in_uv).rgb * u_flares_fac;
+    color += texture(u_glare_tex, in_uv).rgb * u_flares_fac;
+    
     // Fog
     vec3 view_position = load_and_reconstruct_view_space_position(in_uv);
     vec3 world_position = (u_inverse_view_mat * vec4(view_position, 1.0)).xyz;
@@ -193,10 +205,6 @@ void main() {
     float view_distance_xz = length(world_position.xz - u_camera_pos.xz);
     color = applyFog(color, view_distance, view_distance_xz, u_camera_pos, (world_position - u_camera_pos) / view_distance);
 
-
-    // Flares & Glare
-    color += texture(u_flares_tex, in_uv).rgb * u_flares_fac;
-    color += texture(u_glare_tex, in_uv).rgb * u_flares_fac;
 
     // Tonemapping
     color = tonemapAgX(color);

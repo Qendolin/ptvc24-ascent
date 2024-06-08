@@ -159,6 +159,16 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Fog")) {
+            PushID("fog");
+            SliderFloat("Density", &settings.rendering.fog.density, 0.0, 0.1f, "%.5f");
+            SliderFloat("Emission", &settings.rendering.fog.emission, 0.0, 0.1f, "%.5f");
+            SliderFloat("Maximum", &settings.rendering.fog.maximum, 0.0, 1.0f);
+            DragFloat("Height", &settings.rendering.fog.height);
+            ColorEdit3("Color", glm::value_ptr(settings.rendering.fog.color), ImGuiColorEditFlags_Float);
+            PopID();
+        }
+
         Unindent();
         PopID();
     }

@@ -67,12 +67,19 @@ void FinalizationRenderer::render(Camera &camera, gl::Texture *hrd_color, gl::Te
 
     auto &settings = Game::get().debugSettings.rendering;
 
-    shader->fragmentStage()->setUniform("u_bloom_fac", settings.bloom.factor);
-    shader->fragmentStage()->setUniform("u_flares_fac", settings.lens.factor);
-    shader->fragmentStage()->setUniform("u_vignette_params", glm::vec4(settings.vignette.factor, settings.vignette.inner, settings.vignette.outer, settings.vignette.sharpness));
-    shader->fragmentStage()->setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
-    shader->fragmentStage()->setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
-    shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
+    auto &frag = *shader->fragmentStage();
+    frag.setUniform("u_bloom_fac", settings.bloom.factor);
+    frag.setUniform("u_flares_fac", settings.lens.factor);
+    frag.setUniform("u_vignette_params", glm::vec4(settings.vignette.factor, settings.vignette.inner, settings.vignette.outer, settings.vignette.sharpness));
+    frag.setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
+    frag.setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
+    frag.setUniform("u_camera_pos", camera.position);
+
+    frag.setUniform("u_fog_density", settings.fog.density);
+    frag.setUniform("u_fog_emission", settings.fog.emission);
+    frag.setUniform("u_fog_height", settings.fog.height);
+    frag.setUniform("u_fog_max", settings.fog.maximum);
+    frag.setUniform("u_fog_color", settings.fog.color);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     gl::popDebugGroup();

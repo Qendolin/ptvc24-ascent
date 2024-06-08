@@ -127,7 +127,7 @@ vec3 load_and_reconstruct_view_space_position(vec2 uv, float sample_mip_level) {
 
 #define SLICE_COUNT 3
 #define SAMPLES_PER_SLICE_SIDE 7
-#define Z_CUTOFF 0.00001
+#define Z_CUTOFF 0.00005
 
 void main() {
     float slice_count = float(SLICE_COUNT);
@@ -148,6 +148,7 @@ void main() {
     if(pixel_depth <= Z_CUTOFF) { // far plane cutoff
         // Avoid depth precision issues
         imageStore(ambient_occlusion, tex_coords, vec4(1.0, 0.0, 0.0, 0.0));
+        imageStore(depth_differences, tex_coords, uvec4(0xFFFFFFFFu, 0u, 0u, 0u));
         return;
     }
 
