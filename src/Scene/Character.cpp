@@ -258,7 +258,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
             float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
             // Unrealistic but makes gaining hight easier.
             // One problem is that this allows for infinite height gain.
-            result.y += lift * 1.5f;
+            result.y += lift * 1.0f;
             result.x -= looking.x * lift / pitch_cos;
             result.z -= looking.z * lift / pitch_cos;
         }

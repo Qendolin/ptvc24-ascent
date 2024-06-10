@@ -278,7 +278,7 @@ void DebugMenu::drawParticlesWindow_() {
 
     auto emitters = particles.emitters();
     std::string selected_preview = "";
-    if (state.particles.selected >= 0) {
+    if (state.particles.selected >= 0 && state.particles.selected < emitters.size()) {
         selected_preview = format_system_name(*emitters[state.particles.selected]);
     }
     if (BeginCombo("Systems", selected_preview.c_str(), 0)) {

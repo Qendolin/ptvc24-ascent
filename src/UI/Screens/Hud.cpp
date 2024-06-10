@@ -28,7 +28,7 @@ void Hud::drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds) 
 
     const float timer_height = 90_dp;
     const float timer_width = 260_dp;
-    nk_layout_space_push(nk, nk_rect(bounds.w / 2 - bounds.w / 7 - timer_width, bounds.h / 2 - timer_height / 2, timer_width, timer_height));
+    nk_layout_space_push(nk, nk_rect(bounds.w / 2 - bounds.w / 5 - timer_width, bounds.h / 2 - timer_height / 2, timer_width, timer_height));
     nk->style.window.background = nk_rgba_f(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba_f(0, 0, 0, 0));
     nk_style_push_vec2(nk, &nk->style.window.group_padding, nk_vec2(0, 0));
@@ -103,7 +103,7 @@ void Hud::drawBoostMeter_(Game &game, struct nk_context *nk, struct nk_rect &bou
 
     const float boost_meter_height = 180_dp;
     const float boost_meter_width = 30_dp;
-    nk_layout_space_push(nk, nk_rect(bounds.w / 2 + bounds.w / 7 - boost_meter_width, bounds.h / 2 - boost_meter_height / 2, boost_meter_width, boost_meter_height));
+    nk_layout_space_push(nk, nk_rect(bounds.w / 2 + bounds.w / 5 - boost_meter_width, bounds.h / 2 - boost_meter_height / 2, boost_meter_width, boost_meter_height));
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
     if (nk_group_begin(nk, "boost", NK_WINDOW_NO_SCROLLBAR)) {

@@ -313,11 +313,7 @@ void Game::render_() {
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gtaoRenderer_->render(*camera, *hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT), *hdrFramebuffer_->getTexture(1));
         sdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
-        // gl::manager->bindDrawFramebuffer(0);
         gl::manager->setEnabled({});
-        // gl::manager->enable(gl::Capability::DepthTest);
-        // gl::manager->depthMask(true);
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
             *camera,
             hdrFramebuffer_->getTexture(0),
@@ -328,6 +324,8 @@ void Game::render_() {
             gtaoRenderer_->result());
         motionBlurRenderer_->render(*camera, sdrFramebuffer_, hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT));
         gl::manager->bindDrawFramebuffer(0);
+        gl::manager->enable(gl::Capability::DepthTest);
+        gl::manager->depthMask(true);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalFinalizationRenderer_->render(sdrFramebuffer_->getTexture(0));
         // debugRenderer_->render(*this);

@@ -22,6 +22,7 @@ void BarrierObstacleEntity::init() {
     tween = tweeny::from(from_pos.x, from_pos.y, from_pos.z)
                 .to(to_pos.x, to_pos.y, to_pos.z)
                 .during(cycle_time * 1000);
+    tween.seek(std::clamp(base.prop<float>("cycle_phase", 0.0f), 0.0f, 1.0f));
 
     propellerLeft_ = Propeller(base.find("Propeller.Left"), -3);
     propellerRight_ = Propeller(base.find("Propeller.Right"), 3);
