@@ -3,9 +3,6 @@
 #pragma region ForwardDecl
 #include "../GL/Declarations.h"
 class Camera;
-namespace loader {
-class GraphicsData;
-}  // namespace loader
 #pragma endregion
 
 class FinalizationRenderer {

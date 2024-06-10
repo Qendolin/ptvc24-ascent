@@ -81,6 +81,10 @@ struct DebugSettings {
             float maximum = 0.8f;
             glm::vec3 color = glm::vec3(83 / 255.0f, 110 / 255.0f, 170 / 255.0f);
         } fog;
+
+        struct MotionBlur {
+            float targetFps = 30.0;
+        } motionBlur;
     };
     Entity entity;
     Rendering rendering;

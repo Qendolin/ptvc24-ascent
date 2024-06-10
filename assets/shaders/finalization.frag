@@ -1,6 +1,5 @@
 #version 450 core
 
-
 layout(location = 0) in vec2 in_uv;
 
 layout(location = 0) out vec4 out_color;
@@ -14,8 +13,6 @@ layout(binding = 5) uniform sampler2D u_ao_tex;
 
 uniform float u_bloom_fac;
 uniform float u_flares_fac;
-// factor, inner radius, outer radius, sharpness
-uniform vec4 u_vignette_params;
 uniform mat4 u_inverse_projection_mat;
 uniform mat4 u_inverse_view_mat;
 uniform vec3 u_camera_pos;
@@ -25,6 +22,7 @@ uniform float u_fog_emission;
 uniform float u_fog_height;
 uniform float u_fog_max;
 uniform vec3 u_fog_color;
+
 
 // dither matrix, use as dither_matrix[y][x] / 256.0
 const float dither_matrix[16][16] = {
@@ -134,19 +132,6 @@ vec3 dither(vec3 col) {
     return col + value * rgb_normalization;
 }
 
-// https://www.shadertoy.com/view/tt2cDK
-float vignette(vec2 uv) {
-    float inner = u_vignette_params.y;
-    float outer = u_vignette_params.z;
-    float sharpness = u_vignette_params.w;
-
-    vec2 curve = pow(abs(uv * 2.0 - 1.0), vec2(sharpness));
-    float edge = pow(length(curve), 1.0 / sharpness);
-    float vignette = 1.0 - smoothstep(inner, outer, edge);
-
-    return 1.0 - vignette;
-}
-
 // Inigo Quilez's fog
 vec3 applyFog(vec3 frag_color, float d, float d_xz, vec3 ray_origin, vec3 ray_direction) {
     if(ray_direction.y == 0.0) ray_direction.y = 0.000001;
@@ -205,16 +190,14 @@ void main() {
     float view_distance_xz = length(world_position.xz - u_camera_pos.xz);
     color = applyFog(color, view_distance, view_distance_xz, u_camera_pos, (world_position - u_camera_pos) / view_distance);
 
-
     // Tonemapping
     color = tonemapAgX(color);
-
-    // Vignette
-    color = mix(color, vec3(0.0, 0.0, 0.0), vignette(in_uv) * u_vignette_params.x); 
 
     // dithering
     color = dither(color);
 
     out_color = vec4(color, 1.);
-    gl_FragDepth = texture(u_depth_tex, in_uv).x;
+
+    // Not really needed
+    // gl_FragDepth = texture(u_depth_tex, in_uv).x;
 }

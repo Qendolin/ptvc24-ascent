@@ -1,12 +1,13 @@
 #include "FinalizationRenderer.h"
 
 #include "../Camera.h"
+#include "../GL/Framebuffer.h"
 #include "../GL/Geometry.h"
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
 #include "../Game.h"
-#include "../Loader/Environment.h"
+#include "../Input.h"
 
 FinalizationRenderer::FinalizationRenderer() {
     shader = new gl::ShaderPipeline(
@@ -70,7 +71,6 @@ void FinalizationRenderer::render(Camera &camera, gl::Texture *hrd_color, gl::Te
     auto &frag = *shader->fragmentStage();
     frag.setUniform("u_bloom_fac", settings.bloom.factor);
     frag.setUniform("u_flares_fac", settings.lens.factor);
-    frag.setUniform("u_vignette_params", glm::vec4(settings.vignette.factor, settings.vignette.inner, settings.vignette.outer, settings.vignette.sharpness));
     frag.setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
     frag.setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
     frag.setUniform("u_camera_pos", camera.position);

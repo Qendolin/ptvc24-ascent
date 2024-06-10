@@ -17,6 +17,8 @@ class Screen;
 struct Window;
 class AbstractController;
 class FinalizationRenderer;
+class FinalFinalizationRenderer;
+class MotionBlurRenderer;
 class GtaoRenderer;
 class DebugRenderer;
 class BloomRenderer;
@@ -52,11 +54,14 @@ class Game {
     // the controller which will get activated at the start of the next frame
     std::unique_ptr<AbstractController> queuedController_;
     std::unique_ptr<FinalizationRenderer> finalizationRenderer_;
+    std::unique_ptr<FinalFinalizationRenderer> finalFinalizationRenderer_;
+    std::unique_ptr<MotionBlurRenderer> motionBlurRenderer_;
     std::unique_ptr<BloomRenderer> bloomRenderer_;
     std::unique_ptr<LensEffectsRenderer> lensEffectsRenderer_;
     std::unique_ptr<GtaoRenderer> gtaoRenderer_;
     std::unique_ptr<DebugRenderer> debugRenderer_;
     gl::Framebuffer *hdrFramebuffer_;
+    gl::Framebuffer *sdrFramebuffer_;
     std::unique_ptr<FpsLimiter> fpsLimit_;
 
     //  Process user input

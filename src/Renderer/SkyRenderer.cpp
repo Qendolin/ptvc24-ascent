@@ -66,7 +66,6 @@ void SkyRenderer::render(Camera &camera, loader::Environment &env) {
     env.sky().bind(0);
 
     shader->vertexStage()->setUniform("u_rotation_projection_mat", camera.projectionMatrix() * glm::mat4(glm::mat3(camera.viewMatrix())));
-    shader->fragmentStage()->setUniform("u_fog_color", Game::get().debugSettings.rendering.fog.color);
 
     // The sky is rendered using a single, full-screen quad
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);

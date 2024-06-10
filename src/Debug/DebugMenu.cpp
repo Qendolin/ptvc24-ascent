@@ -169,6 +169,12 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Motion Blur")) {
+            PushID("motion_blur");
+            SliderFloat("Target FPS", &settings.rendering.motionBlur.targetFps, 10.0f, 60.0f);
+            PopID();
+        }
+
         Unindent();
         PopID();
     }
