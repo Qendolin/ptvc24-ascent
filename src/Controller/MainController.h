@@ -19,11 +19,12 @@ class Hud;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
-class WaterRenderer;
+class WaterTRenderer;
 class CSM;
 namespace loader {
 class SceneData;
 class Terrain;
+class Water;
 class Environment;
 
 }  // namespace loader
@@ -38,12 +39,13 @@ class MainController : public AbstractController {
     std::unique_ptr<SkyRenderer> skyRenderer;
     std::unique_ptr<TerrainRenderer> terrainRenderer;
     std::unique_ptr<ShadowMapRenderer> shadowRenderer;
-    std::unique_ptr<WaterRenderer> waterRenderer;
+    std::unique_ptr<WaterTRenderer> waterTRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;
     std::unique_ptr<scene::Scene> scene;
     std::unique_ptr<loader::Environment> iblEnv;
     std::unique_ptr<loader::Terrain> terrain;
+    std::unique_ptr<loader::Water> water;
     std::unique_ptr<MainControllerLoader> loader;
     std::unique_ptr<CSM> csm;
 

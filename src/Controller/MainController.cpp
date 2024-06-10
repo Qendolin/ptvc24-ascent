@@ -13,12 +13,13 @@
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
 #include "../Loader/Terrain.h"
+#include "../Loader/Water.h"
 #include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
-#include "../Renderer/WaterRenderer.h"
+#include "../Renderer/WaterTRenderer.h"
 #include "../Scene/Character.h"
 #include "../Scene/Entity.h"
 #include "../Scene/FreeCam.h"
@@ -94,17 +95,15 @@ void MainController::applyLoadResult_() {
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
     iblEnv = std::make_unique<loader::Environment>(*data.environment, *data.environmentDiffuse, *data.environmentSpecular, *data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>();
-    waterRenderer = std::make_unique<WaterRenderer>();
+    waterTRenderer = std::make_unique<WaterTRenderer>();
     if (terrain != nullptr) {
         physics.RemoveBody(terrain->physicsBody()->GetID());
         terrain->destroyPhysicsBody(physics);
     }
     terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
     terrain->createPhysicsBody(physics, glm::vec3(0.0, 1.0, 0.0));
+    water = std::make_unique<loader::Water>(*data.water, 4096.0f * 3, 40.0f, glm::vec3(0, 100, 0), 20);
     physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
-    if (scene && scene->nodesByName.count("terrain")) {
-        scene->physics[scene->nodes[scene->nodesByName.at("terrain")].physics].body = terrain->physicsBody()->GetID();
-    }
 
     if (!data.gltf) return;
 
@@ -138,7 +137,6 @@ void MainController::applyLoadResult_() {
     characterNode.entity = scene->entities.size() - 1;
 
     scene->createPhysicsNode("terrain", scene::Physics{.body = terrain->physicsBody()->GetID()});
-
     game.physics->system->OptimizeBroadPhase();
 
     scene::SceneRef scene_ref(*scene);
@@ -262,7 +260,7 @@ void MainController::render() {
 
     game.hdrFramebuffer().bindTargets({0, 1});
     terrainRenderer->render(*game.camera, *terrain, *csm, *iblEnv);
-    waterRenderer->render(*game.camera);
+    waterTRenderer->render(*game.camera, *water, *csm, *iblEnv);
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *csm, *iblEnv);
 
     game.hdrFramebuffer().bindTargets({0});
