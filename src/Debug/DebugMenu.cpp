@@ -37,6 +37,8 @@ void DebugMenu::drawDebugWindow_() {
     DebugSettings& settings = game.debugSettings;
 
     ph::Physics& physics = *game.physics;
+    SetNextWindowPos(ImVec2(1130, 450), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(ImVec2(470, 450), ImGuiCond_FirstUseEver);
     Begin("Debug Menu", nullptr, 0);
 
     // Misc
@@ -195,6 +197,8 @@ void DebugMenu::drawPerformanceWindow_() {
     Game& game = Game::get();
     Input& input = *game.input;
 
+    SetNextWindowPos(ImVec2(1330, 0), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(ImVec2(270, 450), ImGuiCond_FirstUseEver);
     Begin("Performance", nullptr, 0);
     frameTimes.update(input.timeDelta());
 
@@ -259,6 +263,9 @@ void DebugMenu::drawParticlesWindow_() {
 
     Game& game = Game::get();
     ParticleSystem& particles = *game.particles;
+    SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(ImVec2(440, 740), ImGuiCond_FirstUseEver);
+    SetNextWindowCollapsed(true, ImGuiCond_FirstUseEver);
     Begin("Particles", nullptr, 0);
 
     // Misc
