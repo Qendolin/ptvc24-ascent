@@ -24,11 +24,9 @@ namespace loader {
 struct WaterData {
     struct Files {
         std::string height;
-        std::string normal;
     };
 
     loader::Image height;
-    loader::Image normal;
 
     WaterData(Files files);
     ~WaterData();
@@ -37,7 +35,6 @@ struct WaterData {
 class Water {
    private:
     gl::Texture* height_;
-    gl::Texture* normal_;
     gl::VertexArray* vao_;
     int subdivisions_;
     glm::vec3 origin_;
@@ -53,10 +50,6 @@ class Water {
 
     gl::Texture& heightTexture() {
         return *height_;
-    }
-
-    gl::Texture& normalTexture() {
-        return *normal_;
     }
 
     size_t patchCount() {

@@ -58,8 +58,6 @@ void WaterRenderer::render(Camera &camera, loader::Water &water, loader::Environ
 
     water.heightTexture().bind(0);
     waterSampler->bind(0);
-    water.normalTexture().bind(1);
-    waterSampler->bind(1);
 
     depth->bind(2);
     depthSampler->bind(2);

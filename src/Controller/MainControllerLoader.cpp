@@ -52,9 +52,7 @@ void MainControllerLoader::queueOperations_(TaskPool<Data>& pool, bool load_gltf
     });
     pool.add([](Data& out) {
         out.water = std::make_unique<loader::WaterData>(
-            loader::WaterData::Files{
-                .height = "assets/textures/water_displace.png",
-                .normal = "assets/textures/water_normal.png"});
+            loader::WaterData::Files{.height = "assets/textures/water_displace.png"});
     });
 }
 

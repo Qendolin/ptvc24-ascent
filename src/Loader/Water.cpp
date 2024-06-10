@@ -17,7 +17,6 @@ namespace loader {
 
 WaterData::WaterData(WaterData::Files files) {
     height = loader::image(files.height);
-    normal = loader::image(files.normal);
 }
 
 WaterData::~WaterData() = default;
@@ -27,12 +26,10 @@ Water::Water(WaterData &data, float size, float heightScale, glm::vec3 origin, i
       origin_(origin),
       heightScale_(heightScale) {
     height_ = new gl::Texture(GL_TEXTURE_2D);
-    height_->setDebugLabel("Water/height");
+    height_->setDebugLabel("water/height");
     height_->allocate(0, GL_R8, data.height.width, data.height.height);
     height_->load(0, data.height.width, data.height.height, GL_RGBA, GL_UNSIGNED_BYTE, data.height.data.get());
     height_->generateMipmap();
-    normal_ = loader::texture(data.normal, loader::TextureParameters{.mipmap = true, .srgb = false, .internalFormat = GL_RGB8_SNORM});
-    normal_->setDebugLabel("Water/normal");
     struct Vertex {
         glm::vec2 position;
         glm::vec2 uv;
@@ -84,7 +81,6 @@ Water::Water(WaterData &data, float size, float heightScale, glm::vec3 origin, i
 Water::~Water() {
     delete height_;
     delete vao_;
-    delete normal_;
 }
 
 }  // namespace loader

@@ -16,7 +16,6 @@ layout(location = 1) out vec2 out_normal;
 uniform vec3 u_camera_pos;
 uniform float u_near_plane;
 
-layout(binding = 1) uniform sampler2D u_normal_tex;
 layout(binding = 2) uniform sampler2D u_depth_tex;
 layout(binding = 4) uniform samplerCube u_ibl_diffuse;
 layout(binding = 5) uniform samplerCube u_ibl_specualr;
