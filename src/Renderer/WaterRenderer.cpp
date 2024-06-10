@@ -32,13 +32,6 @@ WaterRenderer::WaterRenderer() {
     depthSampler->setDebugLabel("water_renderer/depth_sampler");
     depthSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
     depthSampler->filterMode(GL_NEAREST, GL_NEAREST);
-
-    shadowSampler = new gl::Sampler();
-    shadowSampler->setDebugLabel("water_renderer/shadow_sampler");
-    shadowSampler->filterMode(GL_LINEAR, GL_LINEAR);
-    shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
-    shadowSampler->borderColor(glm::vec4(0));
-    shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
 }
 
 WaterRenderer::~WaterRenderer() {

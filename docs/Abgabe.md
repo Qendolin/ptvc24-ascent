@@ -5,6 +5,7 @@ When extracting the assets.zip archive make sure the directory strucucture is as
 ```
 /Ascent.exe
 /README.md
+/LICENSE
 /assets/fonts/...
 /assets/models/...
 /assets/shaders/...
@@ -21,13 +22,15 @@ Click to focus the window. Escape to release the focus.
 WASD to fly horizontally. Space & Ctrl to fly vertically. Shift to speed up.  
 Use mouse to look.  
 
-| Key          | Action            |
-| ------------ | ----------------- |
-| `Shift`, `W` | Boost             |
-| `Space`, `S` | Air Break         |
-| `ESC`        | Pause Menu        |
-| `F3`         | Toggle debug menu |
-| `F5`         | Reload assets     |
+| Key          | Action                     |
+| ------------ | -------------------------- |
+| `Shift`, `W` | Boost                      |
+| `Space`, `S` | Air Break                  |
+| `R`          | Respawn at last Checkpoint |
+| `ESC`        | Pause Menu                 |
+| `F2`         | Hide GUI                   |
+| `F3`         | Toggle debug menu          |
+| `F5`         | Reload assets / shaders    |
 
 ## Arguments
 - `--enable-compatibility-profile`  
@@ -65,6 +68,9 @@ https://web.archive.org/web/20220916052250/http://dev.theomader.com/depth-precis
 https://developer.nvidia.com/content/depth-precision-visualized  
 https://www.danielecarbone.com/reverse-depth-buffer-in-opengl/  
 https://www.terathon.com/gdc07_lengyel.pdf
+
+- Blender as Level Editor  
+Objects can be placed and configured in blender.
 
 ## Other Features
 
@@ -115,8 +121,14 @@ See "docs" folder.
 - Adjustable Parameters  
 The window size is adjustable as well as the FOV and mouse sensitivity.
 
+- Advanced Gameplay  
+The game features multiple mechanics and objects that shape the gameplay.
+
 - Collision Detection  
 Usig the Jolt physics engine.
+
+- Advanced Physics  
+Everything has physics colliders. There is a stack of boxes that can be knocked down the montain.
 
 - Heads-Up Display  
 Includes a race timer and a boost meter.
@@ -124,8 +136,20 @@ Implemented using the Nuklear library with a custom renderer backend.
 
 ## Graphics Effects
 
+- Shadow Map with PCF
+Cascased shadow mapping with [4-sample PCF](https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing) and [Normal Offset Biasing](https://web.archive.org/web/20160602232409if_/http://www.dissidentlogic.com/old/images/NormalOffsetShadows/GDC_Poster_NormalOffset.png)
+
+- GPU Particle System using Compute Shader  
+A highly customizable Particle System running enitely on the GPU. Many particle properties can be edited at runtime in the debug menu. Mostly based upon [juandiegomontoya](https://juandiegomontoya.github.io/particles.html).
+
+- Tessellation from Height Map  
+The montain uses tesselation and has collision.
+
 - Hierarchical Animation  
-The propellers on the checkpoints. (I understand if this doesn't count)
+The propellers on the wodden obstacles rotate while the obstacle moves up and down.
+
+- Vertex Shader Animation  
+The water uses animated hieght maps to achive geometric waves. It also uses tesselation.
 
 - Specular Map  
 Using specular maps from the glTF file.
@@ -150,7 +174,7 @@ Based on [learnopengl](https://learnopengl.com/PBR/Theory)
 Using tangents and normal maps from the glTF file.  
 Open the debug menu (F3) to toggle it on and off.
 
-- PB Bloom/Glow  
+- Physically Based Bloom/Glow  
 Configurable in the debug menu (F3).  
 Baed on [CoD: Advanced Warefare](https://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare/), [learnopengl](https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom) and [Froyok's Blog](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom/).
 
@@ -159,18 +183,37 @@ Configurable in the debug menu (F3).
 Based on John Chapman's [Pseudo Lens Flare](https://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html),
 [this blog post](https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/) and Kawase's ligh streaks from [this presentation](https://www.chrisoat.com/papers/Oat-ScenePostprocessing.pdf).
 
+- Ambient Occlusion  
+Using the state of the art [Ground Truth Ambient Occlusion](https://www.activision.com/cdn/research/Practical_Real_Time_Strategies_for_Accurate_Indirect_Occlusion_NEW%20VERSION_COLOR.pdf) algorithm that takes inspiration from Horizon Based Ambient Occlusion aswell as Scalable Ambient Obscurance. It was very difficult to implement due to the lack of resources.
+
+- Motion Blur  
+Framerate independent motion blur based on [John Chapman](https://john-chapman-graphics.blogspot.com/2013/01/what-is-motion-blur-motion-pictures-are.html). Note **IT IS DISABLED BY DEFAULT** and can be enabled in the game settings.
+
+## Non Graded Effects
+
+- Volumetric Altitude Fog  
+Compared to simple distance based fog this variant takes into account the integral along the view ray to give a much nicer result.
+
+- Dithering  
+Uncommon these days but when converting HDR to SDR dithering can still often improve the visual quality.
+
+- Sound and Music
+Using to Soloud library. Supports 2d and 3d sounds.
+
+- FPS Limit  
+For a smooth gameplay experience FPS can be limited to a fixed number. 120 by default.
+
+- Compute-based Post Processing  
+Gives improved performance over rendering a full-screen quad.
+
+- Multithreaded loading  
+The biggest assets are loaded asnychronously, which is not so easy in OpengL.
+
 ## Debug Menu
 Open / Close with F3.  
-On first open the peformance menu will overlap the debug menu.  
+Contains the option to enable "Free Cam" which will let you fly around freely. The flying speed can be changed using the mouse wheel.  
+Also contains many options for the various graphical effects.  
 Window placement is not saved in release builds.  
-
-## Planned "Effects" Features
-
-- Shadow Map with PCF
-- GPU Particle System using Compute Shader
-- Tessellation from Height Map
-- Ambient Occlusion (maybe)
-- Motion Blur (maybe)
 
 ## Libraries
 
@@ -204,4 +247,8 @@ Window placement is not saved in release builds.
 - LZ4 · [GitHub](https://github.com/lz4/lz4)  
   Used for decompressing .iblenv files.
 
+- SoLoud · [GitHub](https://github.com/jarikomppa/soloud)  
+  Used for playing audio.
 
+- DDS Image · [GitHub](https://github.com/spnda/dds_image)  
+  Small library for loading DDS images. (Used for heightmap albedo)

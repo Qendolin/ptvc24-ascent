@@ -4,6 +4,7 @@ When extracting the assets.zip archive make sure the directory strucucture is as
 ```
 /Ascent.exe
 /README.md
+/LICENSE
 /assets/fonts/...
 /assets/models/...
 /assets/shaders/...
@@ -13,7 +14,7 @@ When extracting the assets.zip archive make sure the directory strucucture is as
 
 ## Requirements
 
-Opengl 4.5
+Opengl 4.5, Windows 64bit
 
 ## Controls
 
@@ -64,7 +65,7 @@ https://github.com/syoyo/tinygltf
 - Jolt Physics  
 https://github.com/jrouwe/JoltPhysics
 
-- Physically Based Shading  
+- Physically Based Shading with IBL  
 https://google.github.io/filament/Filament.html#materialsystem  
 https://learnopengl.com/PBR/Theory
 
@@ -74,6 +75,9 @@ https://web.archive.org/web/20220916052250/http://dev.theomader.com/depth-precis
 https://developer.nvidia.com/content/depth-precision-visualized  
 https://www.danielecarbone.com/reverse-depth-buffer-in-opengl/  
 https://www.terathon.com/gdc07_lengyel.pdf
+
+- Blender as Level Editor  
+Objects can be placed and configured in blender.
 
 ## Other Features
 

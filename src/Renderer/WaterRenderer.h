@@ -19,7 +19,6 @@ class WaterRenderer {
     gl::ShaderPipeline* shader;
     gl::Sampler* waterSampler;
     gl::Sampler* depthSampler;
-    gl::Sampler* shadowSampler;
 
    public:
     WaterRenderer();

@@ -6,6 +6,10 @@
 #include "../Camera.h"
 #include "../GL/Declarations.h"
 
+// References:
+// https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
+// https://web.archive.org/web/20160602232409if_/http://www.dissidentlogic.com/old/images/NormalOffsetShadows/GDC_Poster_NormalOffset.png
+
 #pragma region ForwardDecl
 class Camera;
 namespace loader {
