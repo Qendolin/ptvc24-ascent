@@ -67,6 +67,12 @@ struct DebugSettings {
             bool fixedLodOrigin = false;
         } terrain;
 
+        struct Water {
+            bool wireframe = false;
+            bool fixedLodOrigin = false;
+            float heightScale = 64.0;
+        } water;
+
         struct AmbientOcclusion {
             bool enabled = true;
             float factor = 1.0;

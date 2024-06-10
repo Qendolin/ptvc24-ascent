@@ -8,6 +8,7 @@ namespace loader {
 class EnvironmentImage;
 struct FloatImage;
 struct TerrainData;
+struct WaterData;
 }  // namespace loader
 namespace tinygltf {
 class Model;
@@ -26,6 +27,7 @@ class MainControllerLoader {
 
         std::unique_ptr<const tinygltf::Model> gltf;
         std::unique_ptr<loader::TerrainData> terrain;
+        std::unique_ptr<loader::WaterData> water;
     };
 
    private:
