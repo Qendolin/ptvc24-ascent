@@ -22,6 +22,7 @@ uniform float u_fog_emission;
 uniform float u_fog_height;
 uniform float u_fog_max;
 uniform vec3 u_fog_color;
+uniform int u_gtao_enable;
 
 
 // dither matrix, use as dither_matrix[y][x] / 256.0
@@ -173,7 +174,9 @@ void main() {
     vec3 color = texture(u_color_tex, in_uv).rgb;
 
     // GTAO (TODO: apply in pbr shader)
-    color *= clamp(texture(u_ao_tex, in_uv).r, 0.0, 1.0);
+    if(u_gtao_enable != 0) {
+        color *= clamp(texture(u_ao_tex, in_uv).r, 0.0, 1.0);
+    }
     // FIXME: ao looks bad on terrain
 
     // Bloom

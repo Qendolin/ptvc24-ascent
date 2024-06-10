@@ -10,9 +10,14 @@
 #include "../Input.h"
 
 FinalizationRenderer::FinalizationRenderer() {
+    bool gtao = Game::get().settings.get().gtao;
+    std::map<std::string, std::string> shader_defines;
+    if (!gtao) {
+        shader_defines["#define GTAO"] = "#undef GTAO";
+    }
     shader = new gl::ShaderPipeline(
         {new gl::ShaderProgram("assets/shaders/quad_uv.vert"),
-         new gl::ShaderProgram("assets/shaders/finalization.frag")});
+         new gl::ShaderProgram("assets/shaders/finalization.frag", shader_defines)});
     shader->setDebugLabel("finalization_renderer/shader");
 
     gl::Buffer *vbo = new gl::Buffer();
@@ -66,6 +71,7 @@ void FinalizationRenderer::render(Camera &camera, gl::Texture *hrd_color, gl::Te
     glare->bind(4);
     ao->bind(5);
 
+    auto gameSettings = Game::get().settings.get();
     auto &settings = Game::get().debugSettings.rendering;
 
     auto &frag = *shader->fragmentStage();
@@ -74,6 +80,8 @@ void FinalizationRenderer::render(Camera &camera, gl::Texture *hrd_color, gl::Te
     frag.setUniform("u_inverse_projection_mat", glm::inverse(camera.projectionMatrix()));
     frag.setUniform("u_inverse_view_mat", glm::inverse(camera.viewMatrix()));
     frag.setUniform("u_camera_pos", camera.position);
+
+    frag.setUniform("u_gtao_enable", (int)gameSettings.gtao);
 
     frag.setUniform("u_fog_density", settings.fog.density);
     frag.setUniform("u_fog_emission", settings.fog.emission);

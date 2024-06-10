@@ -14,6 +14,9 @@ struct Settings {
     // motion blur intensity, 0 to disable
     float motionBlur = 0.0f;
 
+    // ambient occlusion
+    bool gtao = true;
+
     float masterVolume = 1.0f;
     float musicVolume = 0.5f;
     float soundVolume = 0.5f;

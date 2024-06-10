@@ -109,8 +109,9 @@ void GtaoRenderer::createTextures_() {
 }
 
 void GtaoRenderer::render(Camera &camera, gl::Texture &depth_texture, gl::Texture &view_normals_texture) {
+    auto gameSettings = Game::get().settings.get();
     auto settings = Game::get().debugSettings.rendering.ao;
-    if (!settings.enabled) {
+    if (!settings.enabled || !gameSettings.gtao) {
         return;
     }
 

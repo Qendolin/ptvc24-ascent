@@ -39,7 +39,7 @@ void SettingsScreen::draw_() {
         // prepare sublayout for settings
         auto used = nk_widget_position(nk);
         auto avail = nk_window_get_content_region_size(nk);
-        nk_layout_row_dynamic(nk, avail.y - used.y - 60_dp, 1);
+        nk_layout_row_dynamic(nk, avail.y - used.y - 20_dp, 1);
 
         if (nk_group_begin(nk, "settings", 0)) {
             nk_layout_row_template_begin(nk, 40_dp);
@@ -74,6 +74,18 @@ void SettingsScreen::draw_() {
                 nk_label(nk, "Off", NK_TEXT_ALIGN_RIGHT);
             } else {
                 nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.motionBlur * 100.0f);
+            }
+
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "AO (gtao)", NK_TEXT_ALIGN_LEFT);
+            nk_bool gtao_enabled = settings_.gtao;
+            nk_checkbox_label(nk, "", &gtao_enabled);
+            settings_.gtao = gtao_enabled;
+            nk_style_set_font(nk, font_sm);
+            if (settings_.gtao) {
+                nk_label(nk, "On", NK_TEXT_ALIGN_RIGHT);
+            } else {
+                nk_label(nk, "Off", NK_TEXT_ALIGN_RIGHT);
             }
 
             nk_style_set_font(nk, font_md);

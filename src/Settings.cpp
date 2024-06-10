@@ -18,6 +18,7 @@ void SettingsManager::save() {
     section["look_sensitivity"] = settings_.lookSensitivity;
     section["max_fps"] = settings_.maxFps;
     section["motion_blur"] = settings_.motionBlur;
+    section["gtao"] = settings_.gtao;
     section["master_volume"] = settings_.masterVolume;
     section["sound_volume"] = settings_.soundVolume;
     section["music_volume"] = settings_.musicVolume;
@@ -46,6 +47,7 @@ void SettingsManager::load() {
     settings_.lookSensitivity = section["look_sensitivity"] | settings_.lookSensitivity;
     settings_.maxFps = section["max_fps"] | settings_.maxFps;
     settings_.motionBlur = section["motion_blur"] | settings_.motionBlur;
+    settings_.gtao = section["gtao"] | settings_.gtao;
     settings_.masterVolume = section["master_volume"] | settings_.masterVolume;
     settings_.soundVolume = section["sound_volume"] | settings_.soundVolume;
     settings_.musicVolume = section["music_volume"] | settings_.musicVolume;
