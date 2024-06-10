@@ -150,6 +150,13 @@ void DebugMenu::drawDebugWindow_() {
             PopID();
         }
 
+        if (CollapsingHeader("Water")) {
+            PushID("water");
+            Checkbox("Wireframe", &settings.rendering.water.wireframe);
+            Checkbox("Debug LODs", &settings.rendering.water.fixedLodOrigin);
+            PopID();
+        }
+
         if (CollapsingHeader("GTAO")) {
             PushID("gtao");
             Checkbox("Enabled", &settings.rendering.ao.enabled);

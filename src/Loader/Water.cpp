@@ -31,7 +31,7 @@ Water::Water(WaterData &data, float size, float heightScale, glm::vec3 origin, i
     height_->allocate(0, GL_R8, data.height.width, data.height.height);
     height_->load(0, data.height.width, data.height.height, GL_RGBA, GL_UNSIGNED_BYTE, data.height.data.get());
     height_->generateMipmap();
-    normal_ = loader::texture(data.height, loader::TextureParameters{.mipmap = true, .srgb = false, .internalFormat = GL_RGB8_SNORM});
+    normal_ = loader::texture(data.normal, loader::TextureParameters{.mipmap = true, .srgb = false, .internalFormat = GL_RGB8_SNORM});
     normal_->setDebugLabel("Water/normal");
     struct Vertex {
         glm::vec2 position;

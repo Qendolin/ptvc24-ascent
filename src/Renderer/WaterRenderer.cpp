@@ -10,94 +10,96 @@
 #include "../GL/Texture.h"
 #include "../Game.h"
 #include "../Input.h"
-#include "../Loader/Loader.h"
+#include "../Loader/Environment.h"
+#include "../Loader/Water.h"
+#include "../Util/Log.h"
+#include "ShadowRenderer.h"
 
 WaterRenderer::WaterRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/waterShader.vert"),
-         new gl::ShaderProgram("assets/shaders/waterShader.frag")});
-    shader->setDebugLabel("Water_Renderer/shader");
+        {new gl::ShaderProgram("assets/shaders/water/water.vert"),
+         new gl::ShaderProgram("assets/shaders/water/water.frag"),
+         new gl::ShaderProgram("assets/shaders/water/water.tesc"),
+         new gl::ShaderProgram("assets/shaders/water/water.tese")});
+    shader->setDebugLabel("water_renderer/shader");
 
-    image = loader::texture("assets/textures/SimpleWater_displace.png", {.srgb = false, .internalFormat = GL_R8});
-    width = image->width(), height = image->height();
+    waterSampler = new gl::Sampler();
+    waterSampler->setDebugLabel("water_renderer/water_sampler");
+    waterSampler->wrapMode(GL_MIRRORED_REPEAT, GL_MIRRORED_REPEAT, 0);
+    waterSampler->filterMode(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);  // mipmap levels aren't selected automatically in the tese shader.
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    std::vector<float> vertices;
-    float yScale = 64.0f / 256.0f, yShift = 16.0f;
-    sampler = new gl::Sampler();
-    sampler->wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            const float vx = -height / 2.0f + height * i / (float)height;
-            const float vz = -width / 2.0f + width * j / (float)width;
-            // vertex
-            vertices.push_back(vx);  // vx
-            vertices.push_back(vz);  // vz
-        }
-    }
-    std::cout << "Loaded " << vertices.size() / 3 << " vertices for water renderer" << std::endl;
-    std::vector<unsigned> indices;
-    for (unsigned i = 0; i < height - 1; i += rez) {
-        for (unsigned j = 0; j < width; j += rez) {
-            for (unsigned k = 2; k > 0; k--) {
-                indices.push_back(j + width * (i + (k - 1) * rez));
-            }
-        }
-    }
+    depthSampler = new gl::Sampler();
+    depthSampler->setDebugLabel("water_renderer/depth_sampler");
+    depthSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, 0);
+    depthSampler->filterMode(GL_NEAREST, GL_NEAREST);
 
-    std::cout << "Loaded " << indices.size() << " indices" << std::endl;
-
-    // first, configure the cube's VAO (and terrainVBO + terrainIBO)
-    vao = new gl::VertexArray();
-    vao->layout(0, 0, 2, GL_FLOAT, false, 0);
-
-    gl::Buffer *vbo = new gl::Buffer();
-    vbo->allocate(vertices.data(), sizeof(float) * vertices.size(), 0);
-
-    gl::Buffer *ibo = new gl::Buffer();
-    ibo->allocate(indices.data(), indices.size() * sizeof(unsigned int), 0);
-    vao->bindBuffer(0, *vbo, 0, 2 * sizeof(float));
-    vao->bindElementBuffer(*ibo);
-
-    vao->own(vbo);
-    vao->own(ibo);
+    shadowSampler = new gl::Sampler();
+    shadowSampler->setDebugLabel("water_renderer/shadow_sampler");
+    shadowSampler->filterMode(GL_LINEAR, GL_LINEAR);
+    shadowSampler->wrapMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+    shadowSampler->borderColor(glm::vec4(0));
+    shadowSampler->compareMode(GL_COMPARE_REF_TO_TEXTURE, GL_GEQUAL);
 }
 
 WaterRenderer::~WaterRenderer() {
     delete shader;
-    delete vao;
+    delete waterSampler;
+    delete depthSampler;
 }
 
-void WaterRenderer::render(Camera &camera) {
-    const int numStrips = (height - 1) / rez;
-    const int numTrisPerStrip = (width / rez) * 2 - 2;
-    std::cout << "Created lattice of " << numStrips << " strips with " << numTrisPerStrip << " triangles each" << std::endl;
-    std::cout << "Created " << numStrips * numTrisPerStrip << " triangles total" << std::endl;
+void WaterRenderer::render(Camera &camera, loader::Water &water, loader::Environment &env, OrthoLight &sun, gl::Texture *depth) {
     gl::pushDebugGroup("WaterRenderer::render");
     auto settings = Game::get().debugSettings.rendering.water;
 
-    if (settings.wireframe) {
+    if (settings.wireframe)
         gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
 
-    vao->bind();
-    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
+    water.meshVao().bind();
+    gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace, gl::Capability::Blend});
     gl::manager->depthFunc(gl::DepthFunc::GreaterOrEqual);
-    gl::manager->depthMask(true);
+    gl::manager->depthMask(false);
     gl::manager->cullBack();
+    gl::manager->blendFunc(gl::BlendFactor::SrcAlpha, gl::BlendFactor::OneMinusSrcAlpha);
+    gl::manager->blendEquation(gl::BlendEquation::FuncAdd);
     shader->bind();
-    image->bind(0);
-    sampler->bind(0);
-    shader->vertexStage()->setUniform("projectionView", camera.viewProjectionMatrix());
-    shader->vertexStage()->setUniform("view", camera.viewMatrix());
-    shader->vertexStage()->setUniform("time", (float)Game::get().input->time());
-    for (int strip = 0; strip < numStrips; strip++) {
-        glDrawElements(GL_TRIANGLE_STRIP,                                            // primitive type
-                       numTrisPerStrip + 2,                                          // number of indices to render
-                       GL_UNSIGNED_INT,                                              // index data type
-                       (void *)(sizeof(unsigned) * (numTrisPerStrip + 2) * strip));  // offset to starting index
+
+    water.heightTexture().bind(0);
+    waterSampler->bind(0);
+    water.normalTexture().bind(1);
+    waterSampler->bind(1);
+
+    depth->bind(2);
+    depthSampler->bind(2);
+
+    env.diffuse().bind(4);
+    env.cubemapSampler().bind(4);
+    env.specular().bind(5);
+    env.cubemapSampler().bind(5);
+    env.brdfLut().bind(6);
+    env.lutSampler().bind(6);
+
+    shader->vertexStage()->setUniform("u_position", water.origin());
+
+    glm::vec3 camera_pos = camera.position;
+    if (settings.fixedLodOrigin) {
+        camera_pos = glm::vec3(0.0);
     }
+    shader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera_pos);
+
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_projection_mat", camera.projectionMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_mat", camera.viewMatrix());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", water.heightScale());
+    shader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_time", (float)Game::get().input->time());
+
+    shader->fragmentStage()->setUniform("u_light_dir[0]", sun.direction());
+    shader->fragmentStage()->setUniform("u_light_radiance[0]", sun.radiance());
+
+    shader->fragmentStage()->setUniform("u_near_plane", camera.nearPlane());
+    shader->fragmentStage()->setUniform("u_camera_pos", camera.position);
+
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glDrawArrays(GL_PATCHES, 0, water.patchCount());
+
     if (settings.wireframe)
         gl::manager->polygonMode(GL_FRONT_AND_BACK, GL_FILL);
     gl::popDebugGroup();

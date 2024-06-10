@@ -83,7 +83,7 @@ struct DebugSettings {
         struct Fog {
             float density = 0.0065f;
             float emission = 0.002f;
-            float height = 60.0f;
+            float height = 20.0f;
             float maximum = 0.8f;
             glm::vec3 color = glm::vec3(83 / 255.0f, 110 / 255.0f, 170 / 255.0f);
         } fog;

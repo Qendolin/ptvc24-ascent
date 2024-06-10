@@ -1,5 +1,7 @@
 #version 450
 
+layout(early_fragment_tests) in;
+
 const int SHADOW_CASCADE_COUNT = 4;
 const int LIGHT_COUNT = 1;
 

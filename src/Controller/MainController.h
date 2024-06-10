@@ -20,7 +20,7 @@ class Hud;
 class CharacterEntity;
 class FreeCamEntity;
 class Music;
-class WaterTRenderer;
+class WaterRenderer;
 class CSM;
 namespace loader {
 class SceneData;
@@ -40,7 +40,7 @@ class MainController : public AbstractController {
     std::unique_ptr<SkyRenderer> skyRenderer;
     std::unique_ptr<TerrainRenderer> terrainRenderer;
     std::unique_ptr<ShadowMapRenderer> shadowRenderer;
-    std::unique_ptr<WaterTRenderer> waterTRenderer;
+    std::unique_ptr<WaterRenderer> waterTRenderer;
     std::unique_ptr<DepthPrepassRenderer> depthPrepassRenderer;
 
     std::unique_ptr<loader::SceneData> sceneData;

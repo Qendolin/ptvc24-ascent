@@ -1,22 +1,29 @@
+#pragma once
+
 #include <glm/glm.hpp>
+
+#include "../Scene/Light.h"
 
 #pragma region FrowardDecl
 #include "../GL/Declarations.h"
 class Camera;
+class CSM;
+namespace loader {
+class Water;
+class Environment;
+}  // namespace loader
 #pragma endregion
 
 class WaterRenderer {
    private:
     gl::ShaderPipeline* shader;
-    gl::VertexArray* vao;
-    int rez = 1;
-    int width;
-    int height;
-    gl::Texture* image;
-    gl::Sampler* sampler;
+    gl::Sampler* waterSampler;
+    gl::Sampler* depthSampler;
+    gl::Sampler* shadowSampler;
 
    public:
-    void render(Camera& camera);
     WaterRenderer();
     ~WaterRenderer();
+
+    void render(Camera& camera, loader::Water& water, loader::Environment& env, OrthoLight& sun, gl::Texture* depth);
 };

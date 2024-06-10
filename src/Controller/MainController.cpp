@@ -20,7 +20,7 @@
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
-#include "../Renderer/WaterTRenderer.h"
+#include "../Renderer/WaterRenderer.h"
 #include "../Scene/Character.h"
 #include "../Scene/Entity.h"
 #include "../Scene/FreeCam.h"
@@ -97,14 +97,14 @@ void MainController::applyLoadResult_() {
     materialBatchRenderer = std::make_unique<MaterialBatchRenderer>();
     iblEnv = std::make_unique<loader::Environment>(*data.environment, *data.environmentDiffuse, *data.environmentSpecular, *data.iblBrdfLut);
     skyRenderer = std::make_unique<SkyRenderer>();
-    waterTRenderer = std::make_unique<WaterTRenderer>();
+    waterTRenderer = std::make_unique<WaterRenderer>();
     if (terrain != nullptr) {
         physics.RemoveBody(terrain->physicsBody()->GetID());
         terrain->destroyPhysicsBody(physics);
     }
     terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
     terrain->createPhysicsBody(physics, glm::vec3(0.0, 1.0, 0.0));
-    water = std::make_unique<loader::Water>(*data.water, 4096.0f * 3, 40.0f, glm::vec3(0, 100, 0), 20);
+    water = std::make_unique<loader::Water>(*data.water, 4096.0f * 4, 40.0f, glm::vec3(0, 40, 0), 40);
     physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
 
     if (!data.gltf) return;
@@ -265,7 +265,7 @@ void MainController::render() {
     game.hdrFramebuffer().bindTargets({0, 1});
     terrainRenderer->render(*game.camera, *terrain, *csm, *iblEnv, game.debugSettings.rendering.sun);
     materialBatchRenderer->render(*game.camera, sceneData->graphics, *csm, *iblEnv, game.debugSettings.rendering.sun);
-    waterTRenderer->render(*game.camera, *water, *csm, *iblEnv);
+    waterTRenderer->render(*game.camera, *water, *iblEnv, game.debugSettings.rendering.sun, game.hdrFramebuffer().getTexture(GL_DEPTH_ATTACHMENT));
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera, *iblEnv);
