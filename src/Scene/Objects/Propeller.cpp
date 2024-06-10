@@ -7,11 +7,10 @@ Propeller::Propeller(scene::NodeRef node, float speed) {
     this->blades = node.find("*.Blades.*");
     this->blades.transform().setParent(node.transform());
     this->speed = speed;
-    initial = node.transform().rotation();
+    this->initial = blades.transform().rotation();
 }
 
 void Propeller::update(float time_delta) {
-    // FIXME: Axis wrong on checkpoints
     angle += speed * time_delta * glm::pi<float>();
     angle = glm::wrapAngle(angle);
 
