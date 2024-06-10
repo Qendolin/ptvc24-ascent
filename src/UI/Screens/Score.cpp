@@ -162,4 +162,13 @@ void ScoreScreen::drawPerformance_() {
     nk_label(nk, "High Score", NK_TEXT_ALIGN_LEFT);
     std::string total_str = formatTimeRaceClock(hi_score.total);
     nk_label(nk, total_str.c_str(), NK_TEXT_ALIGN_RIGHT);
+
+    nk_layout_row_dynamic(nk, 20_dp, 1);
+    nk_spacer(nk);
+    nk_layout_row_dynamic(nk, 30_dp, 1);
+    if (score_.total < hi_score.total) {
+        nk_label(nk, "New Record!", NK_TEXT_ALIGN_CENTERED);
+    } else {
+        nk_spacer(nk);
+    }
 }

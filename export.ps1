@@ -7,6 +7,7 @@ $globPatterns = @(
     "assets/shaders/gtao/*.*",
     "assets/shaders/objects/*.*",
     "assets/shaders/terrain/*.*",
+    "assets/shaders/water/*.*",
     "assets/shaders/particles/*.*",
     "assets/textures/*.png",
     "assets/textures/*.f32",
