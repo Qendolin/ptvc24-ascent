@@ -76,6 +76,27 @@ void SettingsScreen::draw_() {
                 nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.motionBlur * 100.0f);
             }
 
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "Audio", NK_TEXT_ALIGN_LEFT);
+            nk_spacer(nk);
+            nk_spacer(nk);
+            nk_label(nk, "Master", NK_TEXT_ALIGN_LEFT);
+            nk_slider_float(nk, 0.0f, &settings_.masterVolume, 1.0f, 0.01f);
+            nk_style_set_font(nk, font_sm);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.masterVolume * 100.0f);
+
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "Music", NK_TEXT_ALIGN_LEFT);
+            nk_slider_float(nk, 0.0f, &settings_.musicVolume, 1.0f, 0.01f);
+            nk_style_set_font(nk, font_sm);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.musicVolume * 100.0f);
+
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "Sound", NK_TEXT_ALIGN_LEFT);
+            nk_slider_float(nk, 0.0f, &settings_.soundVolume, 1.0f, 0.01f);
+            nk_style_set_font(nk, font_sm);
+            nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.soundVolume * 100.0f);
+
             nk_group_end(nk);
         }
 

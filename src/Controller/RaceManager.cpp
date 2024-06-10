@@ -61,7 +61,7 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
             checkpointMarker_->setTarget(checkpoints_[next]->getBase());
         }
 
-        Game::get().audio->assets->woosh.play3dEvent(checkpoint->getBase().transform().position(), 1.0f);
+        Game::get().audio->assets->woosh.play3dEvent(checkpoint->getBase().transform().position(), 1.5f);
     }
 
     // last checkpoint (may also be first)

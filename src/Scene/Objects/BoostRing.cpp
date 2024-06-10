@@ -45,7 +45,7 @@ void BoostRingEntity::onTriggerActivated(JPH::BodyID& body) {
     glm::vec3 velocity = character->velocity();
     velocity += base.prop<float>("boost") * (meshRef.transform().rotation() * glm::vec3(0, 0, -1));
     character->setVelocity(velocity);
-    game().audio->assets->woosh2.play2dEvent(0.5);
+    game().audio->assets->woosh2.play2dEvent(1.0);
 
     cooldown = 2.0;
 }

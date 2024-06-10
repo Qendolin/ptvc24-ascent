@@ -38,9 +38,9 @@ class Audio {
             .thump = Sound(*soundBus, "assets/audio/sound/thump.wav"),
             .boost = Sound(*soundBus, "assets/audio/sound/boost.ogg")}));
         assets->mainMenu.setLooping(true);
-        assets->mainMenu.setVolume(0.8f);
+        assets->mainMenu.setVolume(0.45f);
         assets->bgm.setLooping(true);
-        assets->bgm.setVolume(0.2f);
+        assets->bgm.setVolume(0.7f);
         assets->wind.setLooping(true);
         assets->boost.setLooping(true);
     }
@@ -48,4 +48,6 @@ class Audio {
     std::unique_ptr<Music> createMusic(std::string filename);
 
     std::unique_ptr<Sound> createSound(std::string filename);
+
+    void update(glm::vec3 listener_position, glm::vec3 listener_direction);
 };

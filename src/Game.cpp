@@ -265,7 +265,7 @@ void Game::update_() {
     controller->update();
     debugMenu_->draw();
 
-    audio->system->update(camera->position, glm::mat3(camera->viewMatrix()) * glm::vec3(0, -1, 0));
+    audio->update(camera->position, glm::mat3(camera->viewMatrix()) * glm::vec3(0, -1, 0));
 
     // mouse capturing & releasing
     if (input->mouseMode() == Input::MouseMode::Capture) {

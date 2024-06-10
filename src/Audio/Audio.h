@@ -23,6 +23,7 @@ class AudioSystem {
 
    private:
     SoLoud::Soloud *soloud_;
+    float volume_ = 1;
 
    public:
     AudioSystem();
@@ -30,6 +31,8 @@ class AudioSystem {
     ~AudioSystem();
 
     void update(glm::vec3 position, glm::vec3 direction);
+
+    void setVolume(float volume);
 };
 
 class AudioBus {

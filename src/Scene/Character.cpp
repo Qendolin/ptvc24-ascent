@@ -94,7 +94,7 @@ void CharacterEntity::onBodyContact_(ph::SensorContact& contact) {
     if (contactNode.hasTag("non_killing")) return;
 
     if (!respawnInvulnerability.isZero()) return;
-    game().audio->assets->thump.play2dEvent(0.5, 0);
+    game().audio->assets->thump.play2dEvent(1.0, 0);
     respawn();
 }
 
@@ -181,7 +181,7 @@ void CharacterEntity::update(float time_delta) {
             boostSoundPlaying_ = true;
             boostSoundInstance_->seek(0.0);
         }
-        boostSoundInstance_->setVolume(1.0);
+        boostSoundInstance_->setVolume(0.5f);
     } else {
         boostDynamicFov_ -= BOOST_DYN_FOV_CHANGE * time_delta;
         boostSoundInstance_->setVolume(0.0);
@@ -193,8 +193,8 @@ void CharacterEntity::update(float time_delta) {
 
     float speed = glm::length(velocity_);
     float volume = glm::pow(glm::clamp(speed / 40.0f, 0.0f, 1.0f), 3.0f);
-    windSoundInstanceLeft_->setVolume(volume * 1.25f);
-    windSoundInstanceRight_->setVolume(volume * 1.25f);
+    windSoundInstanceLeft_->setVolume(volume * 1.1f);
+    windSoundInstanceRight_->setVolume(volume * 1.1f);
 }
 
 void CharacterEntity::prePhysicsUpdate() {

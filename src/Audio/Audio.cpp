@@ -24,6 +24,12 @@ void AudioSystem::update(glm::vec3 position, glm::vec3 direction) {
     soloud_->update3dAudio();
 }
 
+void AudioSystem::setVolume(float volume) {
+    if (volume == volume_) return;
+    volume_ = volume;
+    soloud_->setGlobalVolume(volume);
+}
+
 AudioBus::AudioBus(AudioSystem &system) : system(system) {
     bus_ = new SoLoud::Bus();
     handle_ = system.soloud_->play(*bus_);
