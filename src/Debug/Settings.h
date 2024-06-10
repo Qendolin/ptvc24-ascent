@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include "../Scene/Light.h"
+
 struct DebugSettings {
     struct Entity {
         bool debugDrawEnabled = false;
@@ -42,12 +44,16 @@ struct DebugSettings {
             float sharpness = 2.0f;
         } vignette;
 
+        OrthoLight sun = {
+            .azimuth = 55.8f,
+            .elevation = 48.0f,
+            .color = glm::vec3{0.2f, 0.2f, 0.4f},
+            .brightness = 5.5f,
+        };
+
         struct Shadow {
             bool debugDrawEnabled = false;
-            std::array<float, 3> sunTarget = {-27, 0, -70};
-            std::array<float, 2> sunAzimuthElevation = {55.8f, 48};
             float cascadeSplitLambda = 0.75f;
-            float sunDistance = 175;
             float normalBias = 300.0f;
             float sizeBias = 10.0f;
             float depthBias = 0.12f;
@@ -73,6 +79,18 @@ struct DebugSettings {
             float radius = 1.0;
             float power = 2.0;
         } ao;
+
+        struct Fog {
+            float density = 0.0065f;
+            float emission = 0.002f;
+            float height = 60.0f;
+            float maximum = 0.8f;
+            glm::vec3 color = glm::vec3(83 / 255.0f, 110 / 255.0f, 170 / 255.0f);
+        } fog;
+
+        struct MotionBlur {
+            float targetFps = 30.0;
+        } motionBlur;
     };
     Entity entity;
     Rendering rendering;

@@ -19,9 +19,11 @@
 #include "Physics/Physics.h"
 #include "Renderer/BloomRenderer.h"
 #include "Renderer/DebugRenderer.h"
+#include "Renderer/FinalFinalizationRenderer.h"
 #include "Renderer/FinalizationRenderer.h"
 #include "Renderer/GtaoRenderer.h"
 #include "Renderer/LensEffectsRenderer.h"
+#include "Renderer/MotionBlurRenderer.h"
 #include "ScoreManager.h"
 #include "Tween.h"
 #include "UI/Renderer.h"
@@ -78,6 +80,9 @@ Game::Game(Window &window)
     hdrFramebuffer_ = new gl::Framebuffer();
     hdrFramebuffer_->setDebugLabel("hdr_fbo");
 
+    sdrFramebuffer_ = new gl::Framebuffer();
+    sdrFramebuffer_->setDebugLabel("sdr_fbo");
+
     if (!std::filesystem::exists("ascent_data")) {
         LOG_INFO("Creating game data directory 'ascent_data'");
         std::filesystem::create_directory("ascent_data");
@@ -108,6 +113,9 @@ Game::~Game() {
     delete hdrFramebuffer_->getTexture(1);
     delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     delete hdrFramebuffer_;
+
+    delete sdrFramebuffer_->getTexture(0);
+    delete sdrFramebuffer_;
 
     ImGui::DestroyContext();
 }
@@ -151,12 +159,20 @@ void Game::resize(int width, int height) {
     hdrFramebuffer_->bindTargets({0, 1});
     hdrFramebuffer_->check(GL_DRAW_FRAMEBUFFER);
 
+    delete sdrFramebuffer_->getTexture(0);
+    auto sdr_color_attachment = new gl::Texture(GL_TEXTURE_2D);
+    sdr_color_attachment->setDebugLabel("sdr_fbo/color");
+    sdr_color_attachment->allocate(1, GL_RGB8, width, height);
+    sdrFramebuffer_->attachTexture(0, sdr_color_attachment);
+
     if (bloomRenderer_ != nullptr)
         bloomRenderer_->setViewport(width, height);
     if (lensEffectsRenderer_ != nullptr)
         lensEffectsRenderer_->setViewport(width, height);
     if (gtaoRenderer_ != nullptr)
         gtaoRenderer_->setViewport(width, height);
+    if (motionBlurRenderer_ != nullptr)
+        motionBlurRenderer_->setViewport(window.size.x, window.size.y);
 }
 
 void Game::load() {
@@ -178,6 +194,9 @@ void Game::load() {
         controller->load();
 
     finalizationRenderer_ = std::make_unique<FinalizationRenderer>();
+    finalFinalizationRenderer_ = std::make_unique<FinalFinalizationRenderer>();
+    motionBlurRenderer_ = std::make_unique<MotionBlurRenderer>();
+    motionBlurRenderer_->setViewport(window.size.x, window.size.y);
     bloomRenderer_ = std::make_unique<BloomRenderer>();
     bloomRenderer_->setViewport(window.size.x, window.size.y);
     lensEffectsRenderer_ = std::make_unique<LensEffectsRenderer>();
@@ -289,10 +308,12 @@ void Game::render_() {
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gtaoRenderer_->render(*camera, *hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT), *hdrFramebuffer_->getTexture(1));
-        gl::manager->bindDrawFramebuffer(0);
-        gl::manager->enable(gl::Capability::DepthTest);
-        gl::manager->depthMask(true);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        sdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
+        // gl::manager->bindDrawFramebuffer(0);
+        gl::manager->setEnabled({});
+        // gl::manager->enable(gl::Capability::DepthTest);
+        // gl::manager->depthMask(true);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         finalizationRenderer_->render(
             *camera,
             hdrFramebuffer_->getTexture(0),
@@ -301,7 +322,11 @@ void Game::render_() {
             lensEffectsRenderer_->flares(),
             lensEffectsRenderer_->glare(),
             gtaoRenderer_->result());
-        debugRenderer_->render(*this);
+        motionBlurRenderer_->render(*camera, sdrFramebuffer_, hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT));
+        gl::manager->bindDrawFramebuffer(0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        finalFinalizationRenderer_->render(sdrFramebuffer_->getTexture(0));
+        // debugRenderer_->render(*this);
     }
     //  Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());

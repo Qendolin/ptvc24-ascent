@@ -1,3 +1,4 @@
+#pragma once
 
 #include "../UI/Screens/Loading.h"
 #include "../Util/TaskPool.h"

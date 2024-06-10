@@ -5,6 +5,7 @@
 #include "../GL/Shader.h"
 #include "../GL/StateManager.h"
 #include "../GL/Texture.h"
+#include "../Game.h"
 #include "../Loader/Environment.h"
 
 SkyRenderer::SkyRenderer() {

@@ -16,6 +16,7 @@
 #include "../Loader/Water.h"
 #include "../Particles/ParticleSystem.h"
 #include "../Physics/Physics.h"
+#include "../Renderer/DepthPrepassRenderer.h"
 #include "../Renderer/MaterialBatchRenderer.h"
 #include "../Renderer/SkyRenderer.h"
 #include "../Renderer/TerrainRenderer.h"
@@ -77,6 +78,7 @@ void MainController::load() {
 
     shadowRenderer = std::make_unique<ShadowMapRenderer>();
     terrainRenderer = std::make_unique<TerrainRenderer>();
+    depthPrepassRenderer = std::make_unique<DepthPrepassRenderer>();
     csm = std::make_unique<CSM>(2048, 1.0f / 30.0f);
 
     game.audio->assets->bgm.pause();
@@ -250,19 +252,20 @@ void MainController::render() {
         for (auto &&ent : scene->entities) ent->debugDraw();
     }
 
-    if (csm->update(*game.camera,
-                    glm::vec2(glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[0]), glm::radians(game.debugSettings.rendering.shadow.sunAzimuthElevation[1])),
-                    game.input->timeDelta())) {
+    if (csm->update(*game.camera, game.debugSettings.rendering.sun.direction(), game.input->timeDelta())) {
         shadowRenderer->render(*csm, *game.camera, sceneData->graphics, *terrain);
     }
 
     game.hdrFramebuffer().bind(GL_DRAW_FRAMEBUFFER);
+    // Depth prepass
+    // Does not work! Because model matrix update is unsynchronized.
+    // game.hdrFramebuffer().bindTargets({});
+    // depthPrepassRenderer->render(*game.camera, sceneData->graphics, *terrain);
 
     game.hdrFramebuffer().bindTargets({0, 1});
-    terrainRenderer->render(*game.camera, *terrain, *csm, *iblEnv);
+    terrainRenderer->render(*game.camera, *terrain, *csm, *iblEnv, game.debugSettings.rendering.sun);
+    materialBatchRenderer->render(*game.camera, sceneData->graphics, *csm, *iblEnv, game.debugSettings.rendering.sun);
     waterTRenderer->render(*game.camera, *water, *csm, *iblEnv);
-    materialBatchRenderer->render(*game.camera, sceneData->graphics, *csm, *iblEnv);
-
     game.hdrFramebuffer().bindTargets({0});
     game.particles->draw(*game.camera);
     skyRenderer->render(*game.camera, *iblEnv);

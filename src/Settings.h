@@ -10,6 +10,9 @@ struct Settings {
     float lookSensitivity = 0.2f;
 
     float maxFps = 120.0f;
+
+    // motion blur intensity, 0 to disable
+    float motionBlur = 0.0f;
 };
 
 class SettingsManager {

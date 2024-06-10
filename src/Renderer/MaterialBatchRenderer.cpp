@@ -8,12 +8,13 @@
 #include "../Game.h"
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
+#include "../Scene/Light.h"
 #include "ShadowRenderer.h"
 
 MaterialBatchRenderer::MaterialBatchRenderer() {
     shader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/pbr.vert"),
-         new gl::ShaderProgram("assets/shaders/pbr.frag")});
+        {new gl::ShaderProgram("assets/shaders/objects/pbr.vert"),
+         new gl::ShaderProgram("assets/shaders/objects/pbr.frag")});
     shader->setDebugLabel("pbr_renderer/shader");
 
     shadowSampler = new gl::Sampler();
@@ -51,7 +52,7 @@ MaterialBatchRenderer::~MaterialBatchRenderer() {
     delete shadowSampler;
 }
 
-void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env) {
+void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env, OrthoLight &sun) {
     gl::pushDebugGroup("MaterialBatchRenderer::render");
     gl::manager->setEnabled({gl::Capability::DepthTest, gl::Capability::CullFace});
     gl::manager->depthMask(true);
@@ -79,6 +80,8 @@ void MaterialBatchRenderer::render(Camera &camera, loader::GraphicsData &graphic
 
     shader->fragmentStage()->setUniform("u_shadow_depth_bias", Game::get().debugSettings.rendering.shadow.depthBias);
     shader->fragmentStage()->setUniform("u_view_mat", camera.viewMatrix());
+    shader->fragmentStage()->setUniform("u_light_dir[0]", sun.direction());
+    shader->fragmentStage()->setUniform("u_light_radiance[0]", sun.radiance());
     shader->vertexStage()->setUniform("u_shadow_normal_bias", Game::get().debugSettings.rendering.shadow.normalBias);
     for (size_t i = 0; i < CSM::CASCADE_COUNT; i++) {
         CSMShadowCaster &caster = *csm.cascade(i);

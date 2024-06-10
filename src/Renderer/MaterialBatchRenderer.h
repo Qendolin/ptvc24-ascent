@@ -6,6 +6,7 @@
 #include "../GL/Declarations.h"
 class Camera;
 class CSM;
+struct OrthoLight;
 namespace loader {
 class GraphicsData;
 class Environment;
@@ -24,5 +25,5 @@ class MaterialBatchRenderer {
     MaterialBatchRenderer();
     ~MaterialBatchRenderer();
 
-    void render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env);
+    void render(Camera &camera, loader::GraphicsData &graphics, CSM &csm, loader::Environment &env, OrthoLight &sun);
 };

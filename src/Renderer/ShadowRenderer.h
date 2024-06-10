@@ -1,3 +1,5 @@
+#pragma once
+
 #include <array>
 #include <glm/glm.hpp>
 
@@ -118,7 +120,7 @@ class CSM {
      * Update the shadow caster frustums using the update interval.
      * @returns true when an update happened
      */
-    bool update(Camera& camera, glm::vec2 light_dir_polar, float time_delta);
+    bool update(Camera& camera, glm::vec3 light_dir, float time_delta);
 
     void bind();
 };

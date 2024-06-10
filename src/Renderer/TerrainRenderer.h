@@ -1,9 +1,12 @@
+#pragma once
+
 #include <glm/glm.hpp>
 
 #pragma region FrowardDecl
 #include "../GL/Declarations.h"
 class Camera;
 class CSM;
+struct OrthoLight;
 namespace loader {
 class Terrain;
 class Environment;
@@ -20,5 +23,5 @@ class TerrainRenderer {
     TerrainRenderer();
     ~TerrainRenderer();
 
-    void render(Camera& camera, loader::Terrain& terrain, CSM& csm, loader::Environment& env);
+    void render(Camera& camera, loader::Terrain& terrain, CSM& csm, loader::Environment& env, OrthoLight& sun);
 };

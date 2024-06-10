@@ -133,7 +133,7 @@ CSM::~CSM() {
     delete depthTexture_;
 }
 
-bool CSM::update(Camera& camera, glm::vec2 light_dir_polar, float time_delta) {
+bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
     lastUpdateElapsed_ += time_delta;
     if (lastUpdateElapsed_ < updateInterval_) {
         return false;
@@ -210,12 +210,6 @@ bool CSM::update(Camera& camera, glm::vec2 light_dir_polar, float time_delta) {
         glm::vec3 maxExtents = glm::vec3(radius);
         glm::vec3 minExtents = -maxExtents;
 
-        glm::vec3 light_dir = glm::vec3{
-            glm::sin(light_dir_polar.x) * glm::cos(light_dir_polar.y),
-            glm::sin(light_dir_polar.y),
-            glm::cos(light_dir_polar.x) * glm::cos(light_dir_polar.y),
-        };
-
         glm::vec3 eye = frustumCenter - (light_dir * -minExtents.z);
         glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
         glm::mat4 lightViewMatrix = glm::lookAt(eye, frustumCenter, up);
@@ -246,14 +240,14 @@ void CSM::bind() {
 
 ShadowMapRenderer::ShadowMapRenderer() {
     objectShader = new gl::ShaderPipeline({
-        new gl::ShaderProgram("assets/shaders/shadow.vert"),
+        new gl::ShaderProgram("assets/shaders/objects/shadow.vert"),
         new gl::ShaderProgram("assets/shaders/empty.frag"),
     });
     objectShader->setDebugLabel("shadow_map_renderer/object_shader");
     terrainShader = new gl::ShaderPipeline(
-        {new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.vert"),
+        {new gl::ShaderProgram("assets/shaders/terrain/terrain.vert"),
          new gl::ShaderProgram("assets/shaders/empty.frag"),
-         new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.tesc"),
+         new gl::ShaderProgram("assets/shaders/terrain/terrain.tesc"),
          new gl::ShaderProgram("assets/shaders/terrain/terrain_shadow.tese")});
     terrainShader->setDebugLabel("shadow_map_renderer/terrain_shader");
 
@@ -271,8 +265,6 @@ ShadowMapRenderer::~ShadowMapRenderer() {
 
 void ShadowMapRenderer::render(CSM& csm, Camera& camera, loader::GraphicsData& graphics, loader::Terrain& terrain) {
     gl::pushDebugGroup("ShadowMapRenderer::render");
-
-    // TODO: Investigate frame reprojection (don't render every frame)
 
     auto settings = Game::get().debugSettings.rendering.shadow;
 

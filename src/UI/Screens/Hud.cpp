@@ -4,6 +4,7 @@
 #include "../../Controller/RaceManager.h"
 #include "../../GL/Texture.h"
 #include "../../Game.h"
+#include "../../Input.h"
 #include "../../Loader/Loader.h"
 #include "../../Scene/Character.h"
 #include "../../Util/Format.h"
@@ -26,7 +27,7 @@ void Hud::drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds) 
     const ui::Skin &skin = *game.ui->skin();
 
     const float timer_height = 90_dp;
-    const float timer_width = 180_dp;
+    const float timer_width = 260_dp;
     nk_layout_space_push(nk, nk_rect(bounds.w / 2 - bounds.w / 7 - timer_width, bounds.h / 2 - timer_height / 2, timer_width, timer_height));
     nk->style.window.background = nk_rgba_f(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba_f(0, 0, 0, 0));
@@ -37,31 +38,57 @@ void Hud::drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds) 
 
         // Timer
         // background
-        nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
         nk_layout_row_static(nk, 80_dp, static_cast<int>(timer_width), 1);
         struct nk_rect timer_bounds;
         nk_widget(&timer_bounds, nk);
         nk_draw_nine_slice(canvas, timer_bounds, &skin.timerBackground, nk_rgba_f(1, 1, 1, 1));
         nk->active->layout->at_y -= nk->active->layout->row.height;  // roll-back position
 
+        // First row
+        nk_layout_row_begin(nk, NK_STATIC, 45_dp, 2);
+
+        // Checkpoint
+        nk_style_push_vec2(nk, &nk->style.text.padding, nk_vec2(0_dp, 0_dp));
+        nk_layout_row_push(nk, timer_width - 160_dp);
+        nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
+        // nk_layout_row_static(nk, 45_dp, static_cast<int>(timer_width), 1);
+        std::string checkpoint_str = std::format("{}/{}", race_manager.checkpointIndex() + 1, race_manager.checkpointCount());
+        nk_label_colored(nk, checkpoint_str.c_str(), NK_TEXT_RIGHT, nk_rgb(28, 28, 28));
+        nk_style_pop_vec2(nk);
+
         // Timer
         nk_style_push_vec2(nk, &nk->style.text.padding, nk_vec2(5_dp, 0_dp));
-        nk_layout_row_static(nk, 45_dp, static_cast<int>(timer_width), 1);
+        nk_layout_row_push(nk, 160_dp);
+        nk_style_set_font(nk, &game.ui->fonts()->get("menu_md")->handle);
+        // nk_layout_row_static(nk, 45_dp, static_cast<int>(timer_width), 1);
         std::string time_str = formatTimeRaceClock(race_manager.timer());
-        nk_label_colored(nk, time_str.c_str(), NK_TEXT_ALIGN_RIGHT, nk_rgb(28, 28, 28));
+        nk_label_colored(nk, time_str.c_str(), NK_TEXT_RIGHT, nk_rgb(28, 28, 28));
+        nk_layout_row_end(nk);
 
-        // TODO: show last split time for longer
+        // Second row
         // Split Timer
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_sm")->handle);
         nk_layout_row_static(nk, 35_dp, static_cast<int>(timer_width), 1);
         float split_time = race_manager.splitTimer();
+
+        // show last split time for longer
+        int checkpoint_index = race_manager.checkpointIndex();
+        lastCheckpointSplitExtension_.update(game.input->timeDelta());
+        if (checkpoint_index > 0 && lastCheckpointPassedIndex_ != checkpoint_index) {
+            lastCheckpointPassedIndex_ = checkpoint_index;
+            // extend the last spit time shown for x seconds
+            lastCheckpointSplitExtension_ = 0.6f;
+        }
+        if (!lastCheckpointSplitExtension_.isZero()) {
+            split_time = race_manager.splitTime(checkpoint_index);
+        }
         std::string split_str = (split_time < 0 ? "-" : "+") + formatTimeRaceClock(split_time);
         auto split_time_color = nk_rgb(77, 77, 77);
         if (split_time > 0)
             split_time_color = nk_rgb(84, 3, 2);
         else if (split_time < 0)
             split_time_color = nk_rgb(5, 84, 1);
-        nk_label_colored(nk, split_str.c_str(), NK_TEXT_ALIGN_RIGHT, split_time_color);
+        nk_label_colored(nk, split_str.c_str(), NK_TEXT_RIGHT, split_time_color);
         nk_style_pop_vec2(nk);  // text padding
 
         nk_group_end(nk);

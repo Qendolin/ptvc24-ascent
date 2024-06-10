@@ -599,11 +599,11 @@ void StateManager::unbindBuffer(GLuint buffer) {
 
 void StateManager::unbindFramebuffer(GLuint framebuffer) {
     if (drawFramebuffer == framebuffer) {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         drawFramebuffer = 0;
     }
     if (readFramebuffer == framebuffer) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         readFramebuffer = 0;
     }
 }

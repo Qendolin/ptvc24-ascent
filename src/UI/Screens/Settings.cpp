@@ -66,6 +66,16 @@ void SettingsScreen::draw_() {
             nk_style_set_font(nk, font_sm);
             nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f", settings_.maxFps);
 
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "Motion Blur", NK_TEXT_ALIGN_LEFT);
+            nk_slider_float(nk, 0.0f, &settings_.motionBlur, 1.0f, 0.01f);
+            nk_style_set_font(nk, font_sm);
+            if (settings_.motionBlur == 0.0) {
+                nk_label(nk, "Off", NK_TEXT_ALIGN_RIGHT);
+            } else {
+                nk_labelf(nk, NK_TEXT_ALIGN_RIGHT, "%.0f%%", settings_.motionBlur * 100.0f);
+            }
+
             nk_group_end(nk);
         }
 

@@ -17,6 +17,7 @@ void SettingsManager::save() {
     section["fov"] = settings_.fov;
     section["look_sensitivity"] = settings_.lookSensitivity;
     section["max_fps"] = settings_.maxFps;
+    section["motion_blur"] = settings_.motionBlur;
 
     std::fstream file = std::fstream(filename_, std::ios::out | std::ios::trunc);
     file << ini;
@@ -41,4 +42,5 @@ void SettingsManager::load() {
     settings_.fov = section["fov"] | settings_.fov;
     settings_.lookSensitivity = section["look_sensitivity"] | settings_.lookSensitivity;
     settings_.maxFps = section["max_fps"] | settings_.maxFps;
+    settings_.motionBlur = section["motion_blur"] | settings_.motionBlur;
 }
