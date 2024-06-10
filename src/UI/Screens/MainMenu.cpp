@@ -5,15 +5,18 @@
 #include "../../Input.h"
 #include "../../Loader/Loader.h"
 #include "../../Util/Log.h"
+#include "../../Window.h"
 #include "../UI.h"
 
 MainMenuScreen::MainMenuScreen() {
     titleImage_ = loader::texture("assets/textures/ui/title.png", {.srgb = true});
+    backgroundImage_ = loader::texture("assets/textures/ui/main_menu_background.png", {.srgb = true});
     Game::get().input->setMouseMode(Input::MouseMode::Release);
 }
 
 MainMenuScreen::~MainMenuScreen() {
     delete titleImage_;
+    delete backgroundImage_;
 }
 
 void MainMenuScreen::open() {
@@ -28,10 +31,27 @@ void MainMenuScreen::draw_() {
     Game& game = Game::get();
     nk_context* nk = game.ui->context();
 
+    nk->style.window.background = nk_rgba(0, 0, 0, 0);
+    float window_aspect = game.window.size.x / (float)game.window.size.y;
+    uint16_t image_inset = 15;
+    auto background_region = nk_rect(image_inset, image_inset, (uint16_t)(backgroundImage_->width()) - 2 * image_inset, (uint16_t)(backgroundImage_->height()) - 2 * image_inset);
+    if (window_aspect < 16.0f / 9.0f) {
+        uint16_t width = (uint16_t)(background_region.h * window_aspect);
+        background_region.x += (background_region.w - width) / 2;
+        background_region.w = width;
+    } else {
+        uint16_t height = (uint16_t)(background_region.w / window_aspect);
+        background_region.y += (background_region.h - height) / 2;
+        background_region.h = height;
+    }
+    nk->style.window.fixed_background = nk_style_item_image(nk_subimage_id(backgroundImage_->id(), static_cast<uint16_t>(backgroundImage_->width()), static_cast<uint16_t>(backgroundImage_->height()), background_region));
+    if (nk_begin(nk, "main_menu_background", {0, 0, 100_vw, 100_vh}, (nk_window_flags)NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_NOT_INTERACTIVE)) {
+    }
+    nk_end(nk);
+
     // transparent background
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
-
     if (nk_begin(nk, "main_menu", {30_vw, 10_vh, 40_vw, 80_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         // draw title image
         float img_height = 40_vw * titleImage_->height() / titleImage_->width();

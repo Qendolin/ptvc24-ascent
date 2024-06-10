@@ -43,6 +43,7 @@ CSV csv(std::string filename) {
     std::vector<std::vector<std::string>> data;
     std::string line;
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
         std::vector<std::string> tokens;
         std::string token;
         std::istringstream token_stream(line);

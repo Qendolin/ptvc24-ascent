@@ -89,10 +89,18 @@ void Atlas::load_(std::map<std::string, std::string>& sources) {
 
 bool Atlas::checkAtlasMatch_(std::map<std::string, std::string>& sources) {
     auto csv = loader::csv(filename_ + ATLAS_FILE_EXT);
-    if (csv.size() != sources.size()) {
+    if (csv.size() != sources.size() + 1) {
         return false;
     }
+    bool first_row = true;
     for (auto&& row : csv) {
+        if (row.size() != 6) {
+            return false;
+        }
+        if (first_row) {
+            first_row = false;
+            continue;
+        }
         if (!sources.contains(row[0])) {
             // keys don't match
             return false;
