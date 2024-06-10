@@ -6,6 +6,7 @@
 #include "../Loader/Environment.h"
 #include "../Loader/Gltf.h"
 #include "../Loader/Terrain.h"
+#include "../Loader/Water.h"
 #include "../Util/Log.h"
 
 MainControllerLoader::MainControllerLoader() {
@@ -48,6 +49,12 @@ void MainControllerLoader::queueOperations_(TaskPool<Data>& pool, bool load_gltf
                 .occlusion = "assets/textures/terrain_ao.png",
                 .normal = "assets/textures/terrain_normal.png",
             });
+    });
+    pool.add([](Data& out) {
+        out.water = std::make_unique<loader::WaterData>(
+            loader::WaterData::Files{
+                .height = "assets/textures/water_displace.png",
+                .normal = "assets/textures/water_normal.png"});
     });
 }
 
