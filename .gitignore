@@ -46,12 +46,12 @@
 docs/*.pdf
 
 # Prebuild files and assets
-lib/linux/
-lib/windows/
-include/GL/**
-include/GLFW/**
-include/gli/**
-include/glm/**
+# lib/linux/
+# lib/windows/
+# include/GL/**
+# include/GLFW/**
+# include/gli/**
+# include/glm/**
 
 # Source Code
 *.ilk
