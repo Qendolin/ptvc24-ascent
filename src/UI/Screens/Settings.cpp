@@ -22,7 +22,7 @@ void SettingsScreen::draw_() {
     nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
     nk_style_set_font(nk, &game.ui->fonts()->get("menu_lg")->handle);
 
-    if (nk_begin(nk, "settings_menu", {30_vw, 10_vh, 40_vw, 80_vh}, NK_WINDOW_NO_SCROLLBAR)) {
+    if (nk_begin(nk, "settings_menu", {25_vw, 10_vh, 50_vw, 80_vh}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_lg")->handle);
 
         nk_layout_row_dynamic(nk, 80_dp, 1);
@@ -43,7 +43,7 @@ void SettingsScreen::draw_() {
 
         if (nk_group_begin(nk, "settings", 0)) {
             nk_layout_row_template_begin(nk, 40_dp);
-            nk_layout_row_template_push_static(nk, 240_dp);
+            nk_layout_row_template_push_static(nk, 270_dp);
             nk_layout_row_template_push_dynamic(nk);
             nk_layout_row_template_push_static(nk, 60_dp);
             nk_layout_row_template_end(nk);
@@ -83,6 +83,18 @@ void SettingsScreen::draw_() {
             settings_.gtao = gtao_enabled;
             nk_style_set_font(nk, font_sm);
             if (settings_.gtao) {
+                nk_label(nk, "On", NK_TEXT_ALIGN_RIGHT);
+            } else {
+                nk_label(nk, "Off", NK_TEXT_ALIGN_RIGHT);
+            }
+
+            nk_style_set_font(nk, font_md);
+            nk_label(nk, "Dark Corsshair", NK_TEXT_ALIGN_LEFT);
+            nk_bool dark_crosshair_enabled = settings_.darkCrosshair;
+            nk_checkbox_label(nk, "", &dark_crosshair_enabled);
+            settings_.darkCrosshair = dark_crosshair_enabled;
+            nk_style_set_font(nk, font_sm);
+            if (settings_.darkCrosshair) {
                 nk_label(nk, "On", NK_TEXT_ALIGN_RIGHT);
             } else {
                 nk_label(nk, "Off", NK_TEXT_ALIGN_RIGHT);

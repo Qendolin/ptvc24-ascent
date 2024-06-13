@@ -22,6 +22,7 @@ void SettingsManager::save() {
     section["master_volume"] = settings_.masterVolume;
     section["sound_volume"] = settings_.soundVolume;
     section["music_volume"] = settings_.musicVolume;
+    section["dark_crosshair"] = settings_.darkCrosshair;
 
     std::fstream file = std::fstream(filename_, std::ios::out | std::ios::trunc);
     file << ini;
@@ -51,4 +52,5 @@ void SettingsManager::load() {
     settings_.masterVolume = section["master_volume"] | settings_.masterVolume;
     settings_.soundVolume = section["sound_volume"] | settings_.soundVolume;
     settings_.musicVolume = section["music_volume"] | settings_.musicVolume;
+    settings_.darkCrosshair = section["dark_crosshair"] | settings_.darkCrosshair;
 }

@@ -15,7 +15,7 @@ class Hud {
     gl::Texture *crosshairImage_ = nullptr;
 
     Timer lastCheckpointSplitExtension_;
-    int lastCheckpointPassedIndex_ = 0;
+    int lastCheckpointPassedIndex_ = -1;
 
     void drawBoostMeter_(Game &game, struct nk_context *nk, struct nk_rect &bounds);
     void drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds);

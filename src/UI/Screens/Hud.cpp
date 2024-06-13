@@ -14,7 +14,11 @@
 using namespace ui::literals;
 
 Hud::Hud() {
-    crosshairImage_ = loader::texture("assets/textures/ui/crosshair.png", {.srgb = true});
+    std::string src = "crosshair_white.png";
+    if (Game::get().settings.get().darkCrosshair) {
+        src = "crosshair_black.png";
+    }
+    crosshairImage_ = loader::texture("assets/textures/ui/" + src, {.srgb = true});
 }
 
 Hud::~Hud() {

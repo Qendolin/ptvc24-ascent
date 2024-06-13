@@ -20,6 +20,8 @@ struct Settings {
     float masterVolume = 1.0f;
     float musicVolume = 0.5f;
     float soundVolume = 0.5f;
+
+    bool darkCrosshair = false;
 };
 
 class SettingsManager {

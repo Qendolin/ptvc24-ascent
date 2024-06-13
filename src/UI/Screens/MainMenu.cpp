@@ -33,8 +33,7 @@ void MainMenuScreen::draw_() {
 
     nk->style.window.background = nk_rgba(0, 0, 0, 0);
     float window_aspect = game.window.size.x / (float)game.window.size.y;
-    uint16_t image_inset = 15;
-    auto background_region = nk_rect(image_inset, image_inset, (uint16_t)(backgroundImage_->width()) - 2 * image_inset, (uint16_t)(backgroundImage_->height()) - 2 * image_inset);
+    auto background_region = nk_rect(0, 0, (uint16_t)backgroundImage_->width(), (uint16_t)backgroundImage_->height());
     if (window_aspect < 16.0f / 9.0f) {
         uint16_t width = (uint16_t)(background_region.h * window_aspect);
         background_region.x += (background_region.w - width) / 2;
