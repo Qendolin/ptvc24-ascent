@@ -29,6 +29,6 @@ void FadeOverlay::draw_() {
     nk->style.window.background = nk_rgba_f(0, 0, 0, alpha);
     nk->style.window.fixed_background = nk_style_item_color(nk_rgba_f(0, 0, 0, alpha));
 
-    nk_begin(nk, "fade_overlay", {0_vw, 0_vh, 100_vw, 100_vh}, NK_WINDOW_NO_SCROLLBAR);
+    nk_begin(nk, "fade_overlay", {0_vw, 0_vh, 100_vw, 100_vh}, (nk_window_flags)NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_NOT_INTERACTIVE);
     nk_end(nk);
 }

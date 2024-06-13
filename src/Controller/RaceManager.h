@@ -46,6 +46,10 @@ class RaceManager {
         return respawnPoint_;
     }
 
+    void start() {
+        started_ = true;
+    }
+
     void update(float delta_time);
 
     // @return timer time in seconds

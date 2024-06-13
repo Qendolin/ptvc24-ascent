@@ -95,4 +95,5 @@ struct DebugSettings {
     Entity entity;
     Rendering rendering;
     bool freeCam = false;
+    bool infiniteBoost = false;
 };

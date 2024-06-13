@@ -58,8 +58,8 @@ void CharacterEntity::init() {
     character_settings->mShape = new JPH::SphereShape(0.25f);
     character_settings->mFriction = 0.0f;
     character_settings->mGravityFactor = 0.0f;
-
     body_ = new JPH::Character(character_settings, JPH::RVec3(0.0, 0.0, 0.0), JPH::Quat::sIdentity(), 0, physics().system);
+    // EMotionQuality::LinearCast doesn't work with sensor collisions (https://github.com/jrouwe/JoltPhysics/issues/1142)
     physics().interface().SetMotionQuality(body_->GetBodyID(), JPH::EMotionQuality::LinearCast);
     body_->AddToPhysicsSystem(JPH::EActivation::Activate);
     cameraLerpStart_ = cameraLerpEnd_ = ph::convert(body_->GetPosition());
@@ -135,7 +135,8 @@ void CharacterEntity::terminate() {
 void CharacterEntity::update(float time_delta) {
     if (!enabled) return;
     Input& input = *game().input;
-    Settings settings = game().settings.get();
+    Settings gameSettings = game().settings.get();
+    DebugSettings settings = game().debugSettings;
 
     respawnInvulnerability.update(time_delta);
     respawnFreeze.update(time_delta);
@@ -147,11 +148,11 @@ void CharacterEntity::update(float time_delta) {
     }
     // Camera movement
     // yaw
-    camera.angles.y -= input.mouseDelta().x * glm::radians(settings.lookSensitivity);
+    camera.angles.y -= input.mouseDelta().x * glm::radians(gameSettings.lookSensitivity);
     camera.angles.y = glm::wrapAngle(camera.angles.y);
 
     // pitch
-    camera.angles.x -= input.mouseDelta().y * glm::radians(settings.lookSensitivity);
+    camera.angles.x -= input.mouseDelta().y * glm::radians(gameSettings.lookSensitivity);
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
     // Interpolate the camera position from the previous physics body position to the current one.
@@ -170,7 +171,9 @@ void CharacterEntity::update(float time_delta) {
 
     if (input.isKeyDown(GLFW_KEY_LEFT_SHIFT) || input.isKeyDown(GLFW_KEY_W)) {
         boostFlag_ = true;
-
+        if (settings.infiniteBoost) {
+            boostMeter_ = 1.0;
+        }
     } else {
         boostMeter_ = std::min(boostMeter_ + BOOST_REGEN * time_delta, 1.0f);
     }
@@ -189,7 +192,7 @@ void CharacterEntity::update(float time_delta) {
     }
     boostDynamicFov_ = std::clamp<float>(boostDynamicFov_, 0, BOOST_DYN_FOV_MAX);
 
-    camera.setFov(glm::radians(settings.fov + boostDynamicFov_));
+    camera.setFov(glm::radians(gameSettings.fov + boostDynamicFov_));
 
     float speed = glm::length(velocity_);
     float volume = glm::pow(glm::clamp(speed / 40.0f, 0.0f, 1.0f), 3.0f);
@@ -244,37 +247,36 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     result.y += down_accel * time_delta;
 
     // Looking straight up or down would divide by zero
-    if (pitch_cos > glm::epsilon<float>()) {
-        // convert vertical to horizontal velocity
-        if (velocity.y < 0) {
-            float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
-            result.y += lift;
-            result.x += looking.x * lift / pitch_cos;
-            result.z += looking.z * lift / pitch_cos;
-        }
-        // convert horizontal to vertical upwards velocity
-        // allows for flying up
-        if (camera.angles.x > 0) {
-            float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
-            // Unrealistic but makes gaining hight easier.
-            // One problem is that this allows for infinite height gain.
-            result.y += lift * 1.0f;
-            result.x -= looking.x * lift / pitch_cos;
-            result.z -= looking.z * lift / pitch_cos;
-        }
-        // convert horizontal to vertical downwards velocity
-        // allows for better height control
-        if (camera.angles.x < 0) {
-            float anti_lift = horizontal_speed * pitch_sin_sqr * -0.075f * time_delta * SPEED;
-            result.y += anti_lift;
-            result.x += looking.x * anti_lift / pitch_cos;
-            result.z += looking.z * anti_lift / pitch_cos;
-        }
-
-        // steering / turning
-        result.x += (looking.x / pitch_cos * horizontal_speed - velocity.x) * TURN_FACTOR * time_delta;
-        result.z += (looking.z / pitch_cos * horizontal_speed - velocity.z) * TURN_FACTOR * time_delta;
+    pitch_cos = glm::max(pitch_cos, glm::epsilon<float>());
+    // convert vertical to horizontal velocity
+    if (velocity.y < 0) {
+        float lift = velocity.y * -0.125f * pitch_cos_sqr * time_delta * SPEED;
+        result.y += lift;
+        result.x += looking.x * lift / pitch_cos;
+        result.z += looking.z * lift / pitch_cos;
     }
+    // convert horizontal to vertical upwards velocity
+    // allows for flying up
+    if (camera.angles.x > 0) {
+        float lift = horizontal_speed * pitch_sin * 0.125f * time_delta * SPEED;
+        // Unrealistic but makes gaining hight easier.
+        // One problem is that this allows for infinite height gain.
+        result.y += lift * 1.0f;
+        result.x -= looking.x * lift / pitch_cos;
+        result.z -= looking.z * lift / pitch_cos;
+    }
+    // convert horizontal to vertical downwards velocity
+    // allows for better height control
+    if (camera.angles.x < 0) {
+        float anti_lift = horizontal_speed * pitch_sin_sqr * -0.075f * time_delta * SPEED;
+        result.y += anti_lift;
+        result.x += looking.x * anti_lift / pitch_cos;
+        result.z += looking.z * anti_lift / pitch_cos;
+    }
+
+    // steering / turning
+    result.x += (looking.x / pitch_cos * horizontal_speed - velocity.x) * TURN_FACTOR * time_delta;
+    result.z += (looking.z / pitch_cos * horizontal_speed - velocity.z) * TURN_FACTOR * time_delta;
 
     float break_drag = 0.02f;
     if (breakFlag_) {
@@ -309,4 +311,8 @@ static glm::vec2 quatToAzimuthElevation(const glm::quat& q) {
 
 JPH::BodyID CharacterEntity::body() const {
     return body_->GetBodyID();
+}
+
+JPH::BodyID CharacterEntity::kinematicBody() const {
+    return kinematicBody_->GetID();
 }

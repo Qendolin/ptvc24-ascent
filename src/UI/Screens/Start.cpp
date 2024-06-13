@@ -1,5 +1,6 @@
 #include "Start.h"
 
+#include "../../Controller/MainController.h"
 #include "../../GL/Texture.h"
 #include "../../Game.h"
 #include "../../Input.h"
@@ -38,19 +39,22 @@ void StartScreen::draw_() {
 
     Game& game = Game::get();
     nk_context* nk = game.ui->context();
+    game.tween->step(startTextOpacity_);
 
     // transparent background
-    nk->style.window.background = nk_rgba(0, 0, 0, 120);
-    nk->style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 120));
+    nk->style.window.background = nk_rgba_f(0, 0, 0, 0.47f * startTextOpacity_.peek());
+    nk->style.window.fixed_background = nk_style_item_color(nk_rgba_f(0, 0, 0, 0.47f * startTextOpacity_.peek()));
     nk->style.text.color = nk_rgba_f(1, 1, 1, 1);
 
     if (nk_begin(nk, "start_screen", {0_vw, 60_vh, 100_vw, 80_dp}, NK_WINDOW_NO_SCROLLBAR)) {
         nk_style_set_font(nk, &game.ui->fonts()->get("menu_lg")->handle);
         nk_layout_row_dynamic(nk, 80_dp, 1);
 
-        nk_label(nk, "Press Space", NK_TEXT_ALIGN_CENTERED);
+        nk_label_colored(nk, "Press Space", NK_TEXT_ALIGN_CENTERED, nk_rgba_f(1.0, 1.0, 1.0, startTextOpacity_.peek()));
 
         if (game.input->isKeyPress(GLFW_KEY_SPACE)) {
+            MainController& controller = dynamic_cast<MainController&>(*game.controller);
+            controller.raceManager.start();
             close();
         }
     }

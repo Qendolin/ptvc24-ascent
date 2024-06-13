@@ -113,4 +113,6 @@ class CharacterEntity : public scene::NodeEntity {
     }
 
     JPH::BodyID body() const;
+
+    JPH::BodyID kinematicBody() const;
 };

@@ -167,7 +167,7 @@ bool Physics::isNextStepDue() const {
 
 void Physics::step() {
     updateTimer_ = std::max(updateTimer_ - UPDATE_INTERVAL, 0.0f);
-    system->Update(UPDATE_INTERVAL, 1, tempAllocator_, jobSystem_);
+    system->Update(UPDATE_INTERVAL, 2, tempAllocator_, jobSystem_);
     contactListener->DispatchCallbacks();
 }
 

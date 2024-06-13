@@ -28,7 +28,8 @@ static float vh_to_px = REFERENCE_HEIGHT / 100.0f;
 
 void set_scale(int width, int height, float dpi_scale) {
     // should dp only depend on the viewport width?
-    dp_to_px = dpi_scale * width / REFERENCE_WIDTH;
+    // ignore dpi_scale because it breaks ui layout sometimes
+    dp_to_px = width / REFERENCE_WIDTH;
     vw_to_px = width / 100.0f;
     vh_to_px = height / 100.0f;
 }

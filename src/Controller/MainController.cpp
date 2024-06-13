@@ -136,6 +136,8 @@ void MainController::applyLoadResult_() {
     characterNode.physics = scene->physics.size();
     scene->physics.emplace_back(scene::Physics{.body = character->body()});
     scene->nodesByBodyID[character->body()] = characterNode.index;
+    // add both for better hit detection
+    scene->nodesByBodyID[character->kinematicBody()] = characterNode.index;
     characterNode.entity = scene->entities.size() - 1;
 
     scene->createPhysicsNode("terrain", scene::Physics{.body = terrain->physicsBody()->GetID()});
@@ -236,10 +238,10 @@ void MainController::render() {
         if (scoreScreen->resetFlag()) {
             game.queueController<MainMenuController>();
         }
-    } else if (startScreen->opened()) {
-        startScreen->draw();
     } else if (pauseScreen->opened()) {
         pauseScreen->draw();
+    } else if (startScreen->opened()) {
+        startScreen->draw();
     } else {
         hud->draw();
     }

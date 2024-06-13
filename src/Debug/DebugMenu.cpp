@@ -45,6 +45,10 @@ void DebugMenu::drawDebugWindow_() {
     Checkbox("Free Cam", &settings.freeCam);
     LabelText("Position", "%.1f / %.1f / %.1f", game.camera->position.x, game.camera->position.y, game.camera->position.z);
 
+#ifndef NDEBUG
+    Checkbox("Infinite Boost", &settings.infiniteBoost);
+#endif
+
     // Physics
     if (CollapsingHeader("Physics", 0)) {
         PushID("physics");
