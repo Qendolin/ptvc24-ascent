@@ -242,11 +242,11 @@ void MainController::render() {
         pauseScreen->draw();
     } else if (startScreen->opened()) {
         startScreen->draw();
+        fader->draw();
     } else {
         hud->draw();
+        fader->draw();
     }
-
-    fader->draw();
 
     game.camera->updateViewMatrix();
 

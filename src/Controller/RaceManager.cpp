@@ -40,6 +40,7 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
         for (int i = 0; i < skipped; i++) {
             timeSplits_[index - i - 1] = timeSplits_[index];
         }
+        LOG_INFO("Reached checkpoint '" + std::to_string(index + 1) + "' at " + std::to_string(timer()) + " (skipping " + std::to_string(skipped) + ")");
 
         lastPassedCheckpoint_ = index;
         respawnPoint_.transform = checkpoint->respawnTransformation().matrix();

@@ -47,5 +47,5 @@ void BoostRingEntity::onTriggerActivated(JPH::BodyID& body) {
     character->setVelocity(velocity);
     game().audio->assets->woosh2.play2dEvent(1.0);
 
-    cooldown = 2.0;
+    cooldown = 0.5f;
 }
