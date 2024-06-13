@@ -233,6 +233,8 @@ void MainController::render() {
         return;
     }
 
+    fader->draw();
+
     if (scoreScreen->opened()) {
         scoreScreen->draw();
         if (scoreScreen->resetFlag()) {
@@ -242,10 +244,8 @@ void MainController::render() {
         pauseScreen->draw();
     } else if (startScreen->opened()) {
         startScreen->draw();
-        fader->draw();
     } else {
         hud->draw();
-        fader->draw();
     }
 
     game.camera->updateViewMatrix();
