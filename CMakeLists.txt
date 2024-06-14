@@ -41,6 +41,10 @@ FetchContent_Declare(
     SOURCE_SUBDIR "Build")
 FetchContent_MakeAvailable(JoltPhysics)
 
+if (MSVC)
+    target_compile_options(Jolt PRIVATE /wd4514)
+endif()
+
 # Include ImGui
 FetchContent_Declare(
     imgui
@@ -122,7 +126,7 @@ if(MSVC)
     # enable warnings except: 
     # 'size_t' possible loss of data, 'identifier' hides class member,  unused parameter
     # disable warnings in external includes
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4267 /wd4458 /wd4100 /wd4514 /external:anglebrackets /external:W0)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4267 /wd4458 /wd4100 /external:anglebrackets /external:W0)
 endif()
 
 install(
