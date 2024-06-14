@@ -13,6 +13,10 @@ class WavStream;
 typedef unsigned int handle;
 }  // namespace SoLoud
 
+class SoundInstance;
+class SoundInstance3d;
+class SoundInstance2d;
+
 class AudioSystem {
     friend class AudioBus;
     friend class Music;
@@ -83,15 +87,7 @@ class Music {
     Music &operator=(Music const &) = delete;
 
     // allow move
-    Music(Music &&other)
-        : wav_(std::exchange(other.wav_, nullptr)),
-          handle_(std::exchange(other.handle_, 0)),
-          paused_(other.paused_),
-          looping_(other.looping_),
-          volume_(other.volume_),
-          speed_(other.speed_),
-          bus(other.bus) {
-    }
+    Music(Music &&other);
 
     ~Music();
 
@@ -135,10 +131,7 @@ class Sound {
     Sound &operator=(Sound const &) = delete;
 
     // allow move
-    Sound(Sound &&other)
-        : wav_(std::exchange(other.wav_, nullptr)),
-          bus(other.bus) {
-    }
+    Sound(Sound &&other);
 
     ~Sound();
 

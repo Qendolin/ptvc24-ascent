@@ -21,6 +21,9 @@ class FpsLimiter {
 
 class FpsLimiter {
    private:
+    double startTime_ = 0.0;
+    double target_ = 1.0 / 100.0;
+
    public:
     FpsLimiter();
 
@@ -28,7 +31,6 @@ class FpsLimiter {
 
     void start(double current_time_ms);
 
-    void end(double current_time_ms);
+    void end(double current_time_sec);
 };
-
 #endif

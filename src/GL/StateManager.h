@@ -1,4 +1,7 @@
+#pragma once
+
 #define GLEW_STATIC
+#define GLEW_NO_GLU
 #include <GL/glew.h>
 
 #include <array>
@@ -10,8 +13,6 @@
 #include <vector>
 
 #include "../Util/Log.h"
-
-#pragma once
 
 namespace gl {
 

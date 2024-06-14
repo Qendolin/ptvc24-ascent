@@ -51,10 +51,10 @@ class MainController : public AbstractController {
     std::unique_ptr<MainControllerLoader> loader;
     std::unique_ptr<CSM> csm;
 
-    const std::unique_ptr<ScoreScreen> scoreScreen;
-    const std::unique_ptr<StartScreen> startScreen;
-    const std::unique_ptr<PauseScreen> pauseScreen;
-    const std::unique_ptr<Hud> hud;
+    std::unique_ptr<ScoreScreen> scoreScreen;
+    std::unique_ptr<StartScreen> startScreen;
+    std::unique_ptr<PauseScreen> pauseScreen;
+    std::unique_ptr<Hud> hud;
 
     std::unique_ptr<FreeCamEntity> freeCam;
 

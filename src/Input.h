@@ -61,7 +61,7 @@ class Input {
         ReleasedBit = 0b001,
         PressedBit = 0b010,
         PersistentPressedBit = 0b100,
-        ClearMask = static_cast<State>(~static_cast<uint8_t>(ReleasedBit | PressedBit)),
+        ClearMask = 0b011,  // Released | Pressed
         PersistentPressedMask = PressedBit | PersistentPressedBit,
     };
 

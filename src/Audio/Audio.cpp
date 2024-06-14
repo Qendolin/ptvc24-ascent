@@ -5,6 +5,8 @@
 #undef min
 #undef max
 
+#include <utility>
+
 #include "../Util/Log.h"
 #include "Audio.h"
 
@@ -74,6 +76,16 @@ Music::Music(AudioBus &bus, std::string filename) : bus(bus) {
         PANIC("Failed to load music from '" + filename + "'");
     }
     wav_->setSingleInstance(true);
+}
+
+Music::Music(Music &&other)
+    : wav_(std::exchange(other.wav_, nullptr)),
+      handle_(std::exchange(other.handle_, 0)),
+      paused_(other.paused_),
+      looping_(other.looping_),
+      volume_(other.volume_),
+      speed_(other.speed_),
+      bus(other.bus) {
 }
 
 Music::~Music() {
@@ -173,6 +185,11 @@ Sound::Sound(AudioBus &bus, std::string filename) : bus(bus) {
     }
     wav_->set3dAttenuation(SoLoud::AudioSource::INVERSE_DISTANCE, 0.2f);
     wav_->set3dDistanceDelay(false);
+}
+
+Sound::Sound(Sound &&other)
+    : wav_(std::exchange(other.wav_, nullptr)),
+      bus(other.bus) {
 }
 
 Sound::~Sound() {

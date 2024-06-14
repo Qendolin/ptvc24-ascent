@@ -1,9 +1,13 @@
 #include "Object.h"
 
+#include <utility>
+
 #include "StateManager.h"
 #include "Util.h"
 
 namespace gl {
+
+GLObject::GLObject(GLObject&& other) : type_(other.type_), id_(std::exchange(other.id_, 0)) {}
 
 GLObject::~GLObject() {
     if (id_ == 0) return;

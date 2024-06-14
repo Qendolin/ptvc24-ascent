@@ -23,7 +23,7 @@ class MainMenuScreen : public Screen {
     Action action = Action::None;
 
     MainMenuScreen();
-    virtual ~MainMenuScreen();
+    ~MainMenuScreen();
 
     void open();
 };

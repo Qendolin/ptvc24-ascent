@@ -13,7 +13,6 @@ class Screen {
     Screen& operator=(Screen const&) = delete;
 
     Screen() {}
-    virtual ~Screen() {}
 
     virtual void close() {
         opened_ = false;

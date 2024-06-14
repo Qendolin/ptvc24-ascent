@@ -11,13 +11,12 @@ class FadeOverlay : public Screen {
     double startTime_ = 0;
 
     void draw_() override;
-   
+
    public:
     FadeOverlay() {
         opened_ = true;
     };
-    virtual ~FadeOverlay() = default;
+    ~FadeOverlay() = default;
 
     void fade(float from, float to, float duration);
-
 };

@@ -16,7 +16,7 @@ class PauseScreen : public Screen {
     Action action = Action::None;
 
     PauseScreen() = default;
-    virtual ~PauseScreen() = default;
+    ~PauseScreen() = default;
 
     void open();
 

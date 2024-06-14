@@ -127,6 +127,13 @@ if(MSVC)
     # 'size_t' possible loss of data, 'identifier' hides class member,  unused parameter
     # disable warnings in external includes
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /wd4267 /wd4458 /wd4100 /external:anglebrackets /external:W0)
+else()
+    string(REGEX MATCH "^([0-9]+)" GCC_VERSION_MAJOR "${CMAKE_CXX_COMPILER_VERSION}")
+    if(GCC_VERSION_MAJOR LESS 14)
+        message(FATAL_ERROR "Your GCC version doesn't support required c++23 features. Use GCC 14+")
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE stdc++exp)
+    endif()
 endif()
 
 install(

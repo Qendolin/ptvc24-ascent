@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "../Util/Timer.h"
 #include "Entity.h"
 

@@ -66,7 +66,7 @@ AddFileToZip $zipFile (Get-ChildItem "LICENSE") "LICENSE"
 
 
 # Check if the executable exists in the release directory
-$exePath = "_bin/release/PTVC_Project_GL.exe"
+$exePath = "_bin/windows/release/PTVC_Project_GL.exe"
 $lastCompileTime = (Get-Item $exePath).LastWriteTime
 if (((Get-Date) - $lastCompileTime).TotalHours -gt 1) {
     Write-Warning "The compiled exe is older than an hour, may be outdated."

@@ -1,6 +1,6 @@
 @ECHO OFF
-set PROJECT_DIR=build
-set INSTALL_DIR=_bin
+set PROJECT_DIR=build\windows
+set INSTALL_DIR=_bin\windows
 
 if "%~1"=="" goto BLANK
 if "%~1"=="debug" goto DEBUG

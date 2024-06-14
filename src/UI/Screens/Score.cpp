@@ -138,7 +138,7 @@ void ScoreScreen::drawPerformance_() {
         nk_draw_text(canvas, nk_rect(graph_inner.x + graph_inner.w + 15_dp, graph_inner.y + hi_y - 12_dp, 30_dp, 20_dp), "Hi", 2, &game.ui->fonts()->get("menu_ty")->handle, nk_rgba(0, 0, 0, 0), nk_rgb_f(1, 1, 1));
     }
 
-    int limited_count = static_cast<int>(std::max(std::min(recent.size() - 1, 25ULL), 1ULL));
+    int limited_count = static_cast<int>(std::max(std::min(static_cast<unsigned long long>(recent.size() - 1), 25ULL), 1ULL));
     float x_scale = 1.0f / static_cast<float>(limited_count);
     for (int i = 0; i < limited_count; i++) {
         const ScoreEntry& curr = recent[i];

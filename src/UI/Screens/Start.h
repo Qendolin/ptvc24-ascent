@@ -15,7 +15,7 @@ class StartScreen : public Screen {
 
    public:
     StartScreen();
-    virtual ~StartScreen() = default;
+    ~StartScreen() = default;
 
     void open();
 };

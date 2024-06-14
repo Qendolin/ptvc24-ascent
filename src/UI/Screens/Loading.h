@@ -16,7 +16,7 @@ class LoadingScreen : public Screen {
     TaskCompletionView *task;
 
     LoadingScreen() = default;
-    virtual ~LoadingScreen() = default;
+    ~LoadingScreen() = default;
 
     void open(TaskCompletionView *task);
 

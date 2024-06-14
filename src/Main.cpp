@@ -6,11 +6,13 @@
 #include "Util/Log.h"
 #include "Window.h"
 
+#ifdef _WIN32
 extern "C" {
 // signals to the system that the dedicated gpu should be used
-_declspec(dllexport) uint32_t NvOptimusEnablement = 1;
-_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+__declspec(dllexport) uint32_t NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
+#endif
 
 void printNotDeletedOpenGLObjects() {
     std::vector<std::pair<GLenum, GLuint>> tracked = gl::manager->tracked();

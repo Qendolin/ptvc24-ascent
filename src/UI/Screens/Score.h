@@ -27,7 +27,7 @@ class ScoreScreen : public Screen {
 
    public:
     ScoreScreen() = default;
-    virtual ~ScoreScreen() = default;
+    ~ScoreScreen() = default;
 
     void open(ScoreEntry score);
 };

@@ -1,5 +1,7 @@
 #pragma once
+
 #define GLEW_STATIC
+#define GLEW_NO_GLU
 #include <GL/glew.h>
 
 #include <iostream>
@@ -28,7 +30,7 @@ class GLObject {
     GLObject& operator=(GLObject const&) = delete;
 
     // allow move
-    GLObject(GLObject&& other) noexcept : type_(other.type_), id_(std::exchange(other.id_, 0)) {}
+    GLObject(GLObject&& other);
 
     virtual ~GLObject();
 

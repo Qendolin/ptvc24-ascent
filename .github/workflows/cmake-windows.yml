@@ -25,16 +25,16 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=_bin
+        run: cmake -B ${{github.workspace}}/build/windows -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=_bin/windows
 
       - name: Build
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target install
+        run: cmake --build ${{github.workspace}}/build/windows --config ${{env.BUILD_TYPE}} --target install
 
-      - run: mv ${{github.workspace}}/_bin/release/PTVC_Project_GL.exe ${{github.workspace}}/_bin/release/Ascent-${{ github.sha }}.exe
+      - run: mv ${{github.workspace}}/_bin/release/PTVC_Project_GL.exe ${{github.workspace}}/_bin/windows/release/Ascent-${{ github.sha }}.exe
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
         with:
           name: Ascent
-          path: ${{github.workspace}}/_bin/release/Ascent-${{ github.sha }}.exe
+          path: ${{github.workspace}}/_bin/windows/release/Ascent-${{ github.sha }}.exe

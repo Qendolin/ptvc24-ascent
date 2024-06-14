@@ -1,6 +1,6 @@
 OS := $(shell uname)
-PROJECT_DIR = build
-INSTALL_DIR = _bin
+PROJECT_DIR = build/linux
+INSTALL_DIR = _bin/linux
 
 all:
 ifeq ($(OS), Darwin)

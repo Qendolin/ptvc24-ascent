@@ -11,7 +11,7 @@ class SettingsScreen : public Screen {
 
    public:
     SettingsScreen() = default;
-    virtual ~SettingsScreen() = default;
+    ~SettingsScreen() = default;
 
     void open(Settings settings);
 };

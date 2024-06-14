@@ -247,8 +247,8 @@ void DebugMenu::FrameTimes::update(float delta) {
 
     if (nextAvgTimer >= 1.0) {
         currentAvg = nextAvgTimer / (float)nextAvgSum;
-        currentMin = isinf(nextMin) ? 0 : nextMin;
-        currentMax = isinf(nextMax) ? 0 : nextMax;
+        currentMin = std::isinf(nextMin) ? 0 : nextMin;
+        currentMax = std::isinf(nextMax) ? 0 : nextMax;
 
         avg[cumulativeIndex] = currentAvg * 1000;
         min[cumulativeIndex] = currentMin * 1000;

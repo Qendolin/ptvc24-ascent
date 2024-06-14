@@ -15,6 +15,8 @@ MainMenuController::MainMenuController(Game &game)
 {
 }
 
+MainMenuController::~MainMenuController() = default;
+
 void MainMenuController::load() {
     if (menuScreen->closed())
         menuScreen->open();
