@@ -34,5 +34,5 @@ jobs:
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: Ascent.exe
+          name: Ascent-${{ github.sha }}.exe
           path: ${{github.workspace}}/_bin/release/PTVC_Project_GL.exe
