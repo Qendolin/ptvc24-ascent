@@ -1,11 +1,10 @@
 #pragma once
 
 #include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceTable.h>
+#include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterTable.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
-
-#include "Jolt/BroadPhaseLayerInterfaceTable.h"
-#include "Jolt/ObjectLayerPairFilterTable.h"
-#include "Jolt/ObjectVsBroadPhaseLayerFilterTable.h"
+#include <Jolt/Physics/Collision/ObjectLayerPairFilterTable.h>
 
 namespace ph {
 

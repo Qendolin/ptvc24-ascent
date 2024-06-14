@@ -2,9 +2,12 @@
 
 #include <initializer_list>
 
+#pragma warning(push)
+#pragma warning(disable : 4701)  // disable "potentially uninitialized local variable used"
 #define NK_IMPLEMENTATION
 #define NK_NO_STB_RECT_PACK_IMPLEMENTATION
 #include <nuklear.h>
+#pragma warning(pop)
 
 #include <glm/glm.hpp>
 
