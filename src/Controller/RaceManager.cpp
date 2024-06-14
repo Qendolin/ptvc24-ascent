@@ -35,7 +35,7 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
     // next checkpoint
     if (index > lastPassedCheckpoint_) {
         int skipped = std::max(index - lastPassedCheckpoint_ - 1, 0);
-        penaltyTime_ += skipped * 5;
+        penaltyTime_ += skipped * 2.5f;
         timeSplits_[index] = timer();
         for (int i = 0; i < skipped; i++) {
             timeSplits_[index - i - 1] = timeSplits_[index];

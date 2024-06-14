@@ -30,7 +30,7 @@ void Hud::drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds) 
     RaceManager &race_manager = controller.raceManager;
     const ui::Skin &skin = *game.ui->skin();
 
-    const float timer_height = 90_dp;
+    const float timer_height = 105_dp;
     const float timer_width = 260_dp;
     nk_layout_space_push(nk, nk_rect(bounds.w / 2 - bounds.w / 5 - timer_width, bounds.h / 2 - timer_height / 2, timer_width, timer_height));
     nk->style.window.background = nk_rgba_f(0, 0, 0, 0);
@@ -93,6 +93,15 @@ void Hud::drawTimer_(Game &game, struct nk_context *nk, struct nk_rect &bounds) 
         else if (split_time < 0)
             split_time_color = nk_rgb(5, 84, 1);
         nk_label_colored(nk, split_str.c_str(), NK_TEXT_RIGHT, split_time_color);
+        nk_style_pop_vec2(nk);  // text padding
+
+        // Penality timer
+        nk_style_set_font(nk, &game.ui->fonts()->get("menu_ty")->handle);
+        nk_style_push_vec2(nk, &nk->style.text.padding, nk_vec2(5_dp, 0_dp));
+        nk_layout_row_static(nk, 15_dp, static_cast<int>(timer_width), 1);
+        float penalty_time = race_manager.penalty();
+        std::string penalty_str = "+" + formatTimeRaceClock(penalty_time);
+        nk_label_colored(nk, penalty_str.c_str(), NK_TEXT_RIGHT, nk_rgba(84, 3, 2, penalty_time > 0 ? 255 : 0));
         nk_style_pop_vec2(nk);  // text padding
 
         nk_group_end(nk);
