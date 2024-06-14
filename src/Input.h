@@ -61,7 +61,7 @@ class Input {
         ReleasedBit = 0b001,
         PressedBit = 0b010,
         PersistentPressedBit = 0b100,
-        ClearMask = 0b011,  // Released | Pressed
+        ClearMask = static_cast<uint8_t>(~0b011u),  // ~(Released | Pressed)
         PersistentPressedMask = PressedBit | PersistentPressedBit,
     };
 
