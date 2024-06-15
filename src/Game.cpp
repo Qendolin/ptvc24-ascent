@@ -250,6 +250,16 @@ void Game::processInput_() {
     if (input->isKeyPress(GLFW_KEY_F2)) {
         ui->setHidden(!ui->hidden());
     }
+
+    if (input->isKeyPress(GLFW_KEY_F11)) {
+        if (glfwGetWindowAttrib(window, GLFW_DECORATED) == GLFW_TRUE) {
+            glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+            glfwMaximizeWindow(window);
+        } else {
+            glfwRestoreWindow(window);
+            glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_TRUE);
+        }
+    }
 }
 
 void Game::update_() {

@@ -30,6 +30,7 @@ Use mouse to look.
 | `F2`         | Hide GUI                   |
 | `F3`         | Toggle debug menu          |
 | `F5`         | Reload assets / shaders    |
+| `F11`        | Toggle Fullscreen          |
 
 The FreeCam™ mode uses WASD movement and the scrolling to change speed.
 
