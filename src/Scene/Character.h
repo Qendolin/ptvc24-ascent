@@ -117,4 +117,8 @@ class CharacterEntity : public scene::NodeEntity {
     JPH::BodyID body() const;
 
     JPH::BodyID kinematicBody() const;
+
+    bool canEnterCheckpoints() const {
+        return respawnFreeze.isZero();
+    }
 };

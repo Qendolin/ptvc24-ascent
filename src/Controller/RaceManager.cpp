@@ -28,6 +28,11 @@ void RaceManager::onCheckpointEntered(CheckpointEntity *checkpoint) {
     int index = indexOf(checkpoints_, checkpoint);
     LOG_DEBUG("Entered checkpoint '" + std::to_string(index) + "'");
 
+    if (!character_->canEnterCheckpoints()) {
+        LOG_DEBUG("Character cannot enter checkpoints right now");
+        return;
+    }
+
     if (ended_) {
         return;
     }

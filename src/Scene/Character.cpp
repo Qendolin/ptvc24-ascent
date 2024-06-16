@@ -243,14 +243,14 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     }
 
     // Looking straight ahead cancles 75% of gravity due to aerodynamic drag
-    float down_accel = -0.75f * GRAVITY_ACCELERATION;
+    float down_accel = -0.6f * GRAVITY_ACCELERATION;
     result.y += down_accel * time_delta;
 
     // Looking straight up or down would divide by zero
     pitch_cos = glm::max(pitch_cos, glm::epsilon<float>());
     // convert vertical to horizontal velocity
     if (velocity.y < 0) {
-        float lift = velocity.y * -0.2f * pitch_cos_sqr * time_delta * SPEED;
+        float lift = velocity.y * -0.175f * pitch_cos_sqr * time_delta * SPEED;
         result.y += lift;
         result.x += looking.x * lift / pitch_cos;
         result.z += looking.z * lift / pitch_cos;
@@ -258,9 +258,9 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     // convert horizontal to vertical upwards velocity
     // allows for flying up
     if (camera.angles.x > 0) {
-        float lift = horizontal_speed * pitch_sin * 0.2f * time_delta * SPEED;
+        float lift = horizontal_speed * pitch_sin * 0.175f * time_delta * SPEED;
         // Unrealistic but makes gaining hight easier.
-        // One problem is that this allows for infinite height gain.
+        // One problem is that this allows for infinite height gain when te factor is above 1.
         result.y += lift * 1.0f;
         result.x -= looking.x * lift / pitch_cos;
         result.z -= looking.z * lift / pitch_cos;
@@ -268,7 +268,7 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     // convert horizontal to vertical downwards velocity
     // allows for better height control
     if (camera.angles.x < 0) {
-        float anti_lift = horizontal_speed * pitch_sin_sqr * -0.1f * time_delta * SPEED;
+        float anti_lift = horizontal_speed * pitch_sin_sqr * -0.175f * 0.5f * time_delta * SPEED;
         result.y += anti_lift;
         result.x += looking.x * anti_lift / pitch_cos;
         result.z += looking.z * anti_lift / pitch_cos;

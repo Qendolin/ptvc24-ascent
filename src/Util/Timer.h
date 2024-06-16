@@ -22,11 +22,11 @@ struct Timer {
         if (value_ < 0) value_ = 0;
     }
 
-    float value() {
+    float value() const {
         return value_;
     }
 
-    bool isZero() {
+    bool isZero() const {
         return value_ == 0.0;
     }
 
