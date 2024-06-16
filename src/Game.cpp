@@ -254,6 +254,8 @@ void Game::processInput_() {
     if (input->isKeyPress(GLFW_KEY_F11)) {
         if (glfwGetWindowAttrib(window, GLFW_DECORATED) == GLFW_TRUE) {
             glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+            if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED) == GLFW_TRUE)
+                glfwRestoreWindow(window);
             glfwMaximizeWindow(window);
         } else {
             glfwRestoreWindow(window);
