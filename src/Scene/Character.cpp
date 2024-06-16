@@ -243,7 +243,6 @@ glm::vec3 CharacterEntity::calculateVelocity_(float time_delta) {
     }
 
     // Looking straight ahead cancles 75% of gravity due to aerodynamic drag
-    // float down_accel = (pitch_cos_sqr * 0.75f - 1) * GRAVITY_ACCELERATION;
     float down_accel = -0.75f * GRAVITY_ACCELERATION;
     result.y += down_accel * time_delta;
 

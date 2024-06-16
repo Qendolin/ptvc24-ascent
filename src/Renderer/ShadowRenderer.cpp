@@ -140,35 +140,35 @@ bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
     }
     lastUpdateElapsed_ = 0.0f;
 
-    float nearClip = 1.0;
-    float farClip = 1000.0;
-    float clipRange = farClip - nearClip;
-    float minZ = nearClip;
-    float maxZ = nearClip + clipRange;
+    float near_clip = 1.0;
+    float far_clip = 1000.0;
+    float clip_range = far_clip - near_clip;
+    float min_z = near_clip;
+    float max_z = near_clip + clip_range;
 
-    glm::mat4 camera_projection_matrix = glm::perspective(camera.fov(), camera.aspect(), nearClip, farClip);
+    glm::mat4 camera_projection_matrix = glm::perspective(camera.fov(), camera.aspect(), near_clip, far_clip);
 
-    float range = maxZ - minZ;
-    float ratio = maxZ / minZ;
+    float range = max_z - min_z;
+    float ratio = max_z / min_z;
 
-    float cascadeSplits[CASCADE_COUNT];
+    float cascade_splits[CASCADE_COUNT];
 
     auto settings = Game::get().debugSettings.rendering.shadow;
 
     // From https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus
     for (int i = 0; i < CASCADE_COUNT; i++) {
         float p = (i + 1) / (float)(CASCADE_COUNT);
-        float log = (float)(minZ * std::pow(ratio, p));
-        float uniform = minZ + range * p;
+        float log = (float)(min_z * std::pow(ratio, p));
+        float uniform = min_z + range * p;
         float d = settings.cascadeSplitLambda * (log - uniform) + uniform;
-        cascadeSplits[i] = (d - nearClip) / clipRange;
+        cascade_splits[i] = (d - near_clip) / clip_range;
     }
 
     float lastSplitDist = 0.0f;
     for (int i = 0; i < CASCADE_COUNT; i++) {
-        float splitDist = cascadeSplits[i];
+        float splitDist = cascade_splits[i];
 
-        glm::vec3 frustumCorners[] = {
+        glm::vec3 frustum_corners[] = {
             glm::vec3(-1.0f, 1.0f, -1.0f),
             glm::vec3(1.0f, 1.0f, -1.0f),
             glm::vec3(1.0f, -1.0f, -1.0f),
@@ -181,55 +181,54 @@ bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
 
         // Project frustum corners into world space
         glm::mat4 inverse_camera = glm::inverse(camera_projection_matrix * camera.viewMatrix());
-        // glm::mat4 inverse_camera = glm::inverse(camera_projection_matrix);
         for (int j = 0; j < 8; j++) {
-            glm::vec4 invCorner = inverse_camera * glm::vec4(frustumCorners[j], 1.0f);
-            frustumCorners[j] = glm::vec3(invCorner.x / invCorner.w, invCorner.y / invCorner.w, invCorner.z / invCorner.w);
+            glm::vec4 invCorner = inverse_camera * glm::vec4(frustum_corners[j], 1.0f);
+            frustum_corners[j] = glm::vec3(invCorner.x / invCorner.w, invCorner.y / invCorner.w, invCorner.z / invCorner.w);
         }
 
         // set distance
         for (int j = 0; j < 4; j++) {
-            glm::vec3 dist = frustumCorners[j + 4] - frustumCorners[j];
-            frustumCorners[j + 4] = frustumCorners[j] + dist * splitDist;
-            frustumCorners[j] = frustumCorners[j] + dist * lastSplitDist;
+            glm::vec3 dist = frustum_corners[j + 4] - frustum_corners[j];
+            frustum_corners[j + 4] = frustum_corners[j] + dist * splitDist;
+            frustum_corners[j] = frustum_corners[j] + dist * lastSplitDist;
         }
 
-        glm::vec3 frustumCenter(0.0);
+        glm::vec3 frustum_center(0.0);
         for (int j = 0; j < 8; j++) {
-            frustumCenter += frustumCorners[j];
+            frustum_center += frustum_corners[j];
         }
-        frustumCenter /= 8.0f;
+        frustum_center /= 8.0f;
 
         float radius = 0.0f;
         for (int j = 0; j < 8; j++) {
-            float distance = glm::distance(frustumCorners[j], frustumCenter);
+            float distance = glm::distance(frustum_corners[j], frustum_center);
             radius = std::max(radius, distance);
         }
         radius = (float)std::ceil(radius * 16.0f) / 16.0f;
 
-        glm::vec3 maxExtents = glm::vec3(radius);
-        glm::vec3 minExtents = -maxExtents;
+        glm::vec3 max_extents = glm::vec3(radius);
+        glm::vec3 min_extents = -max_extents;
 
-        glm::vec3 eye = frustumCenter - (light_dir * -minExtents.z);
+        glm::vec3 eye = frustum_center - (light_dir * -min_extents.z);
         glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
-        glm::mat4 lightViewMatrix = glm::lookAt(eye, frustumCenter, up);
-        glm::mat4 lightOrthoMatrix = glm::orthoRH_ZO(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+        glm::mat4 light_view_matrix = glm::lookAt(eye, frustum_center, up);
+        glm::mat4 light_ortho_matrix = glm::orthoRH_ZO(min_extents.x, max_extents.x, min_extents.y, max_extents.y, 0.0f, max_extents.z - min_extents.z);
 
         // Reversed orthographic projection for 0-1 depth ragne.
         // Note: This doesn't bring any quality increase since the orthographic depth values are linear,
         // they don't use the perspective 'w' divide. I'm just using this to keep the depth ranges consistent.
-        lightOrthoMatrix = glm::mat4(
+        light_ortho_matrix = glm::mat4(
             2.0f / (2.0f * radius), 0.0f, 0.0f, 0.0f,
             0.0f, 2.0f / (2.0f * radius), 0.0f, 0.0f,
             0.0f, 0.0f, -1.0f / (0.0f - 2.0f * radius), 0.0f,
             0.0f, 0.0f, -2.0f * radius / (0.0f - 2.0f * radius), 1.0f);
 
         // Store split distance and matrix in cascade
-        cascades_[i].lookAt(frustumCenter, -light_dir, radius);
-        cascades_[i].setProjectionMatrix(lightOrthoMatrix);
-        cascades_[i].splitDistance = (nearClip + splitDist * clipRange) * -1.0f;  // -1 because view z is negative
+        cascades_[i].lookAt(frustum_center, -light_dir, radius);
+        cascades_[i].setProjectionMatrix(light_ortho_matrix);
+        cascades_[i].splitDistance = (near_clip + splitDist * clip_range) * -1.0f;  // -1 because view z is negative
 
-        lastSplitDist = cascadeSplits[i];
+        lastSplitDist = cascade_splits[i];
     }
     return true;
 }
