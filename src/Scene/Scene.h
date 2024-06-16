@@ -1,7 +1,7 @@
 #pragma once
 
-#include <jolt/Jolt.h>
-#include <jolt/Physics/Body/BodyID.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/BodyID.h>
 
 #include <any>
 #include <functional>
