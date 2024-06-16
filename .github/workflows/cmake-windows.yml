@@ -31,7 +31,7 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build/windows --config ${{env.BUILD_TYPE}} --target install
 
-      - run: mv ${{github.workspace}}/_bin/release/PTVC_Project_GL.exe ${{github.workspace}}/_bin/windows/release/Ascent-${{ github.sha }}.exe
+      - run: mv ${{github.workspace}}/_bin/windows/release/PTVC_Project_GL.exe ${{github.workspace}}/_bin/windows/release/Ascent-${{ github.sha }}.exe
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
