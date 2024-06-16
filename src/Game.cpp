@@ -128,7 +128,7 @@ void Game::resize(int width, int height) {
     window.size.x = width;
     window.size.y = height;
 
-    camera->setViewport(width, height);
+    camera->setViewport(width * 2, height * 2);
 
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
@@ -145,19 +145,19 @@ void Game::resize(int width, int height) {
     delete hdrFramebuffer_->getTexture(0);
     auto hdr_color_attachment = new gl::Texture(GL_TEXTURE_2D);
     hdr_color_attachment->setDebugLabel("hdr_fbo/color");
-    hdr_color_attachment->allocate(1, GL_R11F_G11F_B10F, width, height);
+    hdr_color_attachment->allocate(1, GL_R11F_G11F_B10F, width * 2, height * 2);
     hdrFramebuffer_->attachTexture(0, hdr_color_attachment);
 
     delete hdrFramebuffer_->getTexture(1);
     auto hdr_normals_attachment = new gl::Texture(GL_TEXTURE_2D);
     hdr_normals_attachment->setDebugLabel("hdr_fbo/normals_packed");
-    hdr_normals_attachment->allocate(1, GL_RG16_SNORM, width, height);
+    hdr_normals_attachment->allocate(1, GL_RG16_SNORM, width * 2, height * 2);
     hdrFramebuffer_->attachTexture(1, hdr_normals_attachment);
 
     delete hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT);
     auto hdr_depth_attachment = new gl::Texture(GL_TEXTURE_2D);
     hdr_depth_attachment->setDebugLabel("hdr_fbo/depth");
-    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT32F, width, height);
+    hdr_depth_attachment->allocate(1, GL_DEPTH_COMPONENT32F, width * 2, height * 2);
     hdrFramebuffer_->attachTexture(GL_DEPTH_ATTACHMENT, hdr_depth_attachment);
 
     hdrFramebuffer_->bindTargets({0, 1});
@@ -166,17 +166,17 @@ void Game::resize(int width, int height) {
     delete sdrFramebuffer_->getTexture(0);
     auto sdr_color_attachment = new gl::Texture(GL_TEXTURE_2D);
     sdr_color_attachment->setDebugLabel("sdr_fbo/color");
-    sdr_color_attachment->allocate(1, GL_RGB8, width, height);
+    sdr_color_attachment->allocate(1, GL_RGB8, width * 2, height * 2);
     sdrFramebuffer_->attachTexture(0, sdr_color_attachment);
 
     if (bloomRenderer_ != nullptr)
-        bloomRenderer_->setViewport(width, height);
+        bloomRenderer_->setViewport(width * 2, height * 2);
     if (lensEffectsRenderer_ != nullptr)
-        lensEffectsRenderer_->setViewport(width, height);
+        lensEffectsRenderer_->setViewport(width * 2, height * 2);
     if (gtaoRenderer_ != nullptr)
-        gtaoRenderer_->setViewport(width, height);
+        gtaoRenderer_->setViewport(width * 2, height * 2);
     if (motionBlurRenderer_ != nullptr)
-        motionBlurRenderer_->setViewport(window.size.x, window.size.y);
+        motionBlurRenderer_->setViewport(window.size.x * 2, window.size.y * 2);
 }
 
 void Game::load() {
@@ -200,13 +200,13 @@ void Game::load() {
     finalizationRenderer_ = std::make_unique<FinalizationRenderer>();
     finalFinalizationRenderer_ = std::make_unique<FinalFinalizationRenderer>();
     motionBlurRenderer_ = std::make_unique<MotionBlurRenderer>();
-    motionBlurRenderer_->setViewport(window.size.x, window.size.y);
+    motionBlurRenderer_->setViewport(window.size.x * 2, window.size.y * 2);
     bloomRenderer_ = std::make_unique<BloomRenderer>();
-    bloomRenderer_->setViewport(window.size.x, window.size.y);
+    bloomRenderer_->setViewport(window.size.x * 2, window.size.y * 2);
     lensEffectsRenderer_ = std::make_unique<LensEffectsRenderer>();
-    lensEffectsRenderer_->setViewport(window.size.x, window.size.y);
+    lensEffectsRenderer_->setViewport(window.size.x * 2, window.size.y * 2);
     gtaoRenderer_ = std::make_unique<GtaoRenderer>();
-    gtaoRenderer_->setViewport(window.size.x, window.size.y);
+    gtaoRenderer_->setViewport(window.size.x * 2, window.size.y * 2);
     debugRenderer_ = std::make_unique<DebugRenderer>();
 }
 
@@ -309,6 +309,8 @@ void Game::render_() {
     if (controller->useHdr()) {
         hdrFramebuffer_->bind(GL_DRAW_FRAMEBUFFER);
         hdrFramebuffer_->bindTargets({0, 1});
+        gl::manager->setViewport(0, 0, window.size.x * 2, window.size.y * 2);
+
     } else {
         gl::manager->bindDrawFramebuffer(0);
     }
@@ -319,6 +321,8 @@ void Game::render_() {
     controller->render();
 
     if (controller->useHdr()) {
+        gl::manager->setViewport(0, 0, window.size.x * 2, window.size.y * 2);
+
         bloomRenderer_->render(hdrFramebuffer_->getTexture(0));
         lensEffectsRenderer_->render(bloomRenderer_->downLevel(0), bloomRenderer_->downLevel(1));
         gtaoRenderer_->render(*camera, *hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT), *hdrFramebuffer_->getTexture(1));
@@ -333,6 +337,7 @@ void Game::render_() {
             lensEffectsRenderer_->glare(),
             gtaoRenderer_->result());
         motionBlurRenderer_->render(*camera, sdrFramebuffer_, hdrFramebuffer_->getTexture(GL_DEPTH_ATTACHMENT));
+        gl::manager->setViewport(0, 0, window.size.x, window.size.y);
         gl::manager->bindDrawFramebuffer(0);
         gl::manager->enable(gl::Capability::DepthTest);
         gl::manager->depthMask(true);
@@ -340,6 +345,8 @@ void Game::render_() {
         finalFinalizationRenderer_->render(sdrFramebuffer_->getTexture(0));
         // debugRenderer_->render(*this);
     }
+    gl::manager->setViewport(0, 0, window.size.x, window.size.y);
+
     //  Draw physics debugging shapes
     physics->debugRender(camera->viewProjectionMatrix());
 

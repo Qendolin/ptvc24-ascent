@@ -28,7 +28,7 @@ FinalFinalizationRenderer::FinalFinalizationRenderer() {
     fboSampler = new gl::Sampler();
     fboSampler->setDebugLabel("final_finalization_renderer/fbo_sampler");
     fboSampler->wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 0);
-    fboSampler->filterMode(GL_NEAREST, GL_NEAREST);
+    fboSampler->filterMode(GL_LINEAR, GL_LINEAR);
 }
 
 FinalFinalizationRenderer::~FinalFinalizationRenderer() {

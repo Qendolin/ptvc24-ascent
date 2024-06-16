@@ -25,6 +25,7 @@
 #include "../Scene/Entity.h"
 #include "../Scene/FreeCam.h"
 #include "../Scene/Objects.h"
+#include "../Scene/OrbitCam.h"
 #include "../Scene/Scene.h"
 #include "../UI/Screens/Fade.h"
 #include "../UI/Screens/Hud.h"
@@ -48,6 +49,7 @@ MainController::MainController(Game &game)
 {
     loader = std::make_unique<MainControllerLoader>();
     freeCam = std::make_unique<FreeCamEntity>(*game.camera);
+    orbitCam = std::make_unique<OrbitCam>();
 }
 
 MainController::~MainController() {
@@ -104,7 +106,7 @@ void MainController::applyLoadResult_() {
     }
     terrain = std::make_unique<loader::Terrain>(*data.terrain, 4096.0f, 1200.0f, glm::vec3(0), 20);
     terrain->createPhysicsBody(physics, glm::vec3(0.0, 1.0, 0.0));
-    water = std::make_unique<loader::Water>(*data.water, 4096.0f * 4, 40.0f, glm::vec3(0, 40, 0), 40);
+    water = std::make_unique<loader::Water>(*data.water, 4096.0f * 4, 40.0f, glm::vec3(0, 40, 0), 80);
     physics.AddBody(terrain->physicsBody()->GetID(), JPH::EActivation::DontActivate);
 
     if (!data.gltf) return;
@@ -202,7 +204,10 @@ void MainController::update() {
     if (game.debugSettings.freeCam) {
         freeCam->update(time_delta);
     }
-    character->enabled = !game.debugSettings.freeCam;
+    character->enabled = !(game.debugSettings.freeCam || game.debugSettings.promo.orbitCam);
+    if (game.debugSettings.promo.orbitCam) {
+        orbitCam->update(game, time_delta);
+    }
 
     // Update and step physics
     game.physics->update(time_delta);

@@ -28,6 +28,20 @@ void DebugMenu::draw() {
     drawDebugWindow_();
     drawPerformanceWindow_();
     drawParticlesWindow_();
+
+    using namespace ImGui;
+    Begin("Camera", nullptr, 0);
+    auto& settings = Game::get().debugSettings.promo;
+    SliderFloat("Smooth FreeCam", &settings.smoothFreeCam, 0, 1);
+    SliderFloat("Fov", &settings.orbitFov, 0, 180);
+    Checkbox("Orbit Cam", &settings.orbitCam);
+    SliderFloat("Speed", &settings.orbitSpeed, 0, 360);
+    DragFloat("Distance", &settings.orbitDistance);
+    SliderFloat("Azimuth", &settings.orbitAzimuth, 0, 360);
+    SliderFloat("Elevation", &settings.orbitElevation, -90, 90);
+    SliderFloat("Pitch", &settings.orbitPitch, -90, 90);
+    DragFloat3("Origin", glm::value_ptr(settings.orbitOrigin));
+    End();
 }
 
 void DebugMenu::drawDebugWindow_() {
@@ -139,6 +153,8 @@ void DebugMenu::drawDebugWindow_() {
         if (CollapsingHeader("Shadow")) {
             PushID("shadow");
             Checkbox("Debug Draw", &settings.rendering.shadow.debugDrawEnabled);
+            SliderFloat("Near Clip", &settings.rendering.shadow.nearClip, 0.0, 100.0);
+            SliderFloat("Far Clip", &settings.rendering.shadow.farClip, 100.0, 10000.0);
             SliderFloat("Split Lambda", &settings.rendering.shadow.cascadeSplitLambda, 0.0, 1.0);
             DragFloat("Normal Bias", &settings.rendering.shadow.normalBias);
             SliderFloat("Size Bias", &settings.rendering.shadow.sizeBias, -300, 300);

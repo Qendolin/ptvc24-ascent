@@ -17,12 +17,20 @@ void FreeCamEntity::update(float time_delta) {
 
     camera.setFov(glm::radians(settings.fov));
 
+    float dx = input.mouseDelta().x * glm::radians(settings.lookSensitivity);
+    float dy = input.mouseDelta().y * glm::radians(settings.lookSensitivity);
+
+    if (game.debugSettings.promo.smoothFreeCam > 0.0f) {
+        dx = xSmooth.smooth(dx, time_delta * (1.0f / game.debugSettings.promo.smoothFreeCam));
+        dy = ySmooth.smooth(dy, time_delta * (1.0f / game.debugSettings.promo.smoothFreeCam));
+    }
+
     // yaw
-    camera.angles.y -= input.mouseDelta().x * glm::radians(settings.lookSensitivity);
+    camera.angles.y -= dx;
     camera.angles.y = glm::wrapAngle(camera.angles.y);
 
     // pitch
-    camera.angles.x -= input.mouseDelta().y * glm::radians(settings.lookSensitivity);
+    camera.angles.x -= dy;
     camera.angles.x = glm::clamp(camera.angles.x, -glm::half_pi<float>(), glm::half_pi<float>());
 
     // Calculate movement input. Use the trick that in c++ we can substract booleans

@@ -22,6 +22,7 @@ class FreeCamEntity;
 class Music;
 class WaterRenderer;
 class CSM;
+class OrbitCam;
 namespace loader {
 class SceneData;
 class Terrain;
@@ -57,6 +58,7 @@ class MainController : public AbstractController {
     std::unique_ptr<Hud> hud;
 
     std::unique_ptr<FreeCamEntity> freeCam;
+    std::unique_ptr<OrbitCam> orbitCam;
 
     /**
      * Is called after loading is finished

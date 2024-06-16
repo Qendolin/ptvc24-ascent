@@ -1,7 +1,7 @@
 #version 450 core
 
-const int MAX_TESS_LEVEL = 9;
-const float MIN_DISTANCE = 1.0;
+const int MAX_TESS_LEVEL = 13;
+const float MIN_DISTANCE = 1000.0;
 const float MAX_DISTANCE = 20000.0;
 
 layout(vertices=4) out;
@@ -50,10 +50,10 @@ void main()
         distance11 = max((distance11 - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0);
 
         // Apply power function, controls falloff
-        float tessLevel0 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance10, distance00), 0.3), 0.0, 1.0);
-        float tessLevel1 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance00, distance01), 0.3), 0.0, 1.0);
-        float tessLevel2 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance01, distance11), 0.3), 0.0, 1.0);
-        float tessLevel3 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance11, distance10), 0.3), 0.0, 1.0);
+        float tessLevel0 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance10, distance00), 0.2), 0.0, 1.0);
+        float tessLevel1 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance00, distance01), 0.2), 0.0, 1.0);
+        float tessLevel2 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance01, distance11), 0.2), 0.0, 1.0);
+        float tessLevel3 = MAX_TESS_LEVEL * clamp(1.0 - pow(min(distance11, distance10), 0.2), 0.0, 1.0);
 
         gl_TessLevelOuter[0] = pow(2.0, tessLevel0);
         gl_TessLevelOuter[1] = pow(2.0, tessLevel1);

@@ -140,8 +140,10 @@ bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
     }
     lastUpdateElapsed_ = 0.0f;
 
-    float nearClip = 1.0;
-    float farClip = 1000.0;
+    auto settings = Game::get().debugSettings.rendering.shadow;
+
+    float nearClip = settings.nearClip;
+    float farClip = settings.farClip;
     float clipRange = farClip - nearClip;
     float minZ = nearClip;
     float maxZ = nearClip + clipRange;
@@ -152,8 +154,6 @@ bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
     float ratio = maxZ / minZ;
 
     float cascadeSplits[CASCADE_COUNT];
-
-    auto settings = Game::get().debugSettings.rendering.shadow;
 
     // From https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus
     for (int i = 0; i < CASCADE_COUNT; i++) {
@@ -181,7 +181,7 @@ bool CSM::update(Camera& camera, glm::vec3 light_dir, float time_delta) {
 
         // Project frustum corners into world space
         glm::mat4 inverse_camera = glm::inverse(camera_projection_matrix * camera.viewMatrix());
-        // glm::mat4 inverse_camera = glm::inverse(camera_projection_matrix);
+
         for (int j = 0; j < 8; j++) {
             glm::vec4 invCorner = inverse_camera * glm::vec4(frustumCorners[j], 1.0f);
             frustumCorners[j] = glm::vec3(invCorner.x / invCorner.w, invCorner.y / invCorner.w, invCorner.z / invCorner.w);
@@ -313,7 +313,11 @@ void ShadowMapRenderer::render(CSM& csm, Camera& camera, loader::GraphicsData& g
 
             terrainShader->vertexStage()->setUniform("u_position", terrain.origin());
 
-            terrainShader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera.position);
+            glm::vec3 camera_pos = camera.position;
+            if (Game::get().debugSettings.rendering.terrain.fixedLodOrigin) {
+                camera_pos = glm::vec3(0.0);
+            }
+            terrainShader->get(GL_TESS_CONTROL_SHADER)->setUniform("u_camera_pos", camera_pos);
 
             terrainShader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_view_projection_mat", caster.projectionMatrix() * caster.viewMatrix());
             terrainShader->get(GL_TESS_EVALUATION_SHADER)->setUniform("u_height_scale", terrain.heightScale());

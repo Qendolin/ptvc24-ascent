@@ -60,6 +60,8 @@ struct DebugSettings {
             float offsetFactor = 1.85f;
             float offsetUnits = 4.5f;
             float offsetClamp = 0.05f;
+            float nearClip = 1.0;
+            float farClip = 1000.0;
         } shadow;
 
         struct Terrain {
@@ -96,4 +98,15 @@ struct DebugSettings {
     Rendering rendering;
     bool freeCam = false;
     bool infiniteBoost = false;
+    struct Promo {
+        bool orbitCam = false;
+        float orbitSpeed = 5;
+        float orbitDistance = 2000;
+        float orbitAzimuth = 0;
+        float orbitElevation = 20;
+        float orbitPitch = -30;
+        float orbitFov = 50;
+        glm::vec3 orbitOrigin = glm::vec3{0, 800, 0};
+        float smoothFreeCam = 0.0f;
+    } promo;
 };

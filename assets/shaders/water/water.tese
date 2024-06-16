@@ -1,7 +1,7 @@
 #version 450 core
 
 const int SHADOW_CASCADE_COUNT = 4;
-const int MAX_TESS_LEVEL = 9;
+const int MAX_TESS_LEVEL = 13;
 
 layout(quads, equal_spacing, ccw) in;
 
@@ -45,15 +45,15 @@ void main()
 
     float lod = MAX_TESS_LEVEL - log2(max(gl_TessLevelInner[0], gl_TessLevelInner[1]));
     float large_waves = 0.0;
-    large_waves += textureLod(u_height_map, tex_coord*1 + u_time*vec2(0,1)/300, lod).r;
-    large_waves += textureLod(u_height_map, tex_coord*1.1 + u_time*vec2(1,0)/250, lod).r;
+    large_waves += textureLod(u_height_map, tex_coord*4 + u_time*vec2(0,1)/300, lod).r;
+    large_waves += textureLod(u_height_map, tex_coord*6 + u_time*vec2(1,0)/250, lod).r;
     
     float small_waves = 0.0;
-    small_waves += textureLod(u_height_map, tex_coord*8 + u_time*normalize(vec2(1,1))/50, lod).r*0.2;
-    small_waves += textureLod(u_height_map, tex_coord*8 + u_time*normalize(vec2(1,3))/30, lod).r*0.2;
+    small_waves += textureLod(u_height_map, tex_coord*16 + u_time*normalize(vec2(1,1))/50, lod).r*0.2;
+    small_waves += textureLod(u_height_map, tex_coord*16 + u_time*normalize(vec2(1,3))/30, lod).r*0.2;
     out_crest = smoothstep(0.22, 0.25, small_waves);
 
-    out_height = (1.5 * large_waves + small_waves) * u_height_scale;
+    out_height = (1.5 * large_waves + 3.0 * small_waves) * u_height_scale * 0.2;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;
