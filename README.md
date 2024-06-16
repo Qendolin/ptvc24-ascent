@@ -1,5 +1,10 @@
 # ptvc24-ascent
 
+## Trailer (YouTube)
+[![Ascent Game Trailer](http://img.youtube.com/vi/yGkNzov98J8/0.jpg)](https://www.youtube.com/watch?v=yGkNzov98J8)
+
+## Info
+
 When extracting the assets.zip archive make sure the directory strucucture is as follows:
 ```
 /Ascent.exe
