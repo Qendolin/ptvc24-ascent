@@ -15,6 +15,7 @@
 #include "GL/StateManager.h"
 #include "GL/Texture.h"
 #include "Input.h"
+#include "Loader/Loader.h"
 #include "Particles/ParticleSystem.h"
 #include "Physics/Physics.h"
 #include "Renderer/BloomRenderer.h"
@@ -208,6 +209,13 @@ void Game::load() {
     gtaoRenderer_ = std::make_unique<GtaoRenderer>();
     gtaoRenderer_->setViewport(window.size.x, window.size.y);
     debugRenderer_ = std::make_unique<DebugRenderer>();
+
+    GLFWimage window_icon;
+    auto window_icon_img = loader::image("assets/textures/icon32.png");
+    window_icon.width = window_icon_img.width;
+    window_icon.height = window_icon_img.height;
+    window_icon.pixels = window_icon_img.data.get();
+    glfwSetWindowIcon(window, 1, &window_icon);
 }
 
 void Game::unload() {
