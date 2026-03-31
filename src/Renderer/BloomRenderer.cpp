@@ -78,6 +78,7 @@ void BloomRenderer::createTextures_() {
 //	Down:
 //
 //	down(src) -> Down[0]
+//	down(Down[0]) -> Down[1]
 //	down(Down[1]) -> Down[2]
 //	down(Down[2]) -> Down[3]
 //	down(Down[3]) -> Down[4]
