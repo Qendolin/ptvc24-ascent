@@ -133,7 +133,7 @@ vec3 sampleAmbient(vec3 N, vec3 V, vec3 R, vec3 F0, float roughness, float metal
     return (kD * diffuse + specular) * ao; 
 }
 
-float sampleShadow(float index, vec3 P_shadow_ndc, float n_dot_l) {
+float sampleShadowGpuGems(float index, vec3 P_shadow_ndc, float n_dot_l) {
     vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0).xy;
     // z is seperate because we are using 0..1 depth, not the usual -1..1
     vec3 shadow_uvz = vec3(P_shadow_ndc.xy * 0.5 + 0.5, P_shadow_ndc.z);
@@ -154,6 +154,30 @@ float sampleShadow(float index, vec3 P_shadow_ndc, float n_dot_l) {
     shadow += texture(u_shadow_map, vec4(shadow_uvz.xy + (offset + vec2(0.5, -1.5)) * texel_size, index, shadow_uvz.z + bias));
 
     return shadow * 0.25;
+}
+
+const vec2 SHADOW_POISSON_DISK[9] = vec2[](
+vec2(-0.75, -0.25), vec2(-0.25, -0.75), vec2(0.25, -0.5),
+vec2(-0.5, 0.25), vec2(0.0, 0.0), vec2(0.5, 0.25),
+vec2(-0.25, 0.5), vec2(0.75, 0.25), vec2(0.25, 0.75)
+);
+
+float sampleShadowPoisson(float index, vec3 P_shadow_ndc, float n_dot_l) {
+    vec2 texel_size = vec2(1.0f) / textureSize(u_shadow_map, 0).xy;
+    // z is seperate because we are using 0..1 depth
+    vec3 shadow_uvz = vec3(P_shadow_ndc.xy * 0.5f + 0.5f, P_shadow_ndc.z);
+
+    // tan(acos(x)) = sqrt(1-x^2)/x
+    n_dot_l = max(n_dot_l, 1e-5f);
+    float bias = u_shadow_depth_bias * texel_size.x * sqrt(1.0f - n_dot_l * n_dot_l) / n_dot_l;
+    bias = clamp(bias, 0.0f, 0.01f);
+
+    float result = 0.0f;
+    for (int i = 0; i < 9; ++i) {
+        vec2 offset = SHADOW_POISSON_DISK[i] * texel_size * 2.0f;
+        result += texture(u_shadow_map, vec4(shadow_uvz.xy + offset, index, shadow_uvz.z + bias));
+    }
+    return result / 9.0f;
 }
 
 void main()
@@ -189,7 +213,7 @@ void main()
             shadow_index = i + 1;
         }
     }
-    float shadow = sampleShadow(float(shadow_index), in_shadow_position[shadow_index], dot(tbn[2], in_shadow_direction));
+    float shadow = sampleShadowPoisson(float(shadow_index), in_shadow_position[shadow_index], dot(tbn[2], in_shadow_direction));
 
     // reflectance equation
     vec3 Lo = vec3(0.0);

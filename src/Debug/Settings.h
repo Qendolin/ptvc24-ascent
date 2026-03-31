@@ -55,11 +55,11 @@ struct DebugSettings {
             bool debugDrawEnabled = false;
             float cascadeSplitLambda = 0.75f;
             float normalBias = 300.0f;
-            float sizeBias = 10.0f;
-            float depthBias = 0.12f;
-            float offsetFactor = 1.85f;
-            float offsetUnits = 4.5f;
-            float offsetClamp = 0.05f;
+            float sizeBias = 5.0f;
+            float depthBias = 0.0f;
+            float offsetFactor = 0.5f;
+            float offsetUnits = 24.0f;
+            float offsetClamp = 0.0f;
         } shadow;
 
         struct Terrain {
